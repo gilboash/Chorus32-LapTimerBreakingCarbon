@@ -260,12 +260,15 @@ void race_page_update(void* data) {
   for(uint8_t i = 0; i < MAX_NUM_PILOTS; ++i) {
     if(isPilotActive(i)) {      
       uint32_t last_lap = getLaptimeRel(i);
-      uint32_t best_lap = getBestLap(i);
+      uint32_t best_lap = getLaptimeRel(i, getBestLap(i));
       char last_lap_str[12];
       char best_lap_str[12];
       snprintf(last_lap_str, 12, "%01d:%02d.%02d", last_lap / 1000 / 60 ,last_lap / 1000, (last_lap % 1000) / 10);
       snprintf(best_lap_str, 12, "%01d:%02d.%02d", best_lap / 1000 / 60 ,best_lap / 1000, (best_lap % 1000) / 10);
       uint8_t lap_count = getCurrentLap(i);
+      if(lap_count != 0 && !getCountFirstLap() ) {
+        --lap_count;
+      }
       display.drawString(0, 9 + (i - skipped) * 9, String(i+1) + ": L:" + last_lap_str + " B: " + best_lap_str + "  #" + String(lap_count));
     }
     else {
