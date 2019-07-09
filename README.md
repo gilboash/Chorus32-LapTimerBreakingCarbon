@@ -1,5 +1,26 @@
 # Chorus32-ESP32Laptimer
 
+This fork adds (mostly backend):
+ * Mutliplexing modules. Reduces the accuracy, but is the only option if you want to go cheap and small
+ * Better ADC voltage reading (on a scale from 5V to 20V off by about 0.3V instead of several volts) (merged)
+ * Support for "normal" buttons (merged)
+ * Threshold setup mode (long press set in the app) (merged)
+ * Remove all .ino files and replace them with .cpp files -> no more variables out of thin air
+ * Refactor input and OLED to make adding new pages much easier
+   * Page with lap times
+ * Refactor outputs
+   * Support for Bluetooth (need to change the partition scheme to "Huge APP" (will disable OTA updates)
+ * Multiple WiFi/Bluetooth clients
+ * Some other changes I don't remember
+
+TODO:
+ * Add LoRa support
+ * Add race times to OSD (not sure how useful this will be, but I'll at least implement it)
+ * Maybe support for checkpoints
+ * Make useable without app
+   * Continous mode
+   * Statistics
+
 This is an ESP32 port of the popular Chorus RF laptimer (https://github.com/voroshkov/Chorus-RF-Laptimer). Using an ESP32 provides much more processing power than AVR based Arduino boards and also has built in Wifi and Bluetooth networking simplifying connectivity options.
 
 Compared to the original ChorusRF Lamptimer this ESP32 version only requires one RX module per pilot and a single ESP32 (nodemcu or similar) board. This allows you to connect your Lap timer wirelessly with no extra hardware required. However, due to ADC constraints, we are limited to 6 pilots per device.
