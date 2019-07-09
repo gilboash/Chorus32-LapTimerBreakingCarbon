@@ -37,6 +37,8 @@ uint32_t getLaptimeRelToStart(uint8_t receiver, uint8_t lap);
 uint32_t getLaptimeRel(uint8_t receiver);
 void startRaceLap();
 
+uint8_t getBestLap(uint8_t pilot);
+
 /**
  * Adds a lap to the pool and returns the current lap id
  */
