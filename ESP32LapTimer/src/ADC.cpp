@@ -57,6 +57,8 @@ static uint8_t current_pilot_num = 0;
 // number of cascading lowpass filter per pilot
 #define PILOT_FILTER_NUM 1
 
+static lowpass_filter_t adc_voltage_filter;
+
 enum pilot_state {
   PILOT_UNUSED,
   PILOT_ACTIVE,
@@ -187,6 +189,7 @@ void ConfigureADC() {
   for(uint8_t i = 0; i < getNumReceivers() && i < MAX_NUM_PILOTS; ++i)  {
     setPilotActive(i, true);
   }
+  filter_init(&adc_voltage_filter, ADC_VOLTAGE_CUTOFF, VOLTAGE_UPDATE_INTERVAL_MS/1000.0);
 }
 
 adc1_channel_t IRAM_ATTR getADCChannel(uint8_t adc_num) {
@@ -309,6 +312,7 @@ float getVbatFloat(bool force_read){
         break;
     }
     last_voltage_update = millis();
+    VbatReadingFloat = filter_add_value(&adc_voltage_filter, VbatReadingFloat);
   }
   return VbatReadingFloat;
 }

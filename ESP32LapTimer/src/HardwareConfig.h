@@ -69,6 +69,7 @@
 #define EEPROM_COMMIT_DELAY_MS 10000 // the time between checks to save the eeprom in ms
 #define MAX_NUM_RECEIVERS 6
 #define VOLTAGE_UPDATE_INTERVAL_MS 1000 // interval of the battery voltage reading
+#define ADC_VOLTAGE_CUTOFF 1
 #define MIN_TUNE_TIME 30000 // value in micro seconds
 #define MAX_UDP_CLIENTS 5
 #define MAX_TCP_CLIENTS 5
