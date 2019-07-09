@@ -78,6 +78,10 @@
 // defines the time after which the crash loop detection assumes the operation is stable
 #define CRASH_COUNT_RESET_TIME_MS 300000
 
+#define MAX_NUM_RECEIVERS 6
+#define MAX_NUM_PILOTS 8
+#define MULTIPLEX_STAY_TIME_US (5 * 1000)
+
 #include "targets/target.h" // Needs to be at the bottom
 
 void InitHardwarePins();
