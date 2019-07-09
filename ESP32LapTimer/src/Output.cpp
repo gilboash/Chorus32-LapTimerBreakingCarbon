@@ -29,7 +29,11 @@
 #ifdef USE_WEBSOCKET_OUTPUT
 #include "TimerWebServer.h"
 #endif
+#ifdef USE_LORA
+#include "Lora.h"
+#endif
 
+#include "HardwareConfig.h"
 #include <freertos/semphr.h>
 
 #define MAX_OUTPUT_BUFFER_SIZE 1500
@@ -54,6 +58,9 @@ static output_t outputs[] = {
 #ifdef USE_WEBSOCKET_OUTPUT
   {NULL, NULL, send_websocket, read_websocket, output_input_callback},
 #endif // USE_WEBSOCKET_OUTPUT
+#ifdef USE_LORA
+  {NULL, lora_init, lora_send_packet, lora_update, output_input_callback},
+#endif // USE_LORA
 };
 
 #define OUTPUT_SIZE (sizeof(outputs)/sizeof(outputs[0]))

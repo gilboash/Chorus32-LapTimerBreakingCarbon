@@ -84,6 +84,11 @@
 #define MAX_NUM_PILOTS 8
 #define MULTIPLEX_STAY_TIME_US (5 * 1000)
 
+#ifdef USE_DEBUG_OUTPUT
+  #define OUTPUT_DEBUG
+  #define INPUT_DEBUG
+#endif
+
 #include "targets/target.h" // Needs to be at the bottom
 
 void InitHardwarePins();

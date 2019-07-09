@@ -9,12 +9,12 @@ This fork adds (mostly backend):
  * Refactor input and OLED to make adding new pages much easier
    * Page with lap times
  * Refactor outputs
-   * Support for Bluetooth (need to change the partition scheme to "Huge APP" (will disable OTA updates)
+   * Support for Bluetooth (need to change the partition scheme to "Huge APP" (will disable OTA updates))
+   * Support for LoRa
  * Multiple WiFi/Bluetooth clients
  * Some other changes I don't remember
 
 TODO:
- * Add LoRa support
  * Add race times to OSD (not sure how useful this will be, but I'll at least implement it)
  * Maybe support for checkpoints
  * Make useable without app
