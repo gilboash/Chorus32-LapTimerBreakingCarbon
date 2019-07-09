@@ -143,7 +143,7 @@ void setup() {
   timerAlarmWrite(adc_task_timer, 1667, true); // 6khz -> 1khz per adc channel
   timerAlarmEnable(adc_task_timer);
 
-  xTaskCreatePinnedToCore(eeprom_task, "eepromSave", 4096, NULL, 1, NULL, 1); 
+  xTaskCreatePinnedToCore(eeprom_task, "eepromSave", 4096, NULL, tskIDLE_PRIORITY, NULL, 1); 
 }
 
 void loop() {
@@ -172,7 +172,8 @@ void loop() {
   handleDNSRequests();
 #endif
 
-  EepromSettings.save();
+  handleNewHTTPClients();
+
   beeperUpdate();
   if(UNLIKELY(!isInRaceMode())) {
     thresholdModeStep();
