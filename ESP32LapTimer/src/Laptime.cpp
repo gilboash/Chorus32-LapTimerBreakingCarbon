@@ -56,6 +56,21 @@ uint32_t getLaptime(uint8_t receiver, uint8_t lap) {
   return 0;
 }
 
+uint32_t getLaptimeRel(uint8_t receiver, uint8_t lap) {
+	if(lap == 1) {
+		return getLaptime(receiver, lap) - start_time;
+	}
+	return getLaptime(receiver, lap) - getLaptime(receiver, lap - 1);
+}
+
+uint32_t getLaptimeRelToStart(uint8_t receiver, uint8_t lap) {
+	return getLaptime(receiver, lap) - start_time;
+}
+
+uint32_t getLaptimeRel(uint8_t receiver) {
+	return getLaptimeRel(receiver, LapTimePtr[receiver]);
+}
+
 uint32_t getLaptime(uint8_t receiver) {
   return getLaptime(receiver, lap_counter[receiver]);
 }
@@ -98,4 +113,8 @@ uint8_t getCurrentLap(uint8_t receiver) {
 void startRaceLap() {
   resetLaptimes();
   start_time = millis();
+}
+
+void startRaceLap() {
+	start_time = millis();
 }
