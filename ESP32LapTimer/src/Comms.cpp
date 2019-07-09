@@ -171,7 +171,6 @@ static int32_t timeAdjustment = INFINITE_TIME_ADJUSTMENT;
 static uint8_t raceMode = 0; // 0: race mode is off; 1: lap times are counted relative to last lap end; 2: lap times are relative to the race start (sum of all previous lap times);
 //static uint8_t isSoundEnabled = 1; // TODO: implement this option
 static uint8_t isConfigured = 0; //changes to 1 if any input changes the state of the device. it will mean that externally stored preferences should not be applied
-static uint8_t shouldWaitForFirstLap = 0; // 0 means start table is before the laptimer, so first lap is not a full-fledged lap (i.e. don't respect min-lap-time for the very first lap)
 
 static uint8_t thresholdSetupMode[MAX_NUM_PILOTS];
 
@@ -503,7 +502,7 @@ void WaitFirstLap(uint8_t NodeAddr) {
   addToSendQueue('S');
   addToSendQueue(TO_HEX(NodeAddr));
   addToSendQueue(RESPONSE_WAIT_FIRST_LAP);
-  addToSendQueue(TO_HEX(shouldWaitForFirstLap));
+  addToSendQueue(TO_HEX(getSkipFirstLap()));
   addToSendQueue('\n');
 }
 
@@ -689,7 +688,7 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
 
       case CONTROL_WAIT_FIRST_LAP:
         valueToSet = TO_BYTE(controlData[3]);
-        shouldWaitForFirstLap = valueToSet;
+        setSkipFirstLap(valueToSet);
         //playClickTones();
         isConfigured = 1;
         break;
