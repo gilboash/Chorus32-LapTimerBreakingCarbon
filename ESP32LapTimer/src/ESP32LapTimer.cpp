@@ -36,6 +36,7 @@
 #ifdef USE_BUTTONS
 #include "Buttons.h"
 #endif
+#include "TimerWebServer.h"
 #include "Watchdog.h"
 #include "Utils.h"
 #include "Laptime.h"
@@ -141,6 +142,8 @@ void setup() {
   timerAttachInterrupt(adc_task_timer, &adc_read, true);
   timerAlarmWrite(adc_task_timer, 1667, true); // 6khz -> 1khz per adc channel
   timerAlarmEnable(adc_task_timer);
+
+  xTaskCreatePinnedToCore(eeprom_task, "eepromSave", 4096, NULL, 1, NULL, 1); 
 }
 
 void loop() {
