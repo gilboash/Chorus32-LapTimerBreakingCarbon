@@ -63,7 +63,7 @@ static struct summaryPageData_s {
 
 oled_page_t oled_pages[] = {
   {&summaryPageData, summary_page_init, summary_page_update, summary_page_input},
-  {NULL, NULL, race_page_update, next_page_input},  
+  {NULL, NULL, race_page_update, next_page_input},
   {&adcPageData, adc_page_init, adc_page_update, next_page_input},
   {NULL, NULL, calib_page_update, calib_page_input},
   {NULL, NULL, airplane_page_update, airplane_page_input},
@@ -76,6 +76,14 @@ static volatile uint8_t current_page = 0;
 
 static void oledNextPage() {
   current_page = (current_page + 1) % NUM_OLED_PAGES;
+}
+
+static void oledPrevPage() {
+  if(current_page == 0) {
+    current_page = NUM_OLED_PAGES - 1;
+  }else {
+    current_page = (current_page - 1);
+  }
 }
 
 void oledSetup(void) {
@@ -129,8 +137,12 @@ void oledInjectInput(uint8_t index, uint8_t type) {
 
 void next_page_input(void* data, uint8_t index, uint8_t type) {
   (void)data;
-  if(index == 0 && type == BUTTON_SHORT) {
-    oledNextPage();
+  if(index == 0) {
+    if(type == BUTTON_SHORT) {
+      oledNextPage();
+    } else if(type == BUTTON_LONG) {
+      oledPrevPage();
+    }
   }
 }
 
@@ -141,11 +153,19 @@ void rx_page_init(void* data) {
 
 void rx_page_input(void* data, uint8_t index, uint8_t type) {
   rxPageData_s* my_data = (rxPageData_s*) data;
-  if(index == 0 && type == BUTTON_SHORT) {
-    ++my_data->currentPilotNumber;
-    if(my_data->currentPilotNumber >= MAX_NUM_PILOTS) {
-      oledNextPage();
-      my_data->currentPilotNumber = 0;
+  if(index == 0) {
+    if(type == BUTTON_SHORT) {
+      ++my_data->currentPilotNumber;
+      if(my_data->currentPilotNumber >= MAX_NUM_PILOTS) {
+        oledNextPage();
+        my_data->currentPilotNumber = 0;
+      }
+    } else if(type == BUTTON_LONG) {
+      if(my_data->currentPilotNumber == 0) {
+        oledPrevPage();
+      } else {
+        --my_data->currentPilotNumber;
+      }
     }
   }
   else if(index == 1 && type == BUTTON_SHORT) {
