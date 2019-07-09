@@ -43,8 +43,8 @@ uint8_t addLap(uint8_t receiver, uint32_t time);
 /// Laps begin at 1. lap 0 is always 0
 uint8_t getCurrentLap(uint8_t receiver);
 
-uint8_t getSkipFirstLap();
-void setSkipFirstLap(uint8_t shouldWaitForFirstLap);
+uint8_t getCountFirstLap();
+void setCountFirstLap(uint8_t shouldWaitForFirstLap);
 
 /// Sends unsent laps to the output queue
 void sendNewLaps();

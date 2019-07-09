@@ -31,7 +31,7 @@ static int last_lap_sent[MAX_NUM_PILOTS];
 
 static uint32_t MinLapTime = 5000;  //this is in millis
 static uint32_t start_time = 0;
-static uint8_t skip_first_lap = 0; // 0 means start table is before the laptimer, so first lap is not a full-fledged lap (i.e. don't respect min-lap-time for the very first lap)
+static uint8_t count_first_lap = 0; // 0 means start table is before the laptimer, so first lap is not a full-fledged lap (i.e. don't respect min-lap-time for the very first lap)
 
 void resetLaptimes() {
   memset(LapTimes, 0, MAX_NUM_PILOTS * MAX_LAPS_NUM * sizeof(LapTimes[0][0]));
@@ -86,7 +86,7 @@ uint8_t addLap(uint8_t receiver, uint32_t time) {
   LapTimes[receiver][lap_counter[receiver]] = time;
   if((getLaptimeRel(receiver) < getLaptimeRel(receiver, best_lap_num[receiver]) || getLaptimeRel(receiver, best_lap_num[receiver]) == 0)) {
     // skip best time if we skip the first lap
-    if(!(lap_counter[receiver] == 1 && skip_first_lap)) {
+    if(!(lap_counter[receiver] == 1 && !count_first_lap)) {
       best_lap_num[receiver] = lap_counter[receiver];
     }
   }
@@ -114,12 +114,12 @@ void startRaceLap() {
   start_time = millis();
 }
 
-void setSkipFirstLap(uint8_t shouldWaitForFirstLap) {
-  skip_first_lap = shouldWaitForFirstLap;
+void setCountFirstLap(uint8_t shouldWaitForFirstLap) {
+  count_first_lap = shouldWaitForFirstLap;
 }
 
-uint8_t getSkipFirstLap() {
-  return skip_first_lap;
+uint8_t getCountFirstLap() {
+  return count_first_lap;
 }
 
 void startRaceLap() {
