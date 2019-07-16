@@ -43,3 +43,5 @@ float fmap(float x, float in_min, float in_max, float out_min, float out_max);
    ({ __typeof__ (a) _a = (a); \
        __typeof__ (b) _b = (b); \
      _a < _b ? _a : _b; })
+
+#define FORCE_INLINE __attribute__((always_inline)) inline
