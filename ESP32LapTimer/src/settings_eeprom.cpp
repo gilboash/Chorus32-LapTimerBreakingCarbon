@@ -189,6 +189,10 @@ uint8_t getNumReceivers() {
   return EepromSettings.NumReceivers;
 }
 
+uint16_t getMinVoltageModule() {
+  return EepromSettings.min_voltage_module;
+}
+
 uint32_t getDisplayTimeout() {
   return EepromSettings.display_timeout_ms;
 }
