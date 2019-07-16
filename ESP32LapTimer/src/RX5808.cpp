@@ -26,6 +26,34 @@
 #define StandbyReg        0b00000000000000000010
 #define PowerOnReg        0b00000000000000000001
 
+#define PD_VCLAMP       0x00080000 /*Video clamp power down control */
+#define PD_VAMP         0x00040000 /*Video amp power down control */
+#define PD_IF_DEMOD     0x00020000 /*IF demodulator power down control */
+#define PD_IFAF         0x00010000 /*IFAF power down control */
+#define PD_RSSI_SQUELCH 0x00008000 /*RSSI & noise squelch power down control */
+#define PD_REGBS        0x00004000 /*BS regulator power down control */
+#define PD_REGIF        0x00002000 /*IF regulator power down control */
+#define PD_BC           0x00001000 /*BC power down control */
+#define PD_DIV4         0x00000800 /*Divide-by-4 power down control */
+#define PD_5GVCO        0x00000400 /*5G VCO power down control */
+#define PD_SYN          0x00000200 /*SYN power down control */
+#define PD_AU6M         0x00000100 /*6M audio modulator power down control */
+#define PD_6M           0x00000080 /*6M power down control */
+#define PD_AU6M5        0x00000040 /*6M5 audio modulator power down control */
+#define PD_6M5          0x00000020 /*6M5 power down control */
+#define PD_REG1D8       0x00000010 /*1.8V regulator power down control */
+#define PD_IFABF        0x00000008 /*IFABF power down control */
+#define PD_MIXER        0x00000004 /*RF Mixer power down control */
+#define PD_DIV80        0x00000002 /*Divide-by-80 power down control */
+#define PD_PLL1D8       0x00000001 /*PLL 1.8V regulator power down control */
+
+//                       PD_VCLAMP | PD_VAMP | PD_IF_DEMOD | PD_IFAF | PD_REGIF | PD_DIV4 | PD_5GVCO | PD_SYN | PD_AU6M | PD_6M | PD_AU6M5 | PD_6M5 | PD_REG1D8 | PD_IFABF | PD_MIXER | PD_DIV80 | PD_PLL1D8
+
+// PD_IF_DEMOD, PD_REGIF, PD_IFABF, PD_MIXER, PD_REGBS, PD_RSSI_SQUELCH, PD_BC breaks rssi
+// PD_SYN decreases rssi extremely. not really usable
+// saves about 10mA
+#define LOW_POWER_STATE (PD_VCLAMP | PD_VAMP | PD_IFAF | PD_DIV4 | PD_5GVCO | PD_AU6M | PD_6M | PD_AU6M5 | PD_6M5 | PD_REG1D8 | PD_DIV80 | PD_PLL1D8)
+
 #include "RX5808.h"
 
 #include "HardwareConfig.h"
@@ -51,6 +79,8 @@ void InitSPI() {
   // Reset all modules to ensure they come back online in case they were offline without a power cycle (pressing the reset button)
   RXResetAll();
   delay(30);
+  rxLowPowerAll();
+  delay(30);
 }
 
 bool IRAM_ATTR isRxReady(uint8_t module) {
@@ -73,6 +103,12 @@ void rxWriteNode(uint8_t node, uint8_t addressBits, uint32_t dataBits) {
     lastUpdate[node] = micros();
     rxWrite(addressBits, dataBits, CS_PINS[node]);
   }
+}
+
+void rxLowPower(uint8_t node) {
+#ifdef USE_LOW_POWER
+	rxWriteNode(node, SPI_ADDRESS_POWER, LOW_POWER_STATE);
+#endif
 }
 
 
@@ -112,6 +148,12 @@ void RXResetAll() {
   for (int i = 0; i < getNumReceivers(); i++) {
     RXreset(i);
   }
+}
+
+void rxLowPowerAll() {
+	for (int i = 0; i < getNumReceivers(); i++) {
+		rxLowPower(i);
+	}
 }
 
 
