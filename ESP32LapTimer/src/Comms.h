@@ -31,5 +31,7 @@ void commsSetup();
 void thresholdModeStep();
 void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t NodeAddr, uint8_t length);
 bool isInRaceMode();
+void startRace();
+void stopRace();
 
 #endif // __COMMS_H__

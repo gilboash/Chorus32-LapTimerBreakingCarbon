@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<script src="jquery-3.3.1.min.js"></script>
+	<title>Chorus32 RF lap Timing System</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="stylesheet" href="assets/css/main.css" />
+	<link rel="stylesheet" href="assets/css/slider.css" />
+</head>
+
+<body>
+	<!-- OI you! get out of my source code!!! -->
+
+	<!-- Header -->
+	<section id="header">
+		<div class="inner">
+			<img src="flag.svg" height="250" width="250" style="padding:20px;"></a>
+			<h1>Welcome to your <strong>Chorus32</strong><br /> configuration Page<br />
+			</h1>
+			<p>From here you can change any settings on your timer<br />
+				<p>
+
+					<b>Firmware Rev. </b><var id="FirmVersion">1.0</var>
+					<p>
+		</div>
+	</section>
+
+	<section id="Status lap" class="main style1">
+		<div class="container">
+			<table style="width:100%">
+				<tr>
+					<th>
+						 <button type="button" onclick="var xhr = new XMLHttpRequest(); xhr.open('GET', 'start_race', false); xhr.send(); console.log('Starting race!')">Start Race</button> 
+					</th>
+					<th>
+						<button type="button" onclick="var xhr = new XMLHttpRequest(); xhr.open('GET', 'stop_race'); xhr.send();">Stop Race</button> 
+					</th>
+				</tr>
+			</table> 
+			 <table style="width:100%" id="lap_table">
+				<tr>
+					<th>Pilot</th>
+					<th>Avg Lap</th>
+					<th>Best Lap</th>
+				</tr>
+			</table> 
+	</section>
+<script src="get_static_lap_info.js"></script>
+<script src="update_laptimes.js"></script>
+</body>
+</html>
