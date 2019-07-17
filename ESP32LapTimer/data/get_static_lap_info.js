@@ -16,7 +16,7 @@ function requestData() {
 		var num_pilots = parseInt(data.num_pilots);
 		var num_laps = parseInt(data.num_laps);
 		
-		var table = document.getElementById("lap_table");
+		var table = document.getElementById("lap_table_default");
 		var i;
 		for(i = num_laps; i != 0 ; i--) {
 			var cell = table.rows[0].insertCell(1);

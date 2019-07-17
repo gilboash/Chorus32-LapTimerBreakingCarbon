@@ -125,8 +125,9 @@ void SendStaticVars(AsyncWebServerRequest* req) {
 }
 
 void send_laptimes(AsyncWebServerRequest* req) {
-  // example json: '{"lap_data" : [ {"pilot" : 0, "laps" : [4, 2, 3]}]}'
-  String json_string = "{\"lap_data\" : [";
+  // example json: '{"race_num": 5, "lap_data" : [ {"pilot" : 0, "laps" : [4, 2, 3]}]}'
+  String json_string = "{\"race_num\" : " + String(getRaceNum()) + ", \"count_first\": " + String(getCountFirstLap());
+  json_string += ", \"lap_data\" : [";
   for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
     if(isPilotActive(i)) {
       json_string += String("{\"pilot\" : ") + i + ", \"laps\" : [";

@@ -46,6 +46,8 @@ uint8_t getCurrentLap(uint8_t receiver);
 uint8_t getCountFirstLap();
 void setCountFirstLap(uint8_t shouldWaitForFirstLap);
 
+uint16_t getRaceNum();
+
 /// Sends unsent laps to the output queue
 void sendNewLaps();
 

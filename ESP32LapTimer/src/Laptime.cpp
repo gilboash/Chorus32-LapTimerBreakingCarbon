@@ -32,6 +32,7 @@ static int last_lap_sent[MAX_NUM_PILOTS];
 static uint32_t MinLapTime = 5000;  //this is in millis
 static uint32_t start_time = 0;
 static uint8_t count_first_lap = 0; // 0 means start table is before the laptimer, so first lap is not a full-fledged lap (i.e. don't respect min-lap-time for the very first lap)
+static uint16_t race_num = 0; // number of races
 
 void resetLaptimes() {
   memset(LapTimes, 0, MAX_NUM_PILOTS * MAX_LAPS_NUM * sizeof(LapTimes[0][0]));
@@ -112,6 +113,7 @@ uint8_t getCurrentLap(uint8_t receiver) {
 void startRaceLap() {
   resetLaptimes();
   start_time = millis();
+  ++race_num;
 }
 
 void setCountFirstLap(uint8_t shouldWaitForFirstLap) {
@@ -124,4 +126,8 @@ uint8_t getCountFirstLap() {
 
 void startRaceLap() {
 	start_time = millis();
+}
+
+uint16_t getRaceNum() {
+  return race_num;
 }

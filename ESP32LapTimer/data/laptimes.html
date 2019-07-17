@@ -8,6 +8,21 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<link rel="stylesheet" href="assets/css/main.css" />
 	<link rel="stylesheet" href="assets/css/slider.css" />
+	<style> 
+		/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+</style>
 </head>
 
 <body>
@@ -37,16 +52,50 @@
 					<th>
 						<button type="button" onclick="var xhr = new XMLHttpRequest(); xhr.open('GET', 'stop_race'); xhr.send();">Stop Race</button> 
 					</th>
+					<!-- TODO: export times button -->
 				</tr>
 			</table> 
-			 <table style="width:100%" id="lap_table">
-				<tr>
-					<th>Pilot</th>
-					<th>Avg Lap</th>
-					<th>Best Lap</th>
-				</tr>
-			</table> 
+			<div class="tab" id="round_buttons">
+			</div>
+			<div id="table_container">
+			</div> <!-- end container for tabs -->
+		</div>
 	</section>
+
+
+<div style="display:none">
+<table style="width:100%" id="lap_table_default">
+	<tr>
+		<th>Pilot</th>
+		<th>Avg Lap</th>
+		<th>Best Lap</th>
+	</tr>
+</table> 
+</div>
+
+<script>
+function openRound(evt, num) {
+  // Declare all variables
+  var i, tabcontent, tablinks;
+
+  // Get all elements with class="tabcontent" and hide them
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+
+  // Get all elements with class="tablinks" and remove the class "active"
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+
+  // Show the current tab, and add an "active" class to the button that opened the tab
+  document.getElementById("round_tab_content_" + num).style.display = "block";
+  evt.currentTarget.className += " active";
+}
+</script>
+	
 <script src="get_static_lap_info.js"></script>
 <script src="update_laptimes.js"></script>
 </body>
