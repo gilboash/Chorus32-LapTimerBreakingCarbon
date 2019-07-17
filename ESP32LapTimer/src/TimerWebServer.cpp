@@ -163,9 +163,6 @@ void ProcessGeneralSettingsUpdate(AsyncWebServerRequest* req) {
   String NumRXs = req->arg("NumRXs");
   EepromSettings.NumReceivers = (byte)NumRXs.toInt();
 
-
-  }
-  
   for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
     String enabled = req->arg("pilot_enabled_" + String(i));
     String multiplex_off = webServer.arg("pilot_multuplex_off_" + String(i));
