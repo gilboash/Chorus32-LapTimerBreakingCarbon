@@ -17,6 +17,7 @@
  */
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include <WiFiUdp.h>
 
 #include <esp_task_wdt.h>
 
@@ -72,6 +73,15 @@ void IRAM_ATTR adc_task(void* args) {
     watchdog_feed();
   }
 }
+
+void eeprom_task(void* args) {
+	const TickType_t xDelay = EEPROM_COMMIT_DELAY_MS / portTICK_PERIOD_MS;
+	while(42) {
+		EepromSettings.save();
+		vTaskDelay(xDelay);
+	}
+}
+
 
 void setup() {
   init_crash_detection();
