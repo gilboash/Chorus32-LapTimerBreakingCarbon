@@ -127,6 +127,7 @@ void SendStaticVars(AsyncWebServerRequest* req) {
     sendSTR += ", \"multiplex_off\" : " + String(isPilotMultiplexOff(i));
     sendSTR += ", \"band\" : " + String(getRXBandPilot(i));
     sendSTR += ", \"channel\" : " + String(getRXChannelPilot(i));
+    sendSTR += ", \"threshold\" : " + String(getRSSIThreshold(i) / 12.0);
     sendSTR += "}";
     if(i + 1 < MAX_NUM_PILOTS) {
       sendSTR += ",";
@@ -163,25 +164,25 @@ void ProcessGeneralSettingsUpdate(AsyncWebServerRequest* req) {
   EepromSettings.NumReceivers = (byte)NumRXs.toInt();
 
 
-  String Rssi = webServer.arg("RSSIthreshold");
-  int rssi = (byte)Rssi.toInt();
-  int value = rssi * 12;
-  for (int i = 0 ; i < MAX_NUM_PILOTS; i++) {
-    EepromSettings.RSSIthresholds[i] = value;
-    setRSSIThreshold(i, value);
   }
   
   for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
-    String enabled = webServer.arg("pilot_enabled_" + String(i));
+    String enabled = req->arg("pilot_enabled_" + String(i));
     String multiplex_off = webServer.arg("pilot_multuplex_off_" + String(i));
     setPilotActive(i, enabled == "on");
     setilotMultiplexOff(i, multiplex_off == "on");
     
-    String Band_str = webServer.arg("band" + String(i));
-    String Channel_str = webServer.arg("channel" + String(i));
+    String Band_str = req->arg("band" + String(i));
+    String Channel_str = req->arg("channel" + String(i));
     int band = (uint8_t)Band_str.toInt();
     int channel = (uint8_t)Channel_str.toInt();
     updateRx(band, channel, i);
+    
+    String Rssi = req->arg("RSSIthreshold" + String(i));
+    int rssi = (byte)Rssi.toInt();
+    int value = rssi * 12;
+    EepromSettings.RSSIthresholds[i] = value;
+    setRSSIThreshold(i, value);
   }
   
 

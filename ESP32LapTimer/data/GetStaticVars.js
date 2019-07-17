@@ -14,7 +14,6 @@
 			document.getElementById("ADCVBATmode").selectedIndex = parseInt(data.ADCVBATmode);
             document.getElementById("RXFilter").selectedIndex = parseInt(data.RXFilter);
 			document.getElementById('ADCcalibValue').value = parseFloat(data.ADCcalibValue);
-            document.getElementById('RSSIthreshold').value = updateRSSIThreshold(parseInt(data.RSSIthreshold))
             document.getElementById('WiFiProtocol').value = parseInt(data.WiFiProtocol);
             document.getElementById('WiFiChannel').value = parseInt(data.WiFiChannel);
             document.getElementById('displayTimeout').value = Math.floor(parseInt(data.displayTimeout) / 1000);
@@ -49,7 +48,12 @@
 
 			// channel selection
 			cell = row.insertCell(-1);
-			input_html = "<select name=\"channel" + i + "\" id=\"channel" + i + "\" style=\"width: 100%;\"><option value=\"0\">1</option><option value=\"1\">2</option><option value=\"2\">3</option><option value=\"3\">4</option><option value=\"4\">5</option><option value=\"5\">6</option><option value=\"6\">7</option><option value=\"7\">8</option></select>";
+			input_html = "<select name=\"channel" + i + "\" style=\"width: 100%;\"><option value=\"0\">1</option><option value=\"1\">2</option><option value=\"2\">3</option><option value=\"3\">4</option><option value=\"4\">5</option><option value=\"5\">6</option><option value=\"6\">7</option><option value=\"7\">8</option></select>";
+			cell.innerHTML = input_html;
+			
+			// RSSI threshold
+			cell = row.insertCell(-1);
+			input_html = "<input type=\"number\" name=\"RSSIthreshold" + i + "\" min=\"0\" max=\"342\" step=\"1\" value=" + pilots[i].threshold + ">";
 			cell.innerHTML = input_html;
 
 			// Enabled checkbox
