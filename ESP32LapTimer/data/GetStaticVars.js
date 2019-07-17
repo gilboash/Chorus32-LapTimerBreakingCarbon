@@ -20,7 +20,6 @@
             document.getElementById('displayTimeout').value = Math.floor(parseInt(data.displayTimeout) / 1000);
            
             createPilotSettings(data);
-            createBandChannel(data.NumRXs);
             updateBandChannel(data);
           }
         }else{requestData() }
@@ -35,21 +34,34 @@
     
     function createPilotSettings(data) {
 		var pilots = data.pilot_data;
-		console.log(pilots);
 		for(var i = 0; i < data.pilot_data.length; ++i) {
 			var table = document.getElementById('pilot_table');
 			var row = table.insertRow(-1);
 			row.insertCell(-1).innerText = pilots[i].number;
-			var cell = row.insertCell(-1);
+			var cell;
 			var input_html = "";
+
+			// band selection
+			cell = row.insertCell(-1);
+			input_html = "<select style=\"width: 80%;\" name=\"band" + pilots[i].number + "\" id=\"band" + pilots[i].number + "\">";
+			input_html += "<option selected=\"\" value=\"0\">R</option><option value=\"1\">A</option><option value=\"2\">B</option><option value=\"3\">E</option><option value=\"4\">F</option><option value=\"5\">D</option><option value=\"6\">Connex</option><option value=\"7\">Connex2</option></select>";
+			cell.innerHTML = input_html;
+
+			// channel selection
+			cell = row.insertCell(-1);
+			input_html = "<select name=\"channel" + i + "\" id=\"channel" + i + "\" style=\"width: 100%;\"><option value=\"0\">1</option><option value=\"1\">2</option><option value=\"2\">3</option><option value=\"3\">4</option><option value=\"4\">5</option><option value=\"5\">6</option><option value=\"6\">7</option><option value=\"7\">8</option></select>";
+			cell.innerHTML = input_html;
+
+			// Enabled checkbox
+			cell = row.insertCell(-1);
 			input_html= "<input type='checkbox' name='pilot_enabled_" + pilots[i].number + "'";
 			if(pilots[i].enabled) {
 				input_html += "checked";
 			}
 			input_html += ">";
-			console.log(input_html);
 			cell.innerHTML = input_html;
 			
+			// multiplex checkbox
 			cell = row.insertCell(-1);
 			input_html = "<input type='checkbox' name='pilot_multuplex_off_" + pilots[i].number + "'";
 			if(pilots[i].multiplex_off) {
@@ -57,51 +69,12 @@
 			}
 			input_html += ">";
 			cell.innerHTML = input_html;
-			console.log(table);
 		}
 	}
-    
-    function createBandChannel(numRXs) {
-        numRXs = numRXs +1;
-        for(var i=1;i<=numRXs;i++){ // GENERATE HTML
-            $("#bandChannel").append('<fieldset class="bandChannel" id="RX'+i+'">');
-            $("#RX"+i).append('<legend id=legenditem'+i+'>RX '+i+'</legend>');
-            $("#RX"+i).append('<table class="tg" id="table'+i+'">');
-            $("#table"+i).append('<tr>');
-            $("#table"+i).append('<td class="table-cell-text">Band:</td>');
-            $("#table"+i).append('<td class="table-cell">')
-            $("#table"+i).append('<select name="band'+i+'" id="band'+i+'">')
-            document.getElementById("band"+i).style.width = "80%";
-            $("#band"+i).append('<option selected value="0">R</option>')
-            $("#band"+i).append('<option value="1">A</option>')
-            $("#band"+i).append('<option value="2">B</option>')
-            $("#band"+i).append('<option value="3">E</option>')
-            $("#band"+i).append('<option value="4">F</option>')
-            $("#band"+i).append('<option value="5">D</option>')
-            $("#band"+i).append('<option value="6">Connex</option>')
-            $("#band"+i).append('<option value="7">Connex2</option>')
-            $("#table"+i).append('</select></td>')
-            $("#table"+i).append('<td class="table-cell-text"> Channel:</td>');
-            $("#table"+i).append('<select name="channel'+i+'" id="channel'+i+'">')
-            document.getElementById("channel"+i).style.width = "100%";
-            $("#channel"+i).append('<option value="0">1</option>')
-            $("#channel"+i).append('<option value="1">2</option>')
-            $("#channel"+i).append('<option value="2">3</option>')
-            $("#channel"+i).append('<option value="3">4</option>')
-            $("#channel"+i).append('<option value="4">5</option>')
-            $("#channel"+i).append('<option value="5">6</option>')
-            $("#channel"+i).append('<option value="6">7</option>')
-            $("#channel"+i).append('<option value="7">8</option>')
-            $("#table"+i).append('</select></td>')
-            $("#table"+i).append('</tr>');
-            $("#bandChannel").append('</fieldset>');
-        }
-    }
+
     function updateBandChannel(data){
-        max = data.NumRXs + 1
-        for(var i=0;i<max;i++){
-            var j = i +1
-            $('#band'+j).val(data.Band[i]);
-            $('#channel'+j).val(data.Channel[i]);
+        for(var i=0;i<data.pilot_data.length;i++){
+            $('#band'+i).val(data.pilot_data[i].band);
+            $('#channel'+i).val(data.pilot_data[i].channel);
         }
     }
