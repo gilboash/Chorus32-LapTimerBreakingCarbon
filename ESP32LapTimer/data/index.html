@@ -92,7 +92,6 @@
 						</legend>
 						<br>Number of Receivers:</br>
 						<select name="NumRXs" id="NumRXs">
-
 							<option value="1">1</option>
 							<option value="2">2</option>
 							<option value="3">3</option>
@@ -101,22 +100,8 @@
 							<option value="6">6</option>
 							<option selected value="7"></option>
 						</select>
-						<div id="bandChannel">
-							<br>Band and channel:</br>
-						</div>
-						<br>
 						<label for="RSSIthreshold">RSSI Threshold (0-341):</label>
 						<input type="number" id="RSSIthreshold" name="RSSIthreshold" min="0" max="342" step="1"></br><br></br>
-						<!-- <div id="bandChannel" name="channel_and_band">
-						</div> -->
-
-						<!--Serial UART Mode:<br>
-							<select name="UART_Mode">
-								<option value="OFF">Debug Only</option>
-								<option value="Mirror">Mirror Control Packets</option>
-								<option selected value="DebugMirror">Serial Debug + Mirror</option>
-							</select>
-						<br> -->
 						<!-- TODO: Disable checkboxes if config would result in a lockup -->
 						<div id="pilot_settings_div">
 							<h4>Pilot settings</h4>
