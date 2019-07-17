@@ -119,8 +119,18 @@ void SendStaticVars(AsyncWebServerRequest* req) {
     }
   }
   sendSTR = sendSTR + "}";
-  sendSTR = sendSTR +  "}";
+  sendSTR += ",\"pilot_data\" : [";
+  for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
+    sendSTR += "{\"number\" : " + String(i);
+    sendSTR += ", \"enabled\" : " + String(isPilotActive(i));
+    sendSTR += ", \"multiplex_off\" : " + String(isPilotMultiplexOff(i));
+    sendSTR += "}";
+    if(i + 1 < MAX_NUM_PILOTS) {
+      sendSTR += ",";
+    }
+  }
 
+  sendSTR = sendSTR +  "]}";
   req->send(200, "application/json", sendSTR);
 }
 

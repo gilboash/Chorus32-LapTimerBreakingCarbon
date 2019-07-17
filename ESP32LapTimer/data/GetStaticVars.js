@@ -18,9 +18,10 @@
             document.getElementById('WiFiProtocol').value = parseInt(data.WiFiProtocol);
             document.getElementById('WiFiChannel').value = parseInt(data.WiFiChannel);
             document.getElementById('displayTimeout').value = Math.floor(parseInt(data.displayTimeout) / 1000);
-
-            createBandChannel(data.NumRXs)
-            updateBandChannel(data)
+           
+            createPilotSettings(data);
+            createBandChannel(data.NumRXs);
+            updateBandChannel(data);
           }
         }else{requestData() }
       };
@@ -31,6 +32,35 @@
         var result = rssi / 12;
         return Math.floor(result)
     }
+    
+    function createPilotSettings(data) {
+		var pilots = data.pilot_data;
+		console.log(pilots);
+		for(var i = 0; i < data.pilot_data.length; ++i) {
+			var table = document.getElementById('pilot_table');
+			var row = table.insertRow(-1);
+			row.insertCell(-1).innerText = pilots[i].number;
+			var cell = row.insertCell(-1);
+			var input_html = "";
+			input_html= "<input type='checkbox' name='pilot_enabled_" + pilots[i].number + "'";
+			if(pilots[i].enabled) {
+				input_html += "checked";
+			}
+			input_html += ">";
+			console.log(input_html);
+			cell.innerHTML = input_html;
+			
+			cell = row.insertCell(-1);
+			input_html = "<input type='checkbox' name='pilot_multuplex_off_" + pilots[i].number + "'";
+			if(pilots[i].multiplex_off) {
+				input_html += "checked";
+			}
+			input_html += ">";
+			cell.innerHTML = input_html;
+			console.log(table);
+		}
+	}
+    
     function createBandChannel(numRXs) {
         numRXs = numRXs +1;
         for(var i=1;i<=numRXs;i++){ // GENERATE HTML

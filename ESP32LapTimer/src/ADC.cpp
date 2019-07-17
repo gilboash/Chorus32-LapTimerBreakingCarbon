@@ -447,3 +447,11 @@ void setPilotBand(uint8_t pilot, uint8_t band) {
   setPilotActive(pilot, false);
   setPilotActive(pilot, true);
 }
+
+bool isPilotMultiplexOff(uint8_t pilot) {
+	return pilots[pilot].disable_multiplexing;
+}
+
+void setilotMultiplexOff(uint8_t pilot, bool off) {
+	pilots[pilot].disable_multiplexing = off;
+}

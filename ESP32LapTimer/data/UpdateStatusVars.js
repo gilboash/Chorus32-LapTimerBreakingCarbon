@@ -18,21 +18,21 @@
 			var data = JSON.parse(StatusData);
 
             document.getElementById("Var_VBAT").innerText = data.Var_VBAT.toFixed(2);
-            document.getElementById("Var_WifiClients").innerText = data.Var_WifiClients;
-            document.getElementById("Var_CurrMode").innerText = data.Var_CurrMode;
+            //document.getElementById("Var_WifiClients").innerText = data.Var_WifiClients;
+            //document.getElementById("Var_CurrMode").innerText = data.Var_CurrMode;
 
           } else { // a problem occurred
 
             document.getElementById("Var_VBAT").innerText = "?";
-            document.getElementById("Var_WifiClients").innerText = "?";
-            document.getElementById("Var_CurrMode").innerText = "?";
+            //document.getElementById("Var_WifiClients").innerText = "?";
+            //document.getElementById("Var_CurrMode").innerText = "?";
           }
         } else {
           console.log('Request failed.  Returned status of ' + xhr.status);
 
           document.getElementById("Var_VBAT").innerText = "?";
-          document.getElementById("Var_WifiClients").innerText = "?";
-          document.getElementById("Var_CurrMode").innerText = "?";
+          //document.getElementById("Var_WifiClients").innerText = "?";
+          //document.getElementById("Var_CurrMode").innerText = "?";
 
         }
       };
