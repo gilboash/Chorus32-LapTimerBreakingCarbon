@@ -76,6 +76,7 @@ typedef struct pilot_data_s {
   receiver_data_t* current_rx;
   uint8_t number;
   uint32_t unused_time; // used to force a certain stay time. if we allow an instant switch, modules would be constantly switching with e.g. 6 modules and 7 pilots
+  bool disable_multiplexing; // don't switch this pilot. scenario: 3 modules installed with 4 pilots. 2 pilots really care about their time and the other 2 just want to see their approximate time. so fix the first two pilots and the remaining module multiplexes the other 2
 } pilot_data_t;
 
 typedef struct receiver_data_s {
@@ -108,6 +109,10 @@ uint16_t multisample_adc1(adc1_channel_t channel, uint8_t samples) {
  * \returns if a different pilot was found.
  */
 static IRAM_ATTR bool setNextPilot(uint8_t adc) {
+  // skip this receiver if the assigned pilot is fixed
+  if(receivers[adc].current_pilot && receivers[adc].current_pilot->disable_multiplexing) {
+    return false;
+  }
   if(!xSemaphoreTake(pilot_queue_lock, 1)) {
     // failed to obtain mutex, so do nothing
     return false;
@@ -190,6 +195,15 @@ void ConfigureADC() {
     setPilotActive(i, true);
   }
   filter_init(&adc_voltage_filter, ADC_VOLTAGE_CUTOFF, VOLTAGE_UPDATE_INTERVAL_MS/1000.0);
+  uint16_t voltage = getVbatFloat(true) * 1000;
+  Serial.printf("Voltage is %d minimum is %d\n", voltage, getMinVoltageModule());
+  if(voltage > getMinVoltageModule()) {
+    // By default enable getNumReceivers() pilots
+    for(uint8_t i = 0; i < getNumReceivers() && i < MAX_NUM_PILOTS; ++i)  {
+      setPilotActive(i, true);
+    }
+  }
+  
 }
 
 adc1_channel_t IRAM_ATTR getADCChannel(uint8_t adc_num) {
