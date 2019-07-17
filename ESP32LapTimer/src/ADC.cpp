@@ -56,6 +56,14 @@ static uint8_t current_pilot_num = 0;
 
 static lowpass_filter_t adc_voltage_filter;
 
+#ifdef DEBUG_SIGNAL_LOG
+// Use the memory we have ;) should be sufficient for around 1sec of full data
+// any more and the web ui won't work anymore due to heavy use of dynamic allocation
+#define DEBUG_SIGNAL_LOG_SIZE 6000
+static uint16_t readings[DEBUG_SIGNAL_LOG_SIZE];
+static uint32_t readings_pos = 0;
+#endif
+
 enum pilot_state {
   PILOT_UNUSED,
   PILOT_ACTIVE,
@@ -146,6 +154,9 @@ static IRAM_ATTR bool setNextPilot(uint8_t adc) {
 }
 
 void ConfigureADC() {
+  #ifdef DEBUG_SIGNAL_LOG
+  memset(readings, 0, DEBUG_SIGNAL_LOG_SIZE * sizeof(uint16_t));
+  #endif
   
   pilot_queue_lock = xSemaphoreCreateMutex();
   pilots_lock = xSemaphoreCreateMutex();
@@ -230,7 +241,13 @@ void IRAM_ATTR nbADCread( void * pvParameters ) {
           CheckRSSIthresholdExceeded(receivers[current_adc].current_pilot->number);
         }
         
-        if(current_pilot->number == 0) ++adcLoopCounter;
+        if(current_pilot->number == 0){
+           ++adcLoopCounter;
+           #ifdef DEBUG_SIGNAL_LOG
+           readings[readings_pos] = current_pilot->ADCReadingRAW;
+           readings_pos = (readings_pos + 1) % DEBUG_SIGNAL_LOG_SIZE;
+           #endif
+         }
       }
     } // end if isRxReady
     xSemaphoreGive(pilots_lock);

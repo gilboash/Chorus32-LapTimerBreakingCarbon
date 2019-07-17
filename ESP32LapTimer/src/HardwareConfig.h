@@ -89,6 +89,9 @@
   #define INPUT_DEBUG
 #endif
 
+//#define DEBUG_FILTER // uncomment to constantly print out the raw and filtered data of pilot 1
+//#define DEBUG_SIGNAL_LOG // uncomment to print out raw adc data from pilot 1 when finishing a lap. debug only!! about 1 secs of 6khz data
+
 #include "targets/target.h" // Needs to be at the bottom
 
 #ifndef EEPROM_DEFAULT_MIN_VOLTAGE_MODULE
