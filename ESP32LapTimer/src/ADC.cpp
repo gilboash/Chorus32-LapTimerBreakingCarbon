@@ -173,27 +173,10 @@ void ConfigureADC() {
 
   ina219.begin();
   ReadVBAT_INA219();
-  float cutoff = 0;
-  switch (getRXADCfilter()) {
-  case LPF_10Hz:
-    cutoff = 10;
-    break;
-  case LPF_20Hz:
-    cutoff = 20;
-    break;
-  case LPF_50Hz:
-    cutoff = 50;
-    break;
-  case LPF_100Hz:
-    cutoff = 100;
-    break;
-  }
+  uint16_t cutoff = getRXADCfilterCutoff();
 
   setPilotFilters(cutoff);
-  // By default enable getNumReceivers() pilots
-  for(uint8_t i = 0; i < getNumReceivers() && i < MAX_NUM_PILOTS; ++i)  {
-    setPilotActive(i, true);
-  }
+
   filter_init(&adc_voltage_filter, ADC_VOLTAGE_CUTOFF, VOLTAGE_UPDATE_INTERVAL_MS/1000.0);
   uint16_t voltage = getVbatFloat(true) * 1000;
   Serial.printf("Voltage is %d minimum is %d\n", voltage, getMinVoltageModule());

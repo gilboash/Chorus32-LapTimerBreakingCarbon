@@ -103,7 +103,7 @@ void SendStatusVars(AsyncWebServerRequest* req) {
 
 void SendStaticVars(AsyncWebServerRequest* req) {
   // TODO: implement dynamic lap number
-  String sendSTR = "{\"displayTimeout\": " + String(getDisplayTimeout()) + ", \"num_pilots\": " + String(getActivePilots()) + ", \"num_laps\": " + String(5) + ", \"NumRXs\": " + String(getNumReceivers() - 1) + ", \"ADCVBATmode\": " + String(getADCVBATmode()) + ", \"RXFilter\": " + String(getRXADCfilter()) + ", \"ADCcalibValue\": " + String(getVBATcalibration(), 3) + ", \"RSSIthreshold\": " + String(getRSSIThreshold(0)) + ", \"WiFiChannel\": " + String(getWiFiChannel()) + ", \"WiFiProtocol\": " + String(getWiFiProtocol());
+  String sendSTR = "{\"displayTimeout\": " + String(getDisplayTimeout()) + ", \"num_pilots\": " + String(getActivePilots()) + ", \"num_laps\": " + String(5) + ", \"NumRXs\": " + String(getNumReceivers() - 1) + ", \"ADCVBATmode\": " + String(getADCVBATmode()) + ", \"RXFilterCutoff\": " + String(getRXADCfilterCutoff()) + ", \"ADCcalibValue\": " + String(getVBATcalibration(), 3) + ", \"RSSIthreshold\": " + String(getRSSIThreshold(0)) + ", \"WiFiChannel\": " + String(getWiFiChannel()) + ", \"WiFiProtocol\": " + String(getWiFiProtocol());
   sendSTR = sendSTR + ",\"Band\":{";
   for (int i = 0; i < getNumReceivers(); i++) {
     sendSTR = sendSTR + "\"" + i + "\":" + EepromSettings.RXBand[i];
@@ -213,9 +213,9 @@ void ProcessVBATModeUpdate(AsyncWebServerRequest* req) {
 }
 
 void ProcessADCRXFilterUpdate(AsyncWebServerRequest* req) {
-  String inRXFilter = req->arg("RXFilter");
-  setRXADCfilter((RXADCfilter_)(byte)inRXFilter.toInt());
-  EepromSettings.RXADCfilter = getRXADCfilter();
+  String inRXFilter = webServer.arg("RXFilterCutoff");
+  setRXADCfilterCutoff(inRXFilter.toInt());
+  EepromSettings.RXADCfilterCutoff = getRXADCfilterCutoff();
 
   req->redirect("/redirect.html");
   setSaveRequired();

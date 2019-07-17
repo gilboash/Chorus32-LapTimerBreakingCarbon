@@ -12,7 +12,7 @@
 			var data = JSON.parse(StatusData); //yeah not sure why I need to do this twice, but otherwise it doesn't work....
             document.getElementById("NumRXs").selectedIndex = parseInt(data.NumRXs);
 			document.getElementById("ADCVBATmode").selectedIndex = parseInt(data.ADCVBATmode);
-            document.getElementById("RXFilter").selectedIndex = parseInt(data.RXFilter);
+            document.getElementById("RXFilterCutoff").value = parseInt(data.RXFilterCutoff);
 			document.getElementById('ADCcalibValue').value = parseFloat(data.ADCcalibValue);
             document.getElementById('WiFiProtocol').value = parseInt(data.WiFiProtocol);
             document.getElementById('WiFiChannel').value = parseInt(data.WiFiChannel);

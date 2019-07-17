@@ -20,7 +20,6 @@
 #include "HardwareConfig.h"
 #include "crc.h"
 
-enum RXADCfilter_ {LPF_10Hz, LPF_20Hz, LPF_50Hz, LPF_100Hz};
 enum ADCVBATmode_ {OFF, ADC_CH5, ADC_CH6, INA219};
 
 #define MaxChannel 7
@@ -29,7 +28,6 @@ enum ADCVBATmode_ {OFF, ADC_CH5, ADC_CH6, INA219};
 #define MaxFreq 5945
 #define MinFreq 5180
 
-#define MaxADCFilter 3
 #define MaxVbatMode 3
 #define MaxVBATCalibration 100.00
 #define MaxThreshold 4095
@@ -39,7 +37,7 @@ struct EepromSettingsStruct {
   uint8_t RXBand[MAX_NUM_PILOTS];
   uint8_t RXChannel[MAX_NUM_PILOTS];
   uint16_t RSSIthresholds[MAX_NUM_PILOTS];
-  RXADCfilter_ RXADCfilter;
+  uint16_t RXADCfilterCutoff;
   ADCVBATmode_ ADCVBATmode;
   float VBATcalibration;
   uint8_t NumReceivers;
@@ -64,10 +62,10 @@ struct EepromSettingsStruct {
 
 extern EepromSettingsStruct EepromSettings;
 
-RXADCfilter_ getRXADCfilter();
 ADCVBATmode_ getADCVBATmode();
+uint16_t getRXADCfilterCutoff();
 
-void setRXADCfilter(RXADCfilter_ filter);
+void setRXADCfilterCutoff(uint16_t cutoff);
 void setADCVBATmode(ADCVBATmode_ mode);
 
 int getWiFiChannel();

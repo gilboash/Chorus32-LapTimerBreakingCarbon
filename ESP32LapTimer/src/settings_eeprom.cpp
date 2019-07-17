@@ -129,11 +129,12 @@ void EepromSettingsStruct::defaults() {
 
   settings.eepromVersionNumber = EEPROM_VERSION_NUMBER;
   settings.ADCVBATmode = INA219;
-  settings.RXADCfilter = LPF_20Hz;
+  settings.RXADCfilterCutoff = 20;
   settings.VBATcalibration = 1;
   settings.NumReceivers = 6;
   settings.WiFiProtocol = 1;
   settings.WiFiChannel = 1;
+  settings.min_voltage_module = EEPROM_DEFAULT_MIN_VOLTAGE_MODULE;
 
   settings.updateCRC();
 
@@ -158,16 +159,17 @@ bool EepromSettingsStruct::validateCRC(){
   return this->crc == this->calcCRC();
 }
 
-RXADCfilter_ getRXADCfilter() {
-  return EepromSettings.RXADCfilter;
+
+uint16_t getRXADCfilterCutoff() {
+  return EepromSettings.RXADCfilterCutoff;
 }
 
 ADCVBATmode_ getADCVBATmode() {
   return EepromSettings.ADCVBATmode;
 }
 
-void setRXADCfilter(RXADCfilter_ filter) {
-  EepromSettings.RXADCfilter = filter;
+void setRXADCfilterCutoff(uint16_t cutoff) {
+  EepromSettings.RXADCfilterCutoff = cutoff;
 }
 
 void setADCVBATmode(ADCVBATmode_ mode) {
@@ -195,4 +197,8 @@ uint16_t getMinVoltageModule() {
 
 uint32_t getDisplayTimeout() {
   return EepromSettings.display_timeout_ms;
+}
+
+uint16_t getFilterCutoff() {
+  return EepromSettings.RXADCfilterCutoff;
 }

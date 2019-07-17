@@ -166,15 +166,8 @@
 						<legend>
 							<h2><b>Filtering</b></h2>
 						</legend>
-						RX ADC Filter<br>
-						<select name="RXFilter" id="RXFilter">
-							<option value="0">10Hz Bessel LPF</option>
-							<option value="1">20Hz Bessel LPF</option>
-							<option value="2">50Hz Bessel LPF</option>
-							<option value="3">100Hz Bessel LPF</option>
-							<option selected value="4"></option>
-
-						</select>
+						RX ADC Filter cutoff<br>
+						<input type="int" name="RXFilterCutoff" min="0" max="1000" value="" id="RXFilterCutoff">
 						<br>
 						<input type="submit" value="&nbsp;Update&nbsp;">
 					</fieldset>
