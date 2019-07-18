@@ -39,49 +39,52 @@ def mask_data(data: List[int], threshold: int, grace_samples: int) -> Tuple[np.m
 		else:
 			upper_mask.append(1)
 			lower_mask.append(0)
-	
+
 	upper_data = np.ma.array(data, mask=upper_mask)
 	lower_data = np.ma.array(data, mask=lower_mask)
 	
 	return (upper_data, lower_data)
 
-def plot_data(data: List[int], threshold: int, grace_samples: int, lowpass: lowpass_filter, plot_magnitude:bool = False):
+def plot_data(data: List[int], threshold: int, grace_samples: int, lowpass_filters: List[lowpass_filter], plot_magnitude:bool = False):
 	raw_data = np.array(data)
-	lowpass.state = raw_data[0]
-	
+	for lowpass in lowpass_filters:
+		lowpass.state = raw_data[0]
+
 	raw_max = [0, 0]
 	filtered_max = [0, 0]
-	
-	
+
 	filtered_data = []
 	i = 0
 	for data_point in raw_data:
-		filtered_data.append(lowpass.add_value(data_point))
+		val = data_point
+		for lowpass in lowpass_filters:
+			val = lowpass.add_value(val)
+		filtered_data.append(val)
 		if filtered_max[0] < filtered_data[-1]:
 			filtered_max[0] = filtered_data[-1]
 			filtered_max[1] = i
 		if raw_max[0] < data_point:
 			raw_max[0] = data_point
 			raw_max[1] = i
-		
+
 		i += 1
-	
+
 	t = np.arange(0.0, len(raw_data), 1)
 
 	# not used to be more flexible with sample num
 	#upper_data = np.ma.masked_where(raw_data >= threshold, raw_data)
 	#lower_data = np.ma.masked_where(raw_data < threshold, raw_data)
-	
+
 	upper_data, lower_data = mask_data(raw_data, threshold, grace_samples)
 	upper_data_filtered, lower_data_filtered = mask_data(filtered_data, threshold, grace_samples)
-	
+
 	if plot_magnitude:
 		fig, ((ax_data, ax_magitude)) = plt.subplots(2, 1)
 		normalized_data = raw_data - np.mean(raw_data)
 		ax_magitude.magnitude_spectrum(normalized_data, Fs=args.sampling, scale=args.scale)
 	else:
 		fig, ax_data = plt.subplots(1, 1)
-		
+
 	ax_data.plot(t, lower_data, t, upper_data)
 	ax_data.plot(t, lower_data_filtered, t, upper_data_filtered)
 	ax_data.axhline(y=threshold, color='r')
@@ -99,9 +102,11 @@ if __name__ == "__main__":
 	parser.add_argument("-x", "--scale", dest="scale", help="Scaling of the frequency graph (dB, linear) [default: %(default)s]", type=str, default="dB")
 	parser.add_argument("-t", "--threshold", dest="threshold", help="Threshold for coloring (like shown in the app) [default: %(default)d]", type=int, default=150)
 	parser.add_argument("-c", "--cutoff", dest="cutoff", help="Lowpass filter cutoff [default: %(default)d]", type=int, default=20)
+	parser.add_argument("--filter-sampling", dest="filter_sampling", help="Separate filter sampling rate [default: %(default)dHz]", type=int, default=6000)
+	parser.add_argument("--filter-num", dest="filter_num", help="Number of lowpass filters [default: %(default)d]", type=int, default=1)
 	parser.add_argument("-m", "--magnitude", dest="enable_magnitude", help="Enable magnitude graph", action='store_true')
 	args = parser.parse_args()
-	
+
 	data_list = []
 	if args.input is None:
 		parser.print_help()
@@ -118,9 +123,12 @@ if __name__ == "__main__":
 			if line == "_\n": # beginning of data
 				inside_data = True
 				data_list.append([])
-				
+
 	print("Got {} sets of data".format(len(data_list)))
 
 	for data in data_list:
-		plot_data(data, args.threshold * 12, 500, lowpass_filter(args.cutoff, 1/args.sampling), args.enable_magnitude)
+		filters = []
+		for i in range(args.filter_num):
+			filters.append(lowpass_filter(args.cutoff, 1/args.filter_sampling))
+		plot_data(data, args.threshold * 12, 500, filters, args.enable_magnitude)
 	plt.show()
