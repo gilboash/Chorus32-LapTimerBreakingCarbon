@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from argparse import ArgumentParser, RawTextHelpFormatter
 import math
 
-from typing import List
+from typing import List, Tuple
 
 
 class lowpass_filter:
@@ -22,7 +22,7 @@ class lowpass_filter:
 	def adjust_dt(self, dt: float):
 		self.alpha = dt / (self.RC + dt)
 
-def mask_data(data, threshold, grace_samples):
+def mask_data(data: List[int], threshold: int, grace_samples: int) -> Tuple[np.ma.array, np.ma.array]:
 	samples = grace_samples
 	upper_mask = []
 	lower_mask = []
@@ -44,7 +44,7 @@ def mask_data(data, threshold, grace_samples):
 	
 	return (upper_data, lower_data)
 
-def plot_data(data: List[int], threshold, grace_samples, lowpass: lowpass_filter, plot_magnitude:bool = False):
+def plot_data(data: List[int], threshold: int, grace_samples: int, lowpass: lowpass_filter, plot_magnitude:bool = False):
 	raw_data = np.array(data)
 	lowpass.state = raw_data[0]
 	
