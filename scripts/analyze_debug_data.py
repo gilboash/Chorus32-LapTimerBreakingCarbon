@@ -6,7 +6,20 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 import math
 import sys
 
+import scipy.signal
+
 from typing import List, Tuple
+
+def scipy_lowpass(cutoff, fs, order=5, function=scipy.signal.butter):
+	nyq = 0.5 * fs
+	normal_cutoff = cutoff / nyq
+	b, a = function(order, normal_cutoff, btype='low', analog=False)
+	return b, a
+
+def scipy_lowpass_filter(data, cutoff, fs, order=5, function=scipy.signal.butter):
+	b, a = scipy_lowpass(cutoff, fs, order=order, function=function)
+	y = scipy.signal.lfilter(b, a, data)
+	return y
 
 
 class lowpass_filter:
@@ -45,10 +58,17 @@ def mask_data(data: List[int], threshold: int, grace_samples: int) -> Tuple[np.m
 	
 	return (upper_data, lower_data)
 
-def plot_data(data: List[int], threshold: int, grace_samples: int, lowpass_filters: List[lowpass_filter], plot_magnitude:bool = False):
+def plot_data(data: List[int], threshold: int, grace_samples: int, filter_cutoff, filter_num, filter_sampling, plot_magnitude:bool = False, scipy_filter = None):
+	
+	lowpass_filters = []
+	for i in range(args.filter_num):
+		lowpass_filters.append(lowpass_filter(filter_cutoff, 1/filter_sampling))
+	
 	raw_data = np.array(data)
 	for lowpass in lowpass_filters:
-		lowpass.state = raw_data[0]
+		# Only apply this if we have no filter to compare to. No clue on how to set the initial value
+		if scipy_filter is None:
+			lowpass.state = raw_data[0]
 
 	raw_max = [0, 0]
 	filtered_max = [0, 0]
@@ -68,6 +88,10 @@ def plot_data(data: List[int], threshold: int, grace_samples: int, lowpass_filte
 			raw_max[1] = i
 
 		i += 1
+	
+	filtered_data2 = 0
+	if scipy_filter is not None:
+		filtered_data2 = scipy_lowpass_filter(raw_data, filter_cutoff, filter_sampling, filter_num, scipy_filter)
 
 	t = np.arange(0.0, len(raw_data), 1)
 
@@ -87,6 +111,9 @@ def plot_data(data: List[int], threshold: int, grace_samples: int, lowpass_filte
 
 	ax_data.plot(t, lower_data, t, upper_data)
 	ax_data.plot(t, lower_data_filtered, t, upper_data_filtered)
+	if scipy_filter is not None:
+		ax_data.plot(t, filtered_data2, label="Scipy filter")
+
 	ax_data.axhline(y=threshold, color='r')
 	ax_data.axvline(x=raw_max[1], color='r', label="raw max: difference {0:.2f}ms".format(abs(raw_max[1] - filtered_max[1]) * (1/args.sampling) * 1000))
 	ax_data.axvline(x=filtered_max[1], label="filtered max: difference {} samples".format(abs(raw_max[1] - filtered_max[1])))
@@ -104,6 +131,7 @@ if __name__ == "__main__":
 	parser.add_argument("-c", "--cutoff", dest="cutoff", help="Lowpass filter cutoff [default: %(default)d]", type=int, default=20)
 	parser.add_argument("--filter-sampling", dest="filter_sampling", help="Separate filter sampling rate [default: %(default)dHz]", type=int, default=6000)
 	parser.add_argument("--filter-num", dest="filter_num", help="Number of lowpass filters [default: %(default)d]", type=int, default=1)
+	parser.add_argument("--filter-scipy", dest="scipy_filter", help="Scipy filter to compare. Valid are butter and bessel. Order is determined by filter-num", type=str, default=None)
 	parser.add_argument("-m", "--magnitude", dest="enable_magnitude", help="Enable magnitude graph", action='store_true')
 	args = parser.parse_args()
 
@@ -126,9 +154,12 @@ if __name__ == "__main__":
 
 	print("Got {} sets of data".format(len(data_list)))
 
+	scipy_filter = None
+	if args.scipy_filter == "bessel":
+		scipy_filter = scipy.signal.bessel
+	elif args.scipy_filter == "butter":
+		scipy_filter = scipy.signal.butter
+
 	for data in data_list:
-		filters = []
-		for i in range(args.filter_num):
-			filters.append(lowpass_filter(args.cutoff, 1/args.filter_sampling))
-		plot_data(data, args.threshold * 12, 500, filters, args.enable_magnitude)
+		plot_data(data, args.threshold * 12, 500, args.cutoff, args.filter_num, args.filter_sampling, args.enable_magnitude, scipy_filter)
 	plt.show()
