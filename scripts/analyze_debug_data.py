@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from argparse import ArgumentParser, RawTextHelpFormatter
 import math
+import sys
 
 from typing import List, Tuple
 
@@ -94,14 +95,18 @@ def plot_data(data: List[int], threshold: int, grace_samples: int, lowpass: lowp
 if __name__ == "__main__":
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument("-i", "--input", dest="input", help="Path to input file", type=str)
-	parser.add_argument("-s", "--sampling", dest="sampling", help="Sampling rate in Hz [default: %(default)Hz]", type=int, default=6000)
-	parser.add_argument("-x", "--scale", dest="scale", help="Scaling of the frequency graph (dB, linear) [default: %(default)]", type=str, default="dB")
-	parser.add_argument("-t", "--threshold", dest="threshold", help="Threshold for coloring (like shown in the app) [default: %(default)]", type=int, default=150)
-	parser.add_argument("-c", "--cutoff", dest="cutoff", help="Lowpass filter cutoff [default: %(default)]", type=int, default=20)
-	parser.add_argument("-m", "--magnitude", dest="enable_magnitude", help="Enable magnitude graph [default: %(default)]", action='store_true')
+	parser.add_argument("-s", "--sampling", dest="sampling", help="Sampling rate in Hz [default: %(default)dHz]", type=int, default=6000)
+	parser.add_argument("-x", "--scale", dest="scale", help="Scaling of the frequency graph (dB, linear) [default: %(default)s]", type=str, default="dB")
+	parser.add_argument("-t", "--threshold", dest="threshold", help="Threshold for coloring (like shown in the app) [default: %(default)d]", type=int, default=150)
+	parser.add_argument("-c", "--cutoff", dest="cutoff", help="Lowpass filter cutoff [default: %(default)d]", type=int, default=20)
+	parser.add_argument("-m", "--magnitude", dest="enable_magnitude", help="Enable magnitude graph", action='store_true')
 	args = parser.parse_args()
-
+	
 	data_list = []
+	if args.input is None:
+		parser.print_help()
+		sys.exit(1)
+
 	with open(args.input, "r", encoding='utf-8', errors='ignore') as data_file:
 		inside_data = False
 		for line in data_file.readlines():
