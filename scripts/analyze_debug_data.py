@@ -124,7 +124,7 @@ def plot_data(data: List[int], threshold: int, grace_samples: int, filter_cutoff
 
 if __name__ == "__main__":
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
-	parser.add_argument("-i", "--input", dest="input", help="Path to input file", type=str)
+	parser.add_argument("-i", "--input", dest="input", help="Path to input file", type=str, required=True)
 	parser.add_argument("-s", "--sampling", dest="sampling", help="Sampling rate in Hz [default: %(default)dHz]", type=int, default=6000)
 	parser.add_argument("-x", "--scale", dest="scale", help="Scaling of the frequency graph (dB, linear) [default: %(default)s]", type=str, default="dB")
 	parser.add_argument("-t", "--threshold", dest="threshold", help="Threshold for coloring (like shown in the app) [default: %(default)d]", type=int, default=150)
