@@ -102,6 +102,8 @@ def plot_data(data: List[int], threshold: int, grace_samples: int, filter_cutoff
 	upper_data, lower_data = mask_data(raw_data, threshold, grace_samples)
 	upper_data_filtered, lower_data_filtered = mask_data(filtered_data, threshold, grace_samples)
 
+	old_trigger_index = upper_data_filtered.nonzero()[0][0]
+
 	if plot_magnitude:
 		fig, ((ax_data, ax_magitude)) = plt.subplots(2, 1)
 		normalized_data = raw_data - np.mean(raw_data)
@@ -117,6 +119,7 @@ def plot_data(data: List[int], threshold: int, grace_samples: int, filter_cutoff
 	ax_data.axhline(y=threshold, color='r')
 	ax_data.axvline(x=raw_max[1], color='r', label="raw max: difference {0:.2f}ms".format(abs(raw_max[1] - filtered_max[1]) * (1/args.sampling) * 1000))
 	ax_data.axvline(x=filtered_max[1], label="filtered max: difference {} samples".format(abs(raw_max[1] - filtered_max[1])))
+	ax_data.axvline(x=old_trigger_index, color='g', label="Old trigger: diff {0:.2f}ms".format(abs(filtered_max[1] - old_trigger_index) * (1/args.sampling) * 1000))
 	ax_data.set_xlabel('Sample')
 	ax_data.set_ylabel('Amplitude')
 	ax_data.legend()
