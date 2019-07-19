@@ -132,12 +132,16 @@ if __name__ == "__main__":
 	parser.add_argument("-x", "--scale", dest="scale", help="Scaling of the frequency graph (dB, linear) [default: %(default)s]", type=str, default="dB")
 	parser.add_argument("-t", "--threshold", dest="threshold", help="Threshold for coloring (like shown in the app) [default: %(default)d]", type=int, default=150)
 	parser.add_argument("-c", "--cutoff", dest="cutoff", help="Lowpass filter cutoff [default: %(default)d]", type=int, default=20)
-	parser.add_argument("--filter-sampling", dest="filter_sampling", help="Separate filter sampling rate [default: %(default)dHz]", type=int, default=6000)
+	parser.add_argument("--filter-sampling", dest="filter_sampling", help="Separate filter sampling rate", type=int)
 	parser.add_argument("--filter-num", dest="filter_num", help="Number of lowpass filters [default: %(default)d]", type=int, default=1)
 	parser.add_argument("--filter-scipy", dest="scipy_filter", help="Scipy filter to compare. Valid are butter and bessel. Order is determined by filter-num", type=str, default=None)
 	parser.add_argument("-m", "--magnitude", dest="enable_magnitude", help="Enable magnitude graph", action='store_true')
+	parser.add_argument("-d", "--drop", dest="drop", help="keep every x sample [default: %(default)d]", type=int, default=1)
 	args = parser.parse_args()
 
+	args.sampling /= args.drop
+
+	print("Sampling: {}".format(args.sampling))
 	data_list = []
 	if args.input is None:
 		parser.print_help()
@@ -145,11 +149,16 @@ if __name__ == "__main__":
 
 	with open(args.input, "r", encoding='utf-8', errors='ignore') as data_file:
 		inside_data = False
+		i = 1
 		for line in data_file.readlines():
 			if line == "-\n": # end of data
 				inside_data = False
 			if inside_data:
-				data_list[-1].append(int(line))
+				if i == args.drop:
+					data_list[-1].append(int(line))
+					i = 1
+				else:
+					i +=1
 
 			if line == "_\n": # beginning of data
 				inside_data = True
@@ -163,6 +172,9 @@ if __name__ == "__main__":
 	elif args.scipy_filter == "butter":
 		scipy_filter = scipy.signal.butter
 
+	filter_sampling = args.sampling
+	if args.filter_sampling is not None:
+		filter_sampling = args.filter_sampling
 	for data in data_list:
-		plot_data(data, args.threshold * 12, 500, args.cutoff, args.filter_num, args.filter_sampling, args.enable_magnitude, scipy_filter)
+		plot_data(data, args.threshold * 12, 500, args.cutoff, args.filter_num, filter_sampling, args.enable_magnitude, scipy_filter)
 	plt.show()
