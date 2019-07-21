@@ -1,17 +1,18 @@
 # Chorus32-ESP32Laptimer
 
+Some notes on using this fork:
+ * Bluetooth is enabled by default, so you'll need to change the partition scheme to "HUGE APP" or something similar, so the sketch fits
+ * Currently the initial power state of the modules is off, if the voltage reading is below 6V (this is to protect my already weak USB-Port during developement with multiple modules)
+ * The standard baud rate for serial is changed to 230400 (is used for faster dater retrival)
+ * The module will always report 8 pilots. If the number of activated pilots is greater than the number of modules, multiplexing is enabled. If the number is lower the unsused modules are powered down. You can disable multiplexing for specific pilots on the settings page
+ * EEPROM will be saved after a max of 10 sec
+ * I'll regularly rebase and force push this branch ;)
+
 This fork adds (mostly backend):
  * Mutliplexing modules. Reduces the accuracy, but is the only option if you want to go cheap and small
- * Better ADC voltage reading (on a scale from 5V to 20V off by about 0.3V instead of several volts) (merged)
- * Support for "normal" buttons (merged)
- * Threshold setup mode (long press set in the app) (merged)
- * Remove all .ino files and replace them with .cpp files -> no more variables out of thin air
- * Refactor input and OLED to make adding new pages much easier
-   * Page with lap times
- * Refactor outputs
-   * Support for Bluetooth (need to change the partition scheme to "Huge APP" (will disable OTA updates))
-   * Support for LoRa
- * Multiple WiFi/Bluetooth clients
+ * OLED page with lap times
+ * Support for LoRa
+ * Support for using a TCP connection. This should improve the connection quality (needs my fork of the app)
  * Some other changes I don't remember
  * Almost entirely usable without the app. Navigate to http://192.168.4.1/laptimes.html for in browser lap times (still needs to be reloaded if you change the number of pilots and the number of displayed laps is fixed for now)
  * Currently testing new peak detection method. See the wiki for some test results.
