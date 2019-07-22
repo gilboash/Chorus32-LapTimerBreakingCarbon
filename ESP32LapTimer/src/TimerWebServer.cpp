@@ -22,6 +22,9 @@
 #include "RX5808.h"
 #include "Calibration.h"
 #include "Output.h"
+#include "Laptime.h"
+#include "Comms.h"
+#include "HardwareConfig.h"
 #include "Wireless.h"
 #include "CrashDetection.h"
 
@@ -163,7 +166,7 @@ void ProcessGeneralSettingsUpdate(AsyncWebServerRequest* req) {
 
   for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
     String enabled = req->arg("pilot_enabled_" + String(i));
-    String multiplex_off = webServer.arg("pilot_multuplex_off_" + String(i));
+    String multiplex_off = req->arg("pilot_multuplex_off_" + String(i));
     setPilotActive(i, enabled == "on");
     setilotMultiplexOff(i, multiplex_off == "on");
     
@@ -211,13 +214,13 @@ void ProcessVBATModeUpdate(AsyncWebServerRequest* req) {
 }
 
 void ProcessADCRXFilterUpdate(AsyncWebServerRequest* req) {
-  String inRXFilter = webServer.arg("RXFilterCutoff");
+  String inRXFilter = req->arg("RXFilterCutoff");
   setRXADCfilterCutoff(inRXFilter.toInt());
   EepromSettings.RXADCfilterCutoff = getRXADCfilterCutoff();
 
   req->redirect("/redirect.html");
   setSaveRequired();
-
+  setPilotFilters(getRXADCfilterCutoff());
 }
 
 void ProcessWifiSettings(AsyncWebServerRequest* req) {

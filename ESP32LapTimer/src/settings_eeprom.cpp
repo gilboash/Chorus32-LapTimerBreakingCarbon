@@ -50,13 +50,6 @@ bool EepromSettingsStruct::SanityCheck() {
     Serial.println(EepromSettings.NumReceivers);
   }
 
-
-  if (EepromSettings.RXADCfilter > MaxADCFilter) {
-    IsGoodEEPROM = false;
-    Serial.print("Error: Corrupted EEPROM value RXADCfilter: ");
-    Serial.println(EepromSettings.RXADCfilter);
-  }
-
   if (EepromSettings.ADCVBATmode > MaxVbatMode) {
     IsGoodEEPROM = false;
     Serial.print("Error: Corrupted EEPROM value ADCVBATmode: ");

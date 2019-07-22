@@ -124,10 +124,6 @@ uint8_t getCountFirstLap() {
   return count_first_lap;
 }
 
-void startRaceLap() {
-	start_time = millis();
-}
-
 uint16_t getRaceNum() {
   return race_num;
 }

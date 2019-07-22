@@ -387,10 +387,10 @@ void setPilotActive(uint8_t pilot, bool active) {
   // First we power up all modules. If we have less pilots than modules they get activated at a later stage. As this function will never be called during a race this should be okay
   // There might be a way better solution, but this will have to suffice for now
   // XXX: We have to reset the module since it won't come online with a simple power up
-  // only reset active modules. a user might have 6 modules installed but only uses 4. using the all function all modules would power up
-  for(int i = 0; i < getNumReceivers(); ++i) {
-    RXreset(i);
-    while(!isRxReady(i));
+  
+  // Power down all modules
+  for(uint8_t i = 0; i < MAX_NUM_RECEIVERS; ++i) {
+    RXPowerDown(i);
   }
   while(!xSemaphoreTake(pilot_queue_lock, portMAX_DELAY)); // Wait until this is free. this is a non critical section
   while(!xSemaphoreTake(pilots_lock, portMAX_DELAY));
@@ -425,6 +425,14 @@ void setPilotActive(uint8_t pilot, bool active) {
 
   Serial.print("New pilot num: ");
   Serial.println(current_pilot_num);
+  
+  // only reset active modules. a user might have 6 modules installed but only uses 4. using the all function all modules would power up
+  for(int i = 0; i < MIN(current_pilot_num, getNumReceivers()); ++i) {
+    RXreset(i);
+    while(!isRxReady(i));
+    rxLowPower(i);
+    while(!isRxReady(i));
+  }
 
   // adjust the filters for all active pilots
   // Turns out just using the sample frequency and completely ignore the down time works the best. Still leaving this here in case this idea isn't so bad after all
@@ -445,10 +453,6 @@ void setPilotActive(uint8_t pilot, bool active) {
     }
   }*/
 
-  // Power down all unused modules
-  for(uint8_t i = current_pilot_num; i < getNumReceivers(); ++i) {
-    RXPowerDown(i);
-  }
   xSemaphoreGive(pilot_queue_lock);
   xSemaphoreGive(pilots_lock);
 }

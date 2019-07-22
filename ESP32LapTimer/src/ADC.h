@@ -50,11 +50,6 @@ void setVBATcalibration(float val);
 uint8_t getActivePilots();
 bool isPilotActive(uint8_t pilot);
 void setPilotActive(uint8_t pilot, bool active);
-void setPilotFilters(uint16_t cutoff);
-
-void setPilotBand(uint8_t pilot, uint8_t band);
-void setPilotChannel(uint8_t pilot, uint8_t channel);
-
 bool isPilotMultiplexOff(uint8_t pilot);
 void setilotMultiplexOff(uint8_t pilot, bool off);
 void setPilotFilters(uint16_t cutoff);
