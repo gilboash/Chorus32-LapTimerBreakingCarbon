@@ -82,6 +82,11 @@ typedef struct pilot_data_s {
   uint8_t number;
   uint32_t unused_time; // used to force a certain stay time. if we allow an instant switch, modules would be constantly switching with e.g. 6 modules and 7 pilots
   bool disable_multiplexing; // don't switch this pilot. scenario: 3 modules installed with 4 pilots. 2 pilots really care about their time and the other 2 just want to see their approximate time. so fix the first two pilots and the remaining module multiplexes the other 2
+  // Used for finding the maximum rssi after reaching the threshold
+  uint16_t max_adc;
+  uint32_t max_time;
+  // require a certain amount of samples below threshold to determine the maximum. prevents triggering a lap when one approaches the timer and the rssi fluctuates
+  uint16_t samples;
 } pilot_data_t;
 
 typedef struct receiver_data_s {
@@ -336,14 +341,15 @@ float getMaFloat() {
 float getVbatFloat(bool force_read){
   static uint32_t last_voltage_update = 0;
   if((millis() - last_voltage_update) > VOLTAGE_UPDATE_INTERVAL_MS || force_read) {
+    int32_t adc_reading = 0;
     switch (getADCVBATmode()) {
       case ADC_CH5:
-        VbatReadingSmooth = esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC5), &adc_chars);
-        setVbatFloat(VbatReadingSmooth / 1000.0 * VBATcalibration);
+        adc_reading = esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC5), &adc_chars);
+        setVbatFloat(adc_reading / 1000.0 * VBATcalibration);
         break;
       case ADC_CH6:
-        VbatReadingSmooth = esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC6), &adc_chars);
-        setVbatFloat(VbatReadingSmooth / 1000.0 * VBATcalibration);
+        adc_reading = esp_adc_cal_raw_to_voltage(adc1_get_raw(ADC6), &adc_chars);
+        setVbatFloat(adc_reading / 1000.0 * VBATcalibration);
         break;
       case INA219:
         ReadVBAT_INA219();
