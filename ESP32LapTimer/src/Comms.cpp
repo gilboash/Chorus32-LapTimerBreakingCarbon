@@ -95,6 +95,7 @@
 #define CONTROL_GET_TIME            't'
 #define CONTROL_GET_VOLTAGE         'v'
 #define CONTROL_GET_IS_CONFIGURED   'y'
+#define CONTROL_PING                '%'
 
 // output id byte constants
 #define RESPONSE_WAIT_FIRST_LAP      '1'
@@ -117,6 +118,7 @@
 #define RESPONSE_VOLTAGE             'v'
 #define RESPONSE_END_SEQUENCE        'x'
 #define RESPONSE_IS_CONFIGURED       'y'
+#define RESPONSE_PING                '%'
 
 // send item byte constants
 // Must correspond to sequence of numbers used in "send data" switch statement
@@ -645,6 +647,11 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
 
   if (ControlByte == CONTROL_NUM_RECIEVERS) {
     SendNumberOfnodes();
+  }
+  
+  if(ControlByte == CONTROL_PING) {
+      addToSendQueue((uint8_t*)controlData, length);
+      update_outputs();
   }
 
   if (controlData[2] == CONTROL_GET_TIME) {
