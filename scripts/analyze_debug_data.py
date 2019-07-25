@@ -142,6 +142,7 @@ if __name__ == "__main__":
 	args.sampling /= args.drop
 
 	print("Sampling: {}".format(args.sampling))
+	metadata_list = []
 	data_list = []
 	if args.input is None:
 		parser.print_help()
@@ -160,11 +161,14 @@ if __name__ == "__main__":
 				else:
 					i +=1
 
-			if line == "_\n": # beginning of data
+			if line.startswith("_"): # beginning of data
 				inside_data = True
+				current_pilot = int(line[1])
 				data_list.append([])
+				metadata_list.append(current_pilot)
 
 	print("Got {} sets of data".format(len(data_list)))
+	print("Got {} sets of metadata".format(len(metadata_list)))
 
 	scipy_filter = None
 	if args.scipy_filter == "bessel":

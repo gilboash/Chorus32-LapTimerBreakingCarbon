@@ -57,11 +57,8 @@ static uint8_t current_pilot_num = 0;
 static lowpass_filter_t adc_voltage_filter;
 
 #ifdef DEBUG_SIGNAL_LOG
-// Use the memory we have ;) should be sufficient for around 1sec of full data
-// any more and the web ui won't work anymore due to heavy use of dynamic allocation
-#define DEBUG_SIGNAL_LOG_SIZE 6000
-static uint16_t readings[DEBUG_SIGNAL_LOG_SIZE];
-static uint32_t readings_pos = 0;
+static uint16_t readings[DEBUG_SIGNAL_LOG_NUM][DEBUG_SIGNAL_LOG_SIZE];
+static uint32_t readings_pos[DEBUG_SIGNAL_LOG_NUM];
 #endif
 
 enum pilot_state {
@@ -160,7 +157,8 @@ static IRAM_ATTR bool setNextPilot(uint8_t adc) {
 
 void ConfigureADC() {
   #ifdef DEBUG_SIGNAL_LOG
-  memset(readings, 0, DEBUG_SIGNAL_LOG_SIZE * sizeof(uint16_t));
+  memset(readings, 0, DEBUG_SIGNAL_LOG_SIZE * DEBUG_SIGNAL_LOG_NUM * sizeof(uint16_t));
+  memset(readings_pos, 0, DEBUG_SIGNAL_LOG_NUM * sizeof(uint32_t));
   #endif
   
   pilot_queue_lock = xSemaphoreCreateMutex();
@@ -248,11 +246,13 @@ void IRAM_ATTR nbADCread( void * pvParameters ) {
         
         if(current_pilot->number == 0){
            ++adcLoopCounter;
-           #ifdef DEBUG_SIGNAL_LOG
-           readings[readings_pos] = current_pilot->ADCReadingRAW;
-           readings_pos = (readings_pos + 1) % DEBUG_SIGNAL_LOG_SIZE;
-           #endif
          }
+         #ifdef DEBUG_SIGNAL_LOG
+         if(current_pilot->number < DEBUG_SIGNAL_LOG_NUM) {
+           readings[current_pilot->number][readings_pos[current_pilot->number]] = current_pilot->ADCReadingRAW;
+           readings_pos[current_pilot->number] = (readings_pos[current_pilot->number] + 1) % DEBUG_SIGNAL_LOG_SIZE;
+         }
+         #endif // DEBUG_SIGNAL_LOG
       }
     } // end if isRxReady
     xSemaphoreGive(pilots_lock);
@@ -292,12 +292,13 @@ void IRAM_ATTR CheckRSSIthresholdExceeded(uint8_t pilot) {
       pilots[pilot].max_time = 0;
       #ifdef DEBUG_SIGNAL_LOG
       // Print out signal at falling edge
-      if(pilot == 0) {
-        Serial.println("_");
+      if(pilot < DEBUG_SIGNAL_LOG_NUM) {
+        Serial.print("_");
+        Serial.println(pilot);
         for(uint32_t i = 0; i < DEBUG_SIGNAL_LOG_SIZE; ++i) {
-          Serial.println(readings[(i + readings_pos) % DEBUG_SIGNAL_LOG_SIZE]);
+          Serial.println(readings[pilot][(i + readings_pos[pilot]) % DEBUG_SIGNAL_LOG_SIZE]);
         }
-        readings_pos = 0;
+        readings_pos[pilot] = 0;
         Serial.println("-");
       }
       #endif
