@@ -18,6 +18,7 @@
 #pragma once
 
 #include <esp_attr.h>
+#include <driver/adc.h>
 #include <stdint.h>
 
 #include "HardwareConfig.h"
@@ -27,6 +28,8 @@ void ConfigureADC();
 void IRAM_ATTR CheckRSSIthresholdExceeded(uint8_t node);
 void ReadVBAT_INA219();
 void IRAM_ATTR nbADCread( void * pvParameters );
+adc1_channel_t IRAM_ATTR getADCChannel(uint8_t adc_num);
+uint16_t multisample_adc1(adc1_channel_t channel, uint8_t samples);
 
 uint16_t getRSSI(uint8_t index);
 void setRSSIThreshold(uint8_t node, uint16_t threshold);

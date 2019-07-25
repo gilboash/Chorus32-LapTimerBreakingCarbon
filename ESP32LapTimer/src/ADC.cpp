@@ -93,7 +93,7 @@ SemaphoreHandle_t pilots_lock;
 
 static adc1_channel_t ADC_PINS[MAX_NUM_RECEIVERS] = {ADC1, ADC2, ADC3, ADC4, ADC5, ADC6};
 
-static uint16_t multisample_adc1(adc1_channel_t channel, uint8_t samples) {
+uint16_t multisample_adc1(adc1_channel_t channel, uint8_t samples) {
   uint32_t val = 0;
   for(uint8_t i = 0; i < samples; ++i) {
     val += adc1_get_raw(channel);

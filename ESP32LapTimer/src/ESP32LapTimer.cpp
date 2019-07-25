@@ -63,7 +63,11 @@ void IRAM_ATTR adc_task(void* args) {
   watchdog_add_task();
   while(42) {
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-    nbADCread(NULL);
+    if(LIKELY(!isCalibrating())) {
+      nbADCread(NULL);
+    } else {
+      rssiCalibrationUpdate();
+    }
     watchdog_feed();
   }
 }
