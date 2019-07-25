@@ -75,11 +75,11 @@ void IRAM_ATTR adc_task(void* args) {
 }
 
 void eeprom_task(void* args) {
-	const TickType_t xDelay = EEPROM_COMMIT_DELAY_MS / portTICK_PERIOD_MS;
-	while(42) {
-		EepromSettings.save();
-		vTaskDelay(xDelay);
-	}
+  const TickType_t xDelay = EEPROM_COMMIT_DELAY_MS / portTICK_PERIOD_MS;
+  while(42) {
+    EepromSettings.save();
+    vTaskDelay(xDelay);
+  }
 }
 
 
