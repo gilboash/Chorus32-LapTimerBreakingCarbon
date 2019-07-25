@@ -270,24 +270,20 @@ void ReadVBAT_INA219() {
 
 void IRAM_ATTR CheckRSSIthresholdExceeded(uint8_t pilot) {
   uint32_t CurrTime = millis();
-  static uint16_t max_adc = 0;
-  static uint32_t max_time = 0;
   // require a certain amount of samples below threshold to determine the maximum. prevents triggering a lap when one approaches the timer and the rssi fluctuates
-  static uint16_t samples  = 0;
   if ( pilots[pilot].ADCvalue > pilots[pilot].RSSIthreshold) {
     pilots[pilot].samples = 0;
     if (CurrTime > (getMinLapTime() + getLaptime(pilot))) {
-      if(pilots[pilot].ADCvalue > max_adc) {
+      if(pilots[pilot].ADCvalue > pilots[pilot].max_adc) {
         pilots[pilot].max_adc = pilots[pilot].ADCvalue;
         pilots[pilot].max_time = CurrTime;
       }
     }
   } else if(pilots[pilot].max_adc && pilots[pilot].max_time) { // falling edge and max set
-
     ++pilots[pilot].samples;
     if(pilots[pilot].samples > 500) {
       pilots[pilot].samples = 0;
-      addLap(pilot, max_time);
+      addLap(pilot, pilots[pilot].max_time);
       pilots[pilot].max_adc = 0;
       pilots[pilot].max_time = 0;
       #ifdef DEBUG_SIGNAL_LOG

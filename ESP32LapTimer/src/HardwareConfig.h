@@ -90,12 +90,12 @@
 #endif
 
 //#define DEBUG_FILTER // uncomment to constantly print out the raw and filtered data of pilot 1
-#define DEBUG_SIGNAL_LOG // uncomment to print out raw adc data from pilot 1 when finishing a lap. debug only!! about 1 secs of 6khz data
+//#define DEBUG_SIGNAL_LOG // uncomment to print out raw adc data from pilot 1 when finishing a lap. debug only!! about 1 secs of 6khz data
 
 // Use the memory we have ;) should be sufficient for around 1sec of full data
 // any more and the web ui won't work anymore due to heavy use of dynamic allocation
-//#define DEBUG_SIGNAL_LOG_SIZE 3000
-//#define DEBUG_SIGNAL_LOG_NUM 2 // number of pilots to track
+#define DEBUG_SIGNAL_LOG_SIZE 3000
+#define DEBUG_SIGNAL_LOG_NUM 2 // number of pilots to track
 
 #include "targets/target.h" // Needs to be at the bottom
 
