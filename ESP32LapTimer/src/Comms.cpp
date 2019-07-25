@@ -87,6 +87,7 @@
 #define CONTROL_SOUND               'S'
 #define CONTROL_THRESHOLD           'T'
 #define CONTROL_PILOT_ACTIVE        'A'
+#define CONTROL_EXPERIMENTAL_MODE   'E'
 // get only:
 #define CONTROL_GET_API_VERSION     '#'
 #define CONTROL_WILDCARD_INDICATOR  '*'
@@ -111,6 +112,7 @@
 #define RESPONSE_SOUND               'S'
 #define RESPONSE_THRESHOLD           'T'
 #define RESPONSE_PILOT_ACTIVE        'A'
+#define RESPONSE_EXPERIMENTAL_MODE   'E'
 
 #define RESPONSE_API_VERSION         '#'
 #define RESPONSE_RSSI                'r'
@@ -173,6 +175,7 @@ static int32_t timeAdjustment = INFINITE_TIME_ADJUSTMENT;
 static uint8_t raceMode = 0; // 0: race mode is off; 1: lap times are counted relative to last lap end; 2: lap times are relative to the race start (sum of all previous lap times);
 //static uint8_t isSoundEnabled = 1; // TODO: implement this option
 static uint8_t isConfigured = 0; //changes to 1 if any input changes the state of the device. it will mean that externally stored preferences should not be applied
+static uint8_t use_experimental = 0;
 
 static uint8_t thresholdSetupMode[MAX_NUM_PILOTS];
 
@@ -466,6 +469,15 @@ void sendPilotActive(uint8_t pilot) {
   addToSendQueue('\n');
 }
 
+void sendExperimentalMode(uint8_t NodeAddr) {
+  uint8_t status = use_experimental;
+  addToSendQueue('S');
+  addToSendQueue(TO_HEX(NodeAddr));
+  addToSendQueue(RESPONSE_EXPERIMENTAL_MODE);
+  addToSendQueue(TO_HEX(status));
+  addToSendQueue('\n');
+}
+
 void SendRSSImonitorInterval(uint8_t NodeAddr) {
   addToSendQueue('S');
   addToSendQueue(TO_HEX(NodeAddr));
@@ -633,6 +645,10 @@ void SendAllSettings(uint8_t NodeAddr) {
   sendThresholdMode(NodeAddr);
   SendXdone(NodeAddr);
   sendPilotActive(NodeAddr);
+  sendExperimentalMode(NodeAddr);
+  
+  // flush outputs after this long message
+  update_outputs();
 
   update_outputs(); // Flush output after each node to prevent lost messages
 }
@@ -682,6 +698,11 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
     case CONTROL_PILOT_ACTIVE:
       valueToSet = TO_BYTE(controlData[3]);
       setPilotActive(NodeAddrByte, valueToSet);
+      break;
+    case CONTROL_EXPERIMENTAL_MODE:
+      valueToSet = TO_BYTE(controlData[3]);
+      use_experimental = valueToSet;
+      sendExperimentalMode(NodeAddrByte);
       break;
 
       case CONTROL_RACE_MODE:
@@ -865,4 +886,8 @@ void stopRace() {
   for (int i = 0; i < MAX_NUM_PILOTS; i++) {
     SendRaceMode(i);
   }
+}
+
+bool isExperimentalModeOn() {
+  return use_experimental;
 }

@@ -33,5 +33,6 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
 bool isInRaceMode();
 void startRace();
 void stopRace();
+bool isExperimentalModeOn();
 
 #endif // __COMMS_H__

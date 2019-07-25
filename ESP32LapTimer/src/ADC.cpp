@@ -274,9 +274,14 @@ void IRAM_ATTR CheckRSSIthresholdExceeded(uint8_t pilot) {
   if ( pilots[pilot].ADCvalue > pilots[pilot].RSSIthreshold) {
     pilots[pilot].samples = 0;
     if (CurrTime > (getMinLapTime() + getLaptime(pilot))) {
-      if(pilots[pilot].ADCvalue > pilots[pilot].max_adc) {
+      if(pilots[pilot].ADCvalue > pilots[pilot].max_adc && isExperimentalModeOn()) {
         pilots[pilot].max_adc = pilots[pilot].ADCvalue;
         pilots[pilot].max_time = CurrTime;
+      } else if(!isExperimentalModeOn()){ // normal mode
+        uint8_t lap_num = addLap(pilot, CurrTime);
+        sendLap(lap_num, pilot);
+        pilots[pilot].max_adc = 0;
+        pilots[pilot].max_time = 0;
       }
     }
   } else if(pilots[pilot].max_adc && pilots[pilot].max_time) { // falling edge and max set
