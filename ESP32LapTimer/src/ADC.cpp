@@ -193,7 +193,7 @@ void ConfigureADC() {
   filter_init(&adc_voltage_filter, ADC_VOLTAGE_CUTOFF, VOLTAGE_UPDATE_INTERVAL_MS/1000.0);
   uint16_t voltage = getVbatFloat(true) * 1000;
   Serial.printf("Voltage is %d minimum is %d\n", voltage, getMinVoltageModule());
-  if(voltage > getMinVoltageModule()) {
+  if(voltage >= getMinVoltageModule()) {
     // By default enable getNumReceivers() pilots
     for(uint8_t i = 0; i < getNumReceivers() && i < MAX_NUM_PILOTS; ++i)  {
       setPilotActive(i, true);
