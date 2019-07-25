@@ -313,7 +313,11 @@ void adc_page_update(void* data) {
 
 void calib_page_update(void* data) {
   display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.drawString(0, 0, "Frequency - " + String(channelFreqTable[getcalibrationFreqIndex()]) + "Hz");
+  if(isCalibrating()) {
+    display.drawString(0, 0, "Calibrating - " + String(getcalibrationFreqIndex()) + "/" + String(8*(MAX_BAND+1)));
+  } else {
+    display.drawString(0, 0, "Frequency - " + String(channelFreqTable[getcalibrationFreqIndex()]) + "Hz");
+  }  
   display.drawString(0,  9, "Min = " + String(EepromSettings.RxCalibrationMin[0]) + ", Max = " + String(EepromSettings.RxCalibrationMax[0]));
   display.drawString(0, 18, "Min = " + String(EepromSettings.RxCalibrationMin[1]) + ", Max = " + String(EepromSettings.RxCalibrationMax[1]));
   display.drawString(0, 27, "Min = " + String(EepromSettings.RxCalibrationMin[2]) + ", Max = " + String(EepromSettings.RxCalibrationMax[2]));
