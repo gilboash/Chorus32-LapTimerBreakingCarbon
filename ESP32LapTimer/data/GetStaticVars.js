@@ -26,10 +26,6 @@
 
       xhr.send();
     }
-    function updateRSSIThreshold(rssi){
-        var result = rssi / 12;
-        return Math.floor(result)
-    }
     
     function createPilotSettings(data) {
 		var pilots = data.pilot_data;
@@ -53,7 +49,7 @@
 			
 			// RSSI threshold
 			cell = row.insertCell(-1);
-			input_html = "<input type=\"number\" name=\"RSSIthreshold" + i + "\" min=\"0\" max=\"342\" step=\"1\" value=" + pilots[i].threshold + ">";
+			input_html = "<input type=\"number\" name=\"RSSIthreshold" + i + "\" min=\"0\" max=\"342\" step=\"1\" value=" + Math.floor(pilots[i].threshold) + ">";
 			cell.innerHTML = input_html;
 
 			// Enabled checkbox

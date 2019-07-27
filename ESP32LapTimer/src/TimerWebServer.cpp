@@ -125,7 +125,7 @@ void SendStaticVars(AsyncWebServerRequest* req) {
     sendSTR += ", \"multiplex_off\" : " + String(isPilotMultiplexOff(i));
     sendSTR += ", \"band\" : " + String(getRXBandPilot(i));
     sendSTR += ", \"channel\" : " + String(getRXChannelPilot(i));
-    sendSTR += ", \"threshold\" : " + String(getRSSIThreshold(i) / 12.0);
+    sendSTR += ", \"threshold\" : " + String(getRSSIThreshold(i) / 12);
     sendSTR += "}";
     if(i + 1 < MAX_NUM_PILOTS) {
       sendSTR += ",";
