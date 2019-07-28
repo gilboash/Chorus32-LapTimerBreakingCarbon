@@ -278,8 +278,7 @@ void IRAM_ATTR CheckRSSIthresholdExceeded(uint8_t pilot) {
         pilots[pilot].max_adc = pilots[pilot].ADCvalue;
         pilots[pilot].max_time = CurrTime;
       } else if(!isExperimentalModeOn()){ // normal mode
-        uint8_t lap_num = addLap(pilot, CurrTime);
-        sendLap(lap_num, pilot);
+        addLap(pilot, CurrTime);
         pilots[pilot].max_adc = 0;
         pilots[pilot].max_time = 0;
       }
