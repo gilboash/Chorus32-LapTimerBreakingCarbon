@@ -155,7 +155,7 @@ static IRAM_ATTR bool setNextPilot(uint8_t adc) {
   return ret_val;
 }
 
-void ConfigureADC() {
+void ConfigureADC(bool disable_all_modules) {
   #ifdef DEBUG_SIGNAL_LOG
   memset(readings, 0, DEBUG_SIGNAL_LOG_SIZE * DEBUG_SIGNAL_LOG_NUM * sizeof(uint16_t));
   memset(readings_pos, 0, DEBUG_SIGNAL_LOG_NUM * sizeof(uint32_t));
@@ -191,7 +191,7 @@ void ConfigureADC() {
   filter_init(&adc_voltage_filter, ADC_VOLTAGE_CUTOFF, VOLTAGE_UPDATE_INTERVAL_MS/1000.0);
   uint16_t voltage = getVbatFloat(true) * 1000;
   Serial.printf("Voltage is %d minimum is %d\n", voltage, getMinVoltageModule());
-  if(voltage >= getMinVoltageModule()) {
+  if(voltage >= getMinVoltageModule() && !disable_all_modules) {
     // By default enable getNumReceivers() pilots
     for(uint8_t i = 0; i < getNumReceivers() && i < MAX_NUM_PILOTS; ++i)  {
       setPilotActive(i, true);

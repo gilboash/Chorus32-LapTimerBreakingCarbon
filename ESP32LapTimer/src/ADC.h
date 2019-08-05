@@ -24,7 +24,7 @@
 #include "HardwareConfig.h"
 #include "Filter.h"
 
-void ConfigureADC();
+void ConfigureADC(bool disable_all_modules);
 void IRAM_ATTR CheckRSSIthresholdExceeded(uint8_t node);
 void ReadVBAT_INA219();
 void IRAM_ATTR nbADCread( void * pvParameters );

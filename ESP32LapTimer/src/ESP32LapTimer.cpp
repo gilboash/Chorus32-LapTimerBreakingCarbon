@@ -20,6 +20,7 @@
 #include <WiFiUdp.h>
 
 #include <esp_task_wdt.h>
+#include <rom/rtc.h>
 
 #include "Comms.h"
 #include "ADC.h"
@@ -105,6 +106,12 @@ void setup() {
 #ifdef OLED
   oledSetup();
 #endif
+  
+  bool all_modules_off = true;
+  if(rtc_get_reset_reason(0) == 15 || rtc_get_reset_reason(1) == 15) {
+    all_modules_off = true;
+    Serial.println("Rebooted from brownout...disabling all modules...");
+  }
 #ifdef USE_BUTTONS
   newButtonSetup();
 #endif
@@ -120,7 +127,7 @@ void setup() {
     setRXChannelPilot(i, EepromSettings.RXChannel[i]);
   }
   delay(30);
-  ConfigureADC();
+  ConfigureADC(all_modules_off);
   delay(250);
 
   InitWifi();
