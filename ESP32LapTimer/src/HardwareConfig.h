@@ -100,7 +100,7 @@
 #include "targets/target.h" // Needs to be at the bottom
 
 #ifndef EEPROM_DEFAULT_MIN_VOLTAGE_MODULE
-#define EEPROM_DEFAULT_MIN_VOLTAGE_MODULE 0000
+#define EEPROM_DEFAULT_MIN_VOLTAGE_MODULE 6000
 #endif
 
 //#define USE_LOW_POWER // this saves about 5-10mA but the tune time of the module is worse
