@@ -26,7 +26,11 @@ function requestData() {
 		for (i = 0; i < num_pilots; i++) { 
 			var row = table.insertRow(-1);
 			var cell = row.insertCell(-1);
-			cell.innerHTML = "<input id=\"pilot_name_" + i + "\" type=\"text\" name=\"pilot\" value=\"" + (i+1) + "\" oninput=update_default_pilot_name(" + i + ")>";
+			var pilot_name = localStorage.getItem("pilot_name_" + i);
+			if(pilot_name == null) {
+				pilot_name = "Pilot " + i + 1;
+			}
+			cell.innerHTML = "<input id=\"pilot_name_" + i + "\" type=\"text\" name=\"pilot\" value=\"" + pilot_name + "\" oninput=update_default_pilot_name(" + i + ")>";
 			// add remaining cells
 			for(var j = 0; j < num_laps ; ++j) {
 				row.insertCell(-1);
@@ -40,3 +44,30 @@ function requestData() {
 
   xhr.send();
 }
+
+const voiceSelect = document.getElementById('voices');
+var voices = speechSynthesis.getVoices();
+// XXX: sometimes the first call returns null :/
+voices = speechSynthesis.getVoices();
+voices = speechSynthesis.getVoices();
+
+voices.forEach((voice) => {
+	const option = document.createElement('option');
+	option.value = voice.name;
+	option.innerHTML = voice.name;
+	option.id = voice.name;
+	voiceSelect.appendChild(option);
+	// just hope we get an english voice with this
+	if(voice.name.includes("english")) {
+		voiceSelect.value = voice.name;
+	}
+});
+
+var selected_voice = localStorage.getItem("voice");
+if(selected_voice != null) {
+	voiceSelect.value = selected_voice;
+} 
+
+voiceSelect.addEventListener('change', (e) => {
+  localStorage.setItem("voice", voiceSelect.value);
+});

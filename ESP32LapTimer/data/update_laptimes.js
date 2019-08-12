@@ -6,9 +6,13 @@ setInterval(requestData, 2000);
 
 function speak_lap(pilot, lap_number, time) {
 	var su = new SpeechSynthesisUtterance();
+	const voiceSelect = document.getElementById('voices');
 	su.lang = "en";
 	su.text = `${pilot} lap ${lap_number} ${time} seconds`;
-	console.log("Speaking: " + su.text);
+	console.log(su.voice);
+	su.voice = speechSynthesis.getVoices().filter(function (voice) {
+					return voice.name === voiceSelect.value;
+				})[0];
 	speechSynthesis.speak(su);
 }
 
@@ -22,7 +26,11 @@ function requestData() {
 				StatusData = JSON.parse(JSON.stringify(xhr.responseText));
 				var data = JSON.parse(StatusData);
 				var round_num = data.race_num;
+				var race_mode = data.race_mode;
 				if(round_num == 0) return;
+				
+				console.log(race_mode);
+				document.getElementById('race_mode').innerHTML = race_mode ? "Racing" : "Finished";
 				
 				var count_first = parseInt(data.count_first);
 				var table = document.getElementById("lap_table_" + round_num);
@@ -63,7 +71,6 @@ function requestData() {
 								best_lap = Math.min(best_lap, lap);
 								avg_lap += lap;
 								if(row.cells[j+1].innerText == "") {
-									console.log(row.cells[j+1]);
 									var pilot_name = row.cells[0].children[0].value;
 									speak_lap(pilot_name, j, (lap/1000.0).toFixed(2));
 								}

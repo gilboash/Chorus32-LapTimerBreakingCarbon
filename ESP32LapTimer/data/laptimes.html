@@ -14,6 +14,7 @@
 	<!-- OI you! get out of my source code!!! -->
 
 	<!-- Header -->
+	<!-- Disabled for now, since it just blocks too much space
 	<section id="header">
 		<div class="inner">
 			<img src="flag.svg" height="250" width="250" style="padding:20px;"></a>
@@ -26,11 +27,20 @@
 					<p>
 		</div>
 	</section>
+	-->
+
 
 	<section id="Status lap" class="main style1">
 		<div class="container">
 			<table style="width:100%">
 				<tr>
+					<th>Select Voice:</th>
+					<th><select name="voices" id="voices"></select></th>
+				</tr>
+				<tr>
+					<th>
+						Race Mode: <span id="race_mode">Finished</span>
+					</th>
 					<th>
 						 <button type="button" onclick="var xhr = new XMLHttpRequest(); xhr.open('GET', 'start_race', false); xhr.send(); console.log('Starting race!')">Start Race</button> 
 					</th>
@@ -65,6 +75,7 @@ function update_default_pilot_name(num) {
 	// only update the name from the last round (so you can retroactively change a name)
 	var last_pilot_input = document.getElementById("table_container").lastChild.querySelector("[id='pilot_name_" + num + "']");
 	def_input.value = last_pilot_input.value;
+	localStorage.setItem("pilot_name_" + num, last_pilot_input.value);
 }
 
 function openRound(evt, num) {

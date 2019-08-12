@@ -138,7 +138,7 @@ void SendStaticVars(AsyncWebServerRequest* req) {
 
 void send_laptimes(AsyncWebServerRequest* req) {
   // example json: '{"race_num": 5, "lap_data" : [ {"pilot" : 0, "laps" : [4, 2, 3]}]}'
-  String json_string = "{\"race_num\" : " + String(getRaceNum()) + ", \"count_first\": " + String(getCountFirstLap());
+  String json_string = "{\"race_mode\": " + String(isInRaceMode()) + ",\"race_num\" : " + String(getRaceNum()) + ", \"count_first\": " + String(getCountFirstLap());
   json_string += ", \"lap_data\" : [";
   for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
     if(isPilotActive(i)) {
