@@ -2,27 +2,12 @@
 <html>
 
 <head>
-	<script src="jquery-3.3.1.min.js"></script>
 	<title>Chorus32 RF lap Timing System</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<link rel="stylesheet" href="assets/css/main.css" />
 	<link rel="stylesheet" href="assets/css/slider.css" />
-	<style> 
-		/* Style the tab content */
-.tabcontent {
-  display: none;
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  border-top: none;
-}
-/* Style the tab */
-.tab {
-  overflow: hidden;
-  border: 1px solid #ccc;
-  background-color: #f1f1f1;
-}
-</style>
+	<link rel="stylesheet" href="assets/css/laptimes.css" />
 </head>
 
 <body>
@@ -65,15 +50,23 @@
 
 <div style="display:none">
 <table style="width:100%" id="lap_table_default">
-	<tr>
-		<th>Pilot</th>
-		<th>Avg Lap</th>
-		<th>Best Lap</th>
+	<tr align="center">
+		<th width=10% align="center">Pilot</th>
+		<th align="center">Avg Lap</th>
+		<th align="center">Best Lap</th>
 	</tr>
 </table> 
 </div>
 
 <script>
+function update_default_pilot_name(num) {
+	var def_table = document.getElementById("lap_table_default");
+	var def_input = def_table.querySelector("[id='pilot_name_" + num + "']");
+	// only update the name from the last round (so you can retroactively change a name)
+	var last_pilot_input = document.getElementById("table_container").lastChild.querySelector("[id='pilot_name_" + num + "']");
+	def_input.value = last_pilot_input.value;
+}
+
 function openRound(evt, num) {
   // Declare all variables
   var i, tabcontent, tablinks;

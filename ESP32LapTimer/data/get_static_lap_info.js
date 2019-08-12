@@ -16,16 +16,17 @@ function requestData() {
 		var num_pilots = parseInt(data.num_pilots);
 		var num_laps = parseInt(data.num_laps);
 		
+		// build the table template with the given parameters from the node
 		var table = document.getElementById("lap_table_default");
 		var i;
 		for(i = num_laps; i != 0 ; i--) {
 			var cell = table.rows[0].insertCell(1);
-			cell.innerHTML = "Lap " + i;
+			cell.outerHTML = "<th align=\"center\">Lap " + i + "</th>";
 		}
 		for (i = 0; i < num_pilots; i++) { 
 			var row = table.insertRow(-1);
 			var cell = row.insertCell(-1);
-			cell.innerHTML = i + 1;
+			cell.innerHTML = "<input id=\"pilot_name_" + i + "\" type=\"text\" name=\"pilot\" value=\"" + (i+1) + "\" oninput=update_default_pilot_name(" + i + ")>";
 			// add remaining cells
 			for(var j = 0; j < num_laps ; ++j) {
 				row.insertCell(-1);

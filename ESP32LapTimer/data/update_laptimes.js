@@ -1,8 +1,16 @@
 requestData(); // get intial data straight away
 var StatusData;
 
-// request data updates every 5000 milliseconds
+// request data updates every 2000 milliseconds
 setInterval(requestData, 2000);
+
+function speak_lap(pilot, lap_number, time) {
+	var su = new SpeechSynthesisUtterance();
+	su.lang = "en";
+	su.text = `${pilot} lap ${lap_number} ${time} seconds`;
+	console.log("Speaking: " + su.text);
+	speechSynthesis.speak(su);
+}
 
 function requestData() {
 	var xhr = new XMLHttpRequest();
@@ -34,10 +42,13 @@ function requestData() {
 					var button_div = document.getElementById("round_buttons");
 					console.log(button_div);
 					button_div.innerHTML += "<button class='tablinks' onclick='openRound(event," + round_num + ")'>Round " + round_num + "</button>\n"
+					button_div.children[button_div.childElementCount - 1].click();
+					window.scrollTo(0, document.body.scrollHeight);
 				}
 				
 				var lap_data = data.lap_data;
 				var total_laps = table.rows[0].cells.length - 3;
+				// Iterate over all pilots
 				for(var i = 0; i < data.lap_data.length; ++i) {
 					if(data.lap_data[i].laps.length != 0) {
 						var pilot = data.lap_data[i].pilot;
@@ -45,16 +56,23 @@ function requestData() {
 						var best_lap = 99999;
 						var avg_lap = 0;
 						var j;
+						// Iterate over all laps of pilot i
 						for(j = 0; j < data.lap_data[i].laps.length && j < total_laps; ++j) {
 							var lap = data.lap_data[i].laps[j];
-							row.cells[j+1].innerHTML = lap/1000.0;
-							if(count_first == 0 && j == 0) continue; // skip lap 0 for avg and best if we don't count it
-							best_lap = Math.min(best_lap, lap);
-							avg_lap += lap;
+							if(!(count_first == 0 && j == 0)) { // skip lap 0 for avg and best if we don't count it
+								best_lap = Math.min(best_lap, lap);
+								avg_lap += lap;
+								if(row.cells[j+1].innerText == "") {
+									console.log(row.cells[j+1]);
+									var pilot_name = row.cells[0].children[0].value;
+									speak_lap(pilot_name, j, (lap/1000.0).toFixed(2));
+								}
+							}
+							row.cells[j+1].innerText = lap/1000.0;
 						}
 						avg_lap /= j - (count_first == 0);
-						row.cells[total_laps + 1].innerHTML = avg_lap/1000.0;
-						row.cells[total_laps + 2].innerHTML = best_lap/1000.0;
+						row.cells[total_laps + 1].innerText = avg_lap/1000.0;
+						row.cells[total_laps + 2].innerText = best_lap/1000.0;
 					}
 				}
 			} else {
