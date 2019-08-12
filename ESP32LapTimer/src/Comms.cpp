@@ -195,7 +195,6 @@ void commsSetup() {
 
 void setRaceMode(uint8_t mode) {
   if (mode == 0) { // stop race
-    resetLaptimes();
     raceMode = 0;
     //playEndRaceTones();
   } else { // start race in specified mode
