@@ -75,6 +75,7 @@ void IRAM_ATTR adc_task(void* args) {
 void setup() {
   init_crash_detection();
 
+
   Serial.begin(115200);
   Serial.println("Booting....");
 #ifdef USE_ARDUINO_OTA
@@ -85,6 +86,11 @@ void setup() {
     return;
   }
 #endif
+
+  InitSPI();
+  InitHardwarePins();
+  RXPowerDownAll(); // Powers down all RX5808's
+
 #ifdef OLED
   oledSetup();
 #endif
@@ -98,19 +104,12 @@ void setup() {
   setADCVBATmode(EepromSettings.ADCVBATmode);
   setVbatCal(EepromSettings.VBATcalibration);
 
-  InitHardwarePins();
-
   for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
     setRXBandPilot(i, EepromSettings.RXBand[i]);
     setRXChannelPilot(i, EepromSettings.RXChannel[i]);
   }
-
-  delay(500);
-  RXPowerDownAll(); // Powers down all RX5808's
   delay(30);
   ConfigureADC();
-
-  InitSPI();
   delay(250);
 
   InitWifi();
@@ -137,12 +136,11 @@ void setup() {
   init_outputs();
   Serial.println("Starting ADC reading task on core 0");
 
-  xTaskCreatePinnedToCore(adc_task, "ADCreader", 4096, NULL, 1, NULL, 0); 
+  xTaskCreatePinnedToCore(adc_task, "ADCreader", 4096, NULL, 1, &adc_task_handle, 0);
   hw_timer_t* adc_task_timer = timerBegin(0, 8, true);
   timerAttachInterrupt(adc_task_timer, &adc_read, true);
   timerAlarmWrite(adc_task_timer, 1667, true); // 6khz -> 1khz per adc channel
   timerAlarmEnable(adc_task_timer);
-
 }
 
 void loop() {
