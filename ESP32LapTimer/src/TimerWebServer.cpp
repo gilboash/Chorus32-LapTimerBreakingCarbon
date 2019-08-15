@@ -22,6 +22,7 @@
 #include "RX5808.h"
 #include "Calibration.h"
 #include "Output.h"
+#include "Wireless.h"
 #include "CrashDetection.h"
 
 #include <esp_wifi.h>
@@ -46,7 +47,6 @@ static const char NOSPIFFS[] PROGMEM = "<h1>ERROR: Could not read the SPIFFS par
 
 static bool HasSPIFFsBegun = false;
 static bool isHTTPUpdating = false;
-
 
 String getMacAddress() {
   byte mac[6];
