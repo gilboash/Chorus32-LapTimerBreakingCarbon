@@ -7,15 +7,15 @@
 
 #define CS1 16
 #define CS2 5
-#define CS3 4
-#define CS4 15
+#define CS4 4
+#define CS3 15
 #define CS5 0
 #define CS6 0
 
 #define ADC1 ADC1_CHANNEL_0
 #define ADC2 ADC1_CHANNEL_3
-#define ADC3 ADC1_CHANNEL_6
-#define ADC4 ADC1_CHANNEL_7
+#define ADC4 ADC1_CHANNEL_6
+#define ADC3 ADC1_CHANNEL_7
 #define ADC5 ADC1_CHANNEL_7
 #define ADC6 ADC1_CHANNEL_5
 
