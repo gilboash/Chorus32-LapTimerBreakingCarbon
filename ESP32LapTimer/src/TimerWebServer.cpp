@@ -49,6 +49,7 @@ AsyncWebSocket ws("/ws");
 static const char NOSPIFFS[] PROGMEM = "<h1>ERROR: Could not read the SPIFFS partition</h1>This means you either forgot to upload the data files or a previous update failed.<br>To fix this problem you have a few options:<h4>1 Arduino IDE</h4> Install the <b><a href=\"https://github.com/me-no-dev/arduino-esp32fs-plugin\">following plugin</a></b>.<br> Place the plugin file here: <b>\"&lt;path to your Arduino dir&gt;/tools/ESP32FS/tool/esp32fs.jar\"</b>.<br><br> Next select <b>Tools > ESP32 Sketch Data Upload</b>.<br>NOTE: This is a seperate upload to the normal arduino upload!<h4>2 Platformio</h4>Press the Upload Filesystem button or run \"pio run -e &lt;your board&gt; -t uploadfs\"<h4>3 Use this form</h4>Upload the spiffs file from the release site here:<br><br><form method='POST' action='/update' enctype='multipart/form-data'> <input type='file' name='update'> <input type='submit' value='Update'></form>";
 
 static bool HasSPIFFsBegun = false;
+
 static bool isHTTPUpdating = false;
 
 String getMacAddress() {
@@ -169,20 +170,19 @@ void ProcessGeneralSettingsUpdate(AsyncWebServerRequest* req) {
     String multiplex_off = req->arg("pilot_multuplex_off_" + String(i));
     setPilotActive(i, enabled == "on");
     setilotMultiplexOff(i, multiplex_off == "on");
-    
+
     String Band_str = req->arg("band" + String(i));
     String Channel_str = req->arg("channel" + String(i));
     int band = (uint8_t)Band_str.toInt();
     int channel = (uint8_t)Channel_str.toInt();
     updateRx(band, channel, i);
-    
+
     String Rssi = req->arg("RSSIthreshold" + String(i));
     int rssi = (byte)Rssi.toInt();
     int value = rssi * 12;
     EepromSettings.RSSIthresholds[i] = value;
     setRSSIThreshold(i, value);
   }
-  
 
   req->redirect("/redirect.html");
   setSaveRequired();
@@ -333,7 +333,7 @@ void InitWebServer() {
 
   webServer.on("/StatusVars", SendStatusVars);
   webServer.on("/StaticVars", SendStaticVars);
-  
+
   webServer.on("/get_laptimes", send_laptimes);
   webServer.on("/start_race", startRace_button);
   webServer.on("/stop_race", stopRace_button);

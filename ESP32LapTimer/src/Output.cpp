@@ -32,6 +32,9 @@
 #ifdef USE_LORA
 #include "Lora.h"
 #endif
+#ifdef USE_WEBSOCKET_OUTPUT
+#include "WebServer.h"
+#endif
 
 #include "HardwareConfig.h"
 #include <freertos/semphr.h>
@@ -61,6 +64,9 @@ static output_t outputs[] = {
 #ifdef USE_LORA
   {NULL, lora_init, lora_send_packet, lora_update, output_input_callback},
 #endif // USE_LORA
+#ifdef USE_WEBSOCKET_OUTPUT
+  {NULL, NULL, send_websocket, read_websocket, output_input_callback},
+#endif // USE_WEBSOCKET_OUTPUT
 };
 
 #define OUTPUT_SIZE (sizeof(outputs)/sizeof(outputs[0]))
