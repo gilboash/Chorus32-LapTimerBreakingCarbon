@@ -160,6 +160,7 @@ function on_websocket_event(event) {
 startWebsocket("ws://192.168.4.1/ws");
 document.getElementById("start_race_button").onclick = function () {
 	current_race += 1;
+	max_laps = parseInt(document.getElementById("max_laps").value);
 	build_table(current_race, max_laps);
 	ws.send("R*R1\n");
 }
@@ -194,3 +195,4 @@ voiceSelect.addEventListener('change', (e) => {
   localStorage.setItem("voice", voiceSelect.value);
 });
 
+document.getElementById("max_laps").value = max_laps;
