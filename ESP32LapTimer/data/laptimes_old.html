@@ -42,14 +42,14 @@
 						Race Mode: <span id="race_mode">Finished</span>
 					</th>
 					<th>
-						 <button id="start_race_button" type="button">Start Race</button>
+						 <button type="button" onclick="var xhr = new XMLHttpRequest(); xhr.open('GET', 'start_race', false); xhr.send(); console.log('Starting race!')">Start Race</button> 
 					</th>
 					<th>
-						<button id="stop_race_button" type="button">Stop Race</button>
+						<button type="button" onclick="var xhr = new XMLHttpRequest(); xhr.open('GET', 'stop_race'); xhr.send();">Stop Race</button> 
 					</th>
 					<!-- TODO: export times button -->
 				</tr>
-			</table>
+			</table> 
 			<div class="tab" id="round_buttons">
 			</div>
 			<div id="table_container">
@@ -65,7 +65,7 @@
 		<th align="center">Avg Lap</th>
 		<th align="center">Best Lap</th>
 	</tr>
-</table>
+</table> 
 </div>
 
 <script>
@@ -99,6 +99,8 @@ function openRound(evt, num) {
   evt.currentTarget.className += " active";
 }
 </script>
-<script src="laptimes_socket.js"></script>
+	
+<script src="get_static_lap_info.js"></script>
+<script src="update_laptimes.js"></script>
 </body>
 </html>

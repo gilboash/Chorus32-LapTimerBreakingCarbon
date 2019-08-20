@@ -186,6 +186,35 @@ static uint8_t use_experimental = 0;
 
 static uint8_t thresholdSetupMode[MAX_NUM_PILOTS];
 
+// TODO: unify those functions
+void sendExtendedCommandInt(uint8_t set, uint8_t node, uint8_t cmd, int data) {
+  addToSendQueue(EXTENDED_PREFIX);
+  addToSendQueue('S');
+  if(node == '*') {
+    addToSendQueue(node);
+  } else {
+    addToSendQueue(TO_HEX(node));
+  }
+  addToSendQueue(cmd);
+  uint8_t buf[4];
+  intToHex(buf, data);
+  addToSendQueue(buf, 4);
+  addToSendQueue('\n');
+}
+
+void sendExtendedCommandByte(uint8_t set, uint8_t node, uint8_t cmd, uint8_t data) {
+  addToSendQueue(EXTENDED_PREFIX);
+  addToSendQueue('S');
+  if(node == '*') {
+    addToSendQueue(node);
+  } else {
+    addToSendQueue(TO_HEX(node));
+  }
+  addToSendQueue(cmd);
+  addToSendQueue(TO_HEX(data));
+  addToSendQueue('\n');
+}
+
 static void sendThresholdMode(uint8_t node) {
   addToSendQueue('S');
   addToSendQueue(TO_HEX(node));
@@ -208,6 +237,7 @@ void setRaceMode(uint8_t mode) {
     //holeShot = true;
     raceMode = mode;
     startRaceLap();
+    sendExtendedCommandByte('S', '*', EXTENDED_RACE_NUM, getRaceNum());
     for(uint8_t i = 0; i < MAX_NUM_PILOTS; ++i) {
       if(thresholdSetupMode[i]) {
         thresholdSetupMode[i] = 0;
@@ -659,34 +689,6 @@ void SendAllSettings(uint8_t NodeAddr) {
   update_outputs(); // Flush output after each node to prevent lost messages
 }
 
-// TODO: unify those functions
-void sendExtendedCommandInt(uint8_t set, uint8_t node, uint8_t cmd, int data) {
-  addToSendQueue(EXTENDED_PREFIX);
-  addToSendQueue('S');
-  if(node == '*') {
-    addToSendQueue(node);
-  } else {
-    addToSendQueue(TO_HEX(node));
-  }
-  addToSendQueue(cmd);
-  uint8_t buf[4];
-  intToHex(buf, data);
-  addToSendQueue(buf, 4);
-  addToSendQueue('\n');
-}
-
-void sendExtendedCommandByte(uint8_t set, uint8_t node, uint8_t cmd, uint8_t data) {
-  addToSendQueue(EXTENDED_PREFIX);
-  addToSendQueue('S');
-  if(node == '*') {
-    addToSendQueue(node);
-  } else {
-    addToSendQueue(TO_HEX(node));
-  }
-  addToSendQueue(cmd);
-  addToSendQueue(TO_HEX(data));
-  addToSendQueue('\n');
-}
 
 void handleExtendedCommands(char* data, uint8_t length) {
   uint8_t node_addr = TO_BYTE(data[1]);
@@ -711,7 +713,6 @@ void handleExtendedCommands(char* data, uint8_t length) {
 }
 
 void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t NodeAddr, uint8_t length) {
-
   String InString = "";
   uint8_t valueToSet;
   uint8_t NodeAddrByte = TO_BYTE(NodeAddr); // convert ASCII to real byte values

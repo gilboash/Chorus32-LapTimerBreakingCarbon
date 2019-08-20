@@ -53,7 +53,7 @@ function requestData() {
 					button_div.children[button_div.childElementCount - 1].click();
 					window.scrollTo(0, document.body.scrollHeight);
 				}
-				
+
 				var lap_data = data.lap_data;
 				var total_laps = table.rows[0].cells.length - 3;
 				// Iterate over all pilots
