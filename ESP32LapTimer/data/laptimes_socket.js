@@ -142,6 +142,9 @@ function handle_message(message) {
 			case 'A':
 				pilot_active[pilot_num] = message[3] == '1';
 				break;
+			case 'R':
+				document.getElementById('race_mode').innerHTML = parseInt(message[3]) ? "Racing" : "Finished";
+				break;
 		}
 	}
 }
