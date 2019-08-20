@@ -122,6 +122,13 @@
 #define RESPONSE_IS_CONFIGURED       'y'
 #define RESPONSE_PING                '%'
 
+// Extended commands. These are 100% unofficial
+#define EXTENDED_PREFIX   'E'
+
+#define EXTENDED_RACE_NUM 'R'
+#define EXTENDED_CALIB_MIN 'c'
+#define EXTENDED_CALIB_MAX 'C'
+
 // send item byte constants
 // Must correspond to sequence of numbers used in "send data" switch statement
 // Subsequent items starting from 0 participate in "send all data" response
@@ -645,11 +652,62 @@ void SendAllSettings(uint8_t NodeAddr) {
   SendXdone(NodeAddr);
   sendPilotActive(NodeAddr);
   sendExperimentalMode(NodeAddr);
-  
+
   // flush outputs after this long message
   update_outputs();
 
   update_outputs(); // Flush output after each node to prevent lost messages
+}
+
+// TODO: unify those functions
+void sendExtendedCommandInt(uint8_t set, uint8_t node, uint8_t cmd, int data) {
+  addToSendQueue(EXTENDED_PREFIX);
+  addToSendQueue('S');
+  if(node == '*') {
+    addToSendQueue(node);
+  } else {
+    addToSendQueue(TO_HEX(node));
+  }
+  addToSendQueue(cmd);
+  uint8_t buf[4];
+  intToHex(buf, data);
+  addToSendQueue(buf, 4);
+  addToSendQueue('\n');
+}
+
+void sendExtendedCommandByte(uint8_t set, uint8_t node, uint8_t cmd, uint8_t data) {
+  addToSendQueue(EXTENDED_PREFIX);
+  addToSendQueue('S');
+  if(node == '*') {
+    addToSendQueue(node);
+  } else {
+    addToSendQueue(TO_HEX(node));
+  }
+  addToSendQueue(cmd);
+  addToSendQueue(TO_HEX(data));
+  addToSendQueue('\n');
+}
+
+void handleExtendedCommands(char* data, uint8_t length) {
+  uint8_t node_addr = TO_BYTE(data[1]);
+  uint8_t control_byte = data[2];
+  //set commands
+  if(data[0] == 'S') {
+
+
+  } else if(data[0] == 'R') {
+    switch(control_byte) {
+      case EXTENDED_RACE_NUM:
+        sendExtendedCommandByte('S', '*', EXTENDED_RACE_NUM, getRaceNum());
+        break;
+      case EXTENDED_CALIB_MIN:
+        if(node_addr < getNumReceivers()) sendExtendedCommandInt('S', node_addr, EXTENDED_CALIB_MIN, EepromSettings.RxCalibrationMin[node_addr]);
+        break;
+      case EXTENDED_CALIB_MAX:
+        if(node_addr < getNumReceivers()) sendExtendedCommandInt('S', node_addr, EXTENDED_CALIB_MAX, EepromSettings.RxCalibrationMax[node_addr]);
+        break;
+    }
+  }
 }
 
 void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t NodeAddr, uint8_t length) {
@@ -663,10 +721,17 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
   if (ControlByte == CONTROL_NUM_RECIEVERS) {
     SendNumberOfnodes();
   }
-  
+
   if(ControlByte == CONTROL_PING) {
       addToSendQueue((uint8_t*)controlData, length);
       update_outputs();
+  }
+
+  // our unofficial extension commands
+  if(ControlByte == EXTENDED_PREFIX) {
+    // We are removing the prefix here to make handling easier and if we ever decide to use another method
+    handleExtendedCommands(controlData + 1, length - 1);
+    return;
   }
 
   if (controlData[2] == CONTROL_GET_TIME) {
