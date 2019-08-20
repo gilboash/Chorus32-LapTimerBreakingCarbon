@@ -4,6 +4,9 @@ var num_pilots = 8;
 var count_first = 0;
 var max_laps = 4;
 
+var pilot_active = [];
+
+const cells_before_lap = 2;
 function speak_lap(pilot, lap_number, time) {
 	var su = new SpeechSynthesisUtterance();
 	const voiceSelect = document.getElementById('voices');
@@ -42,12 +45,20 @@ function build_table(race_num, num_laps) {
 		table.id = "lap_table_" + race_num;
 		var i;
 		for(i = num_laps; i != 0 ; i--) {
-			var cell = table.rows[0].insertCell(1);
+			var cell = table.rows[0].insertCell(cells_before_lap);
 			cell.outerHTML = "<th align=\"center\">Lap " + i + "</th>";
 		}
 		for (i = 0; i < num_pilots; i++) {
 			var row = table.insertRow(-1);
+			// Active button
 			var cell = row.insertCell(-1);
+			cell.innerHTML = "<input id=\"pilot_active_box_" + i + "\" value=" + i + " type=\"checkbox\"></input>";
+			cell.firstChild.onclick = function () {
+				ws.send(`R${this.value}A${this.checked ? 1 : 0}\n`);
+			};
+			cell.firstChild.checked = pilot_active[i];
+			// pilot name
+			cell = row.insertCell(-1);
 			var pilot_name = localStorage.getItem("pilot_name_" + i);
 			if(pilot_name == null) {
 				pilot_name = "Pilot " + (i + 1);
@@ -87,7 +98,7 @@ function add_lap(race_num, pilot_num, lap_num, lap_time) {
 	var avg_lap = 0;
 	if(!(count_first == 0 && lap_num == 0)) { // skip lap 0 for avg and best if we don't count it
 		best_lap = Math.min(best_lap, lap_time);
-		if(row.cells[lap_num+1].innerText == "") {
+		if(row.cells[lap_num+cells_before_lap].innerText == "") {
 			var pilot_name = row.cells[0].children[0].value;
 			speak_lap(pilot_name, lap_num, (lap_time/1000.0).toFixed(2));
 		}
@@ -96,12 +107,12 @@ function add_lap(race_num, pilot_num, lap_num, lap_time) {
 	// + 1 to skip the pilot field. - 2 because of best/avg lap
 	var avg_lap = 0;
 	var i;
-	for(i = (count_first == 0) + 1; i < row.cells.length - 2; ++i) {
+	for(i = (count_first == 0) + cells_before_lap; i < row.cells.length - 2; ++i) {
 		var lap = parseFloat(row.cells[i].innerText);
 		if(lap == 0 || isNaN(lap)) break;
 		avg_lap += lap;
 	}
-	avg_lap /= i - (count_first == 0) - 1;
+	avg_lap /= i - (count_first == 0) - cells_before_lap;
 	row.cells[row.cells.length - 2].innerText = avg_lap;
 	row.cells[row.cells.length - 1].innerText = best_lap/1000.0;
 }
@@ -111,7 +122,7 @@ function handle_message(message) {
 	if(extended) {
 		message = message.substr(1);
 	}
-
+	var pilot_num = parseInt(message[1]);
 	var cmd = message[2];
 
 	// Extended commands
@@ -124,10 +135,12 @@ function handle_message(message) {
 	} else {
 		switch(cmd) {
 			case 'L':
-				var pilot_num = parseInt(message[1]);
 				var lap_num = parseInt(message.substr(3,2), 16);
 				var lap_time = parseInt(message.substr(5), 16);
 				add_lap(current_race, pilot_num, lap_num, lap_time);
+				break;
+			case 'A':
+				pilot_active[pilot_num] = message[3] == '1';
 				break;
 		}
 	}
