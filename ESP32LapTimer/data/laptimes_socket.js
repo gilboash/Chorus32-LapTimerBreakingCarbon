@@ -129,7 +129,7 @@ function handle_message(message) {
 	if(extended) {
 		switch(cmd) {
 			case 'R':
-				current_race = parseInt(message[3]);
+				current_race = parseInt(message.substr(3), 16);
 				break;
 		}
 	} else {

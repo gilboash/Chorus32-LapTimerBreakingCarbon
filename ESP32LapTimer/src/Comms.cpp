@@ -211,7 +211,9 @@ void sendExtendedCommandByte(uint8_t set, uint8_t node, uint8_t cmd, uint8_t dat
     addToSendQueue(TO_HEX(node));
   }
   addToSendQueue(cmd);
-  addToSendQueue(TO_HEX(data));
+  uint8_t buf[2];
+  byteToHex(buf, data);
+  addToSendQueue(buf, 2);
   addToSendQueue('\n');
 }
 
