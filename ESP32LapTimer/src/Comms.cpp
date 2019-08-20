@@ -763,6 +763,7 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
     case CONTROL_PILOT_ACTIVE:
       valueToSet = TO_BYTE(controlData[3]);
       setPilotActive(NodeAddrByte, valueToSet);
+      sendPilotActive(NodeAddrByte);
       break;
     case CONTROL_EXPERIMENTAL_MODE:
       valueToSet = TO_BYTE(controlData[3]);
