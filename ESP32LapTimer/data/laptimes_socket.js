@@ -11,7 +11,7 @@ function speak_lap(pilot, lap_number, time) {
 	var su = new SpeechSynthesisUtterance();
 	const voiceSelect = document.getElementById('voices');
 	su.lang = "en";
-	su.text = `${pilot} lap ${lap_number} ${time} seconds`;
+	su.text = `${pilot} lap ${lap_number} is ${time} seconds`;
 	console.log(su.voice);
 	su.voice = speechSynthesis.getVoices().filter(function (voice) {
 					return voice.name === voiceSelect.value;
@@ -99,11 +99,11 @@ function add_lap(race_num, pilot_num, lap_num, lap_time) {
 	if(!(count_first == 0 && lap_num == 0)) { // skip lap 0 for avg and best if we don't count it
 		best_lap = Math.min(best_lap, lap_time);
 		if(row.cells[lap_num+cells_before_lap].innerText == "") {
-			var pilot_name = row.cells[0].children[0].value;
+			var pilot_name = row.cells[1].children[0].value;
 			speak_lap(pilot_name, lap_num, (lap_time/1000.0).toFixed(2));
 		}
 	}
-	row.cells[lap_num+1].innerText = lap_time/1000.0;
+	row.cells[lap_num+cells_before_lap].innerText = lap_time/1000.0;
 	// + 1 to skip the pilot field. - 2 because of best/avg lap
 	var avg_lap = 0;
 	var i;
@@ -161,10 +161,10 @@ startWebsocket("ws://192.168.4.1/ws");
 document.getElementById("start_race_button").onclick = function () {
 	current_race += 1;
 	build_table(current_race, max_laps);
-	ws.send("S*R1\n");
+	ws.send("R*R1\n");
 }
 document.getElementById("stop_race_button").onclick = function () {
-	ws.send("S*R0\n");
+	ws.send("R*R0\n");
 }
 
 const voiceSelect = document.getElementById('voices');
