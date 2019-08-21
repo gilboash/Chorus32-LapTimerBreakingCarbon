@@ -57,6 +57,11 @@ function handle_message(message) {
 				set_value_received(field);
 				update_all_values();
 				break;
+			case constants.EXTENDED_DISPLAY_TIMEOUT:
+				var field = document.getElementById("displayTimeout");
+				field.value = parseInt(message.substr(3), 16);
+				set_value_received(field);
+				break;
 		}
 	} else {
 		switch(cmd) {
@@ -90,4 +95,10 @@ document.getElementById("ADCcalibValue").oninput = function() {
 document.getElementById("eepromReset").onclick = function () {
 	set_value_pending(this);
 	ws.send(`ER*${constants.EXTENDED_EEPROM_RESET}\n`);
+};
+
+document.getElementById("displayTimeout").oninput = function () {
+	set_value_pending(this);
+	send_extended_data(constants.EXTENDED_DISPLAY_TIMEOUT, parseInt(this.value*1), 16);
+
 };
