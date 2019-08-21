@@ -80,6 +80,10 @@ function handle_message(message) {
 		}
 	} else {
 		switch(cmd) {
+			case constants.RESPONSE_VOLTAGE:
+				var field = document.getElementById("Var_VBAT");
+				field.value = parseInt(message.substr(3), 16);
+				break;
 		}
 	}
 }
@@ -131,3 +135,9 @@ document.getElementById("RXFilterCutoff").oninput = function () {
 	set_value_pending(this);
 	send_extended_data(constants.EXTENDED_FILTER_CUTOFF, parseInt(this.value*1), 16);
 };
+
+function get_voltage() {
+	ws.send("R*v\n");
+}
+
+setInterval(get_voltage, 2000);
