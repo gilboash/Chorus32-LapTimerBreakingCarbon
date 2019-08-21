@@ -172,7 +172,7 @@ void ProcessGeneralSettingsUpdate(AsyncWebServerRequest* req) {
     String enabled = req->arg("pilot_enabled_" + String(i));
     String multiplex_off = req->arg("pilot_multuplex_off_" + String(i));
     setPilotActive(i, enabled == "on");
-    setilotMultiplexOff(i, multiplex_off == "on");
+    setPilotMultiplexOff(i, multiplex_off == "on");
 
     String Band_str = req->arg("band" + String(i));
     String Channel_str = req->arg("channel" + String(i));

@@ -84,39 +84,33 @@
 		<div class="container">
 
 			<div align="left">
-				<form action="/updateGeneral">
-					<fieldset>
-						<legend>
-							<h2><b>General Configuration</b></h2>
-						</legend>
-						<br>Number of Receivers:</br>
-						<select name="NumRXs" id="NumRXs">
-							<option value="1">1</option>
-							<option value="2">2</option>
-							<option value="3">3</option>
-							<option value="4">4</option>
-							<option value="5">5</option>
-							<option value="6">6</option>
-							<option selected value="7"></option>
-						</select>
-						<!-- TODO: Disable checkboxes if config would result in a lockup -->
-						<div id="pilot_settings_div">
-							<h4>Pilot settings</h4>
-							<table style="width:100%" id="pilot_table">
-								<tr>
-									<th>Pilot number</th>
-									<th>Band</th>
-									<th>Channel</th>
-									<th>RSSI Threshold</th>
-									<th>Enable</th>
-									<th>Disable multiplexing</th>
-								</tr>
-							</table>
-						</div>
-
-						<input type="submit" value="&nbsp;Update&nbsp;">
-					</fieldset>
-				</form>
+				<legend>
+					<h2><b>General Configuration</b></h2>
+				</legend>
+				<br>Number of Receivers:</br>
+				<select name="NumRXs" id="NumRXs">
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+					<option value="6">6</option>
+					<option selected value="7"></option>
+				</select>
+				<!-- TODO: Disable checkboxes if config would result in a lockup -->
+				<div id="pilot_settings_div">
+					<h4>Pilot settings</h4>
+					<table style="width:100%" id="pilot_table">
+						<tr>
+							<th>Pilot number</th>
+							<th>Band</th>
+							<th>Channel</th>
+							<th>RSSI Threshold</th>
+							<th>Enable</th>
+							<th>Disable multiplexing</th>
+						</tr>
+					</table>
+				</div>
 
 				<legend>
 					<h2><b>VBAT Configuration</b></h2>
