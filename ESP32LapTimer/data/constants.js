@@ -54,3 +54,4 @@ export const EXTENDED_EEPROM_RESET = 'E';
 export const EXTENDED_DISPLAY_TIMEOUT = 'D';
 export const EXTENDED_WIFI_CHANNEL = 'W';
 export const EXTENDED_WIFI_PROTOCOL = 'w';
+export const EXTENDED_FILTER_CUTOFF = 'F';

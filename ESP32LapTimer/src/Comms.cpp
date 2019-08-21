@@ -138,6 +138,7 @@
 #define EXTENDED_DISPLAY_TIMEOUT 'D'
 #define EXTENDED_WIFI_CHANNEL 'W'
 #define EXTENDED_WIFI_PROTOCOL 'w'
+#define EXTENDED_FILTER_CUTOFF 'F'
 
 // send item byte constants
 // Must correspond to sequence of numbers used in "send data" switch statement
@@ -722,6 +723,7 @@ void sendAllExtendedSettings() {
   sendExtendedCommandHalfByte('S', '*', EXTENDED_VOLTAGE_TYPE, (uint8_t)EepromSettings.ADCVBATmode);
   sendExtendedCommandInt('S', '*', EXTENDED_VOLTAGE_CALIB, EepromSettings.VBATcalibration * 1000);
   sendExtendedCommandInt('S', '*', EXTENDED_DISPLAY_TIMEOUT, EepromSettings.display_timeout_ms / 1000);
+  sendExtendedCommandInt('S', '*', EXTENDED_FILTER_CUTOFF, EepromSettings.RXADCfilterCutoff);
   for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
     if(i < getNumReceivers()) sendExtendedCommandInt('S', i, EXTENDED_CALIB_MIN, EepromSettings.RxCalibrationMin[i]);
     if(i < getNumReceivers()) sendExtendedCommandInt('S', i, EXTENDED_CALIB_MAX, EepromSettings.RxCalibrationMax[i]);
@@ -758,6 +760,11 @@ void handleExtendedCommands(uint8_t* data, uint8_t length) {
       case EXTENDED_WIFI_PROTOCOL:
         EepromSettings.WiFiProtocol = TO_BYTE(data[3]);
         sendExtendedCommandHalfByte('S', '*', control_byte, EepromSettings.WiFiProtocol);
+        setSaveRequired();
+        break;
+      case EXTENDED_FILTER_CUTOFF:
+        EepromSettings.RXADCfilterCutoff = HEX_TO_UINT16(data + 3);
+        sendExtendedCommandInt('S', '*', control_byte, EepromSettings.RXADCfilterCutoff);
         setSaveRequired();
         break;
     }

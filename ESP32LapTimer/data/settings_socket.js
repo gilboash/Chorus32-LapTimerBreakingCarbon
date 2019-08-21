@@ -72,6 +72,11 @@ function handle_message(message) {
 				field.value = parseInt(message[3], 16);
 				set_value_received(field);
 				break;
+			case constants.EXTENDED_FILTER_CUTOFF:
+				var field = document.getElementById("RXFilterCutoff");
+				field.value = parseInt(message.substr(3), 16);
+				set_value_received(field);
+				break;
 		}
 	} else {
 		switch(cmd) {
@@ -115,9 +120,14 @@ document.getElementById("displayTimeout").oninput = function () {
 document.getElementById("WiFiProtocol").oninput = function () {
 	set_value_pending(this);
 	send_extended_data(constants.EXTENDED_WIFI_PROTOCOL, parseInt(this.value), 4);
-}
+};
 
 document.getElementById("WiFiChannel").oninput = function () {
 	set_value_pending(this);
 	send_extended_data(constants.EXTENDED_WIFI_CHANNEL, parseInt(this.value), 4);
-}
+};
+
+document.getElementById("RXFilterCutoff").oninput = function () {
+	set_value_pending(this);
+	send_extended_data(constants.EXTENDED_FILTER_CUTOFF, parseInt(this.value*1), 16);
+};
