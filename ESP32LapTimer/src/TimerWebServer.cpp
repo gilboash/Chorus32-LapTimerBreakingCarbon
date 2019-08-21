@@ -21,11 +21,11 @@
 #include "ADC.h"
 #include "RX5808.h"
 #include "Calibration.h"
-#include "Output.h"
 #include "Laptime.h"
 #include "Comms.h"
 #include "HardwareConfig.h"
 #include "Wireless.h"
+#include "Output.h"
 #include "CrashDetection.h"
 
 #include <esp_wifi.h>
@@ -99,46 +99,6 @@ void updateRx (int band, int channel, int rx) {
   setPilotChannel(rx, channel);
 }
 
-void SendStatusVars(AsyncWebServerRequest* req) {
-  req->send(200, "application/json", "{\"Var_VBAT\": " + String(getVbatFloat(), 2) + ", \"Var_WifiClients\": 1, \"Var_CurrMode\": \"IDLE\"}");
-}
-
-void SendStaticVars(AsyncWebServerRequest* req) {
-  // TODO: implement dynamic lap number
-  String sendSTR = "{\"displayTimeout\": " + String(getDisplayTimeout()) + ", \"num_pilots\": " + String(getActivePilots()) + ", \"num_laps\": " + String(5) + ", \"NumRXs\": " + String(getNumReceivers() - 1) + ", \"ADCVBATmode\": " + String(getADCVBATmode()) + ", \"RXFilterCutoff\": " + String(getRXADCfilterCutoff()) + ", \"ADCcalibValue\": " + String(getVBATcalibration(), 3) + ", \"RSSIthreshold\": " + String(getRSSIThreshold(0)) + ", \"WiFiChannel\": " + String(getWiFiChannel()) + ", \"WiFiProtocol\": " + String(getWiFiProtocol());
-  sendSTR = sendSTR + ",\"Band\":{";
-  for (int i = 0; i < getNumReceivers(); i++) {
-    sendSTR = sendSTR + "\"" + i + "\":" + EepromSettings.RXBand[i];
-    if (getNumReceivers() > 1 && getNumReceivers() - i > 1) {
-      sendSTR = sendSTR + ",";
-    }
-  }
-  sendSTR = sendSTR + "},";
-  sendSTR = sendSTR + "\"Channel\":{";
-  for (int i = 0; i < getNumReceivers(); i++) {
-    sendSTR = sendSTR + "\"" + i + "\":" + EepromSettings.RXChannel[i];
-    if (getNumReceivers() > 1 && getNumReceivers() - i > 1) {
-      sendSTR = sendSTR + ",";
-    }
-  }
-  sendSTR = sendSTR + "}";
-  sendSTR += ",\"pilot_data\" : [";
-  for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
-    sendSTR += "{\"number\" : " + String(i);
-    sendSTR += ", \"enabled\" : " + String(isPilotActive(i));
-    sendSTR += ", \"multiplex_off\" : " + String(isPilotMultiplexOff(i));
-    sendSTR += ", \"band\" : " + String(getRXBandPilot(i));
-    sendSTR += ", \"channel\" : " + String(getRXChannelPilot(i));
-    sendSTR += ", \"threshold\" : " + String(getRSSIThreshold(i) / 12);
-    sendSTR += "}";
-    if(i + 1 < MAX_NUM_PILOTS) {
-      sendSTR += ",";
-    }
-  }
-
-  sendSTR = sendSTR +  "]}";
-  req->send(200, "application/json", sendSTR);
-}
 
 void send_laptimes(AsyncWebServerRequest* req) {
   // example json: '{"race_num": 5, "lap_data" : [ {"pilot" : 0, "laps" : [4, 2, 3]}]}'
@@ -164,116 +124,10 @@ void send_laptimes(AsyncWebServerRequest* req) {
   req->send(200, "application/json", json_string);
 }
 
-void ProcessGeneralSettingsUpdate(AsyncWebServerRequest* req) {
-  String NumRXs = req->arg("NumRXs");
-  EepromSettings.NumReceivers = (byte)NumRXs.toInt();
-
-  for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
-    String enabled = req->arg("pilot_enabled_" + String(i));
-    String multiplex_off = req->arg("pilot_multuplex_off_" + String(i));
-    setPilotActive(i, enabled == "on");
-    setPilotMultiplexOff(i, multiplex_off == "on");
-
-    String Band_str = req->arg("band" + String(i));
-    String Channel_str = req->arg("channel" + String(i));
-    int band = (uint8_t)Band_str.toInt();
-    int channel = (uint8_t)Channel_str.toInt();
-    updateRx(band, channel, i);
-
-    String Rssi = req->arg("RSSIthreshold" + String(i));
-    int rssi = (byte)Rssi.toInt();
-    int value = rssi * 12;
-    EepromSettings.RSSIthresholds[i] = value;
-    setRSSIThreshold(i, value);
-  }
-
-  req->redirect("/redirect.html");
-  setSaveRequired();
-}
 
 void calibrateRSSI(AsyncWebServerRequest* req) {
   rssiCalibration();
   req->redirect("/redirect.html");
-}
-
-void eepromReset(AsyncWebServerRequest* req){
-  EepromSettings.defaults();
-  req->redirect("/redirect.html");
-}
-
-void ProcessVBATModeUpdate(AsyncWebServerRequest* req) {
-  String inADCVBATmode = req->arg("ADCVBATmode");
-  String inADCcalibValue = req->arg("ADCcalibValue");
-
-  setADCVBATmode((ADCVBATmode_)(byte)inADCVBATmode.toInt());
-  setVBATcalibration(inADCcalibValue.toFloat());
-
-  EepromSettings.ADCVBATmode = getADCVBATmode();
-  EepromSettings.VBATcalibration = getVBATcalibration();
-  setSaveRequired();
-
-  req->redirect("/redirect.html");
-  setSaveRequired();
-}
-
-void ProcessADCRXFilterUpdate(AsyncWebServerRequest* req) {
-  String inRXFilter = req->arg("RXFilterCutoff");
-  setRXADCfilterCutoff(inRXFilter.toInt());
-  EepromSettings.RXADCfilterCutoff = getRXADCfilterCutoff();
-
-  req->redirect("/redirect.html");
-  setSaveRequired();
-  setPilotFilters(getRXADCfilterCutoff());
-}
-
-void ProcessWifiSettings(AsyncWebServerRequest* req) {
-  String inWiFiChannel = req->arg("WiFiChannel");
-  String inWiFiProtocol = req->arg("WiFiProtocol");
-
-  EepromSettings.WiFiProtocol = inWiFiProtocol.toInt();
-  EepromSettings.WiFiChannel = inWiFiChannel.toInt();
-
-  req->redirect("/redirect.html");
-  setSaveRequired();
-  airplaneModeOn();
-  airplaneModeOff();
-}
-
-void ProcessDisplaySettingsUpdate(AsyncWebServerRequest* req) {
-  EepromSettings.display_timeout_ms = req->arg("displayTimeout").toInt() * 1000;
-  req->redirect("/redirect.html");
-  setSaveRequired();
-}
-
-void onWebsocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
-  if(isHTTPUpdating) return; // ignore all incoming messages during update
-  if(xSemaphoreTake(websocket_lock, portMAX_DELAY)){
-    //Handle WebSocket event
-    if(type == WS_EVT_DATA){
-      //data packet
-      AwsFrameInfo * info = (AwsFrameInfo*)arg;
-      if(info->final && info->index == 0 && info->len == len){
-        //the whole message is in a single frame and we got all of it's data
-        // we'll ignore fragmented messages for now
-        if(websocket_buffer_pos + len < WEBSOCKET_BUF_SIZE) {
-          memcpy(websocket_buffer + websocket_buffer_pos, data, len);
-          websocket_buffer_pos += len;
-        }
-      }
-    }
-    xSemaphoreGive(websocket_lock);
-  }
-}
-
-void read_websocket(void* output) {
-  if(xSemaphoreTake(websocket_lock, 1)){
-    if(websocket_buffer_pos > 0) {
-      output_t* out = (output_t*)output;
-      out->handle_input_callback(websocket_buffer, websocket_buffer_pos);
-      websocket_buffer_pos = 0;
-    }
-    xSemaphoreGive(websocket_lock);
-  }
 }
 
 void startRace_button(AsyncWebServerRequest* req) {
@@ -298,7 +152,6 @@ void InitWebServer() {
   ws.onEvent(onWebsocketEvent);
   webServer.addHandler(&ws);
   websocket_lock = xSemaphoreCreateMutex();
-
   webServer.on("/recovery.html", HTTP_GET, [](AsyncWebServerRequest* req) {
       req->send(200, "text/html", NOSPIFFS);
     });
@@ -334,21 +187,13 @@ void InitWebServer() {
     }
   });
 
-  webServer.on("/StatusVars", SendStatusVars);
-  webServer.on("/StaticVars", SendStaticVars);
 
   webServer.on("/get_laptimes", send_laptimes);
   webServer.on("/start_race", startRace_button);
   webServer.on("/stop_race", stopRace_button);
 
-  webServer.on("/updateGeneral", ProcessGeneralSettingsUpdate);
-  webServer.on("/updateFilters", ProcessADCRXFilterUpdate);
-  webServer.on("/ADCVBATsettings", ProcessVBATModeUpdate);
-  webServer.on("/displaySettings", ProcessDisplaySettingsUpdate);
   webServer.on("/calibrateRSSI",calibrateRSSI);
-  webServer.on("/eepromReset",eepromReset);
 
-  webServer.on("/WiFisettings", ProcessWifiSettings);
 
 
   webServer.on("/update", HTTP_POST, [](AsyncWebServerRequest* req) {
