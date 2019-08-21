@@ -99,7 +99,7 @@ function handle_message(message) {
 		switch(cmd) {
 			case constants.RESPONSE_VOLTAGE:
 				var field = document.getElementById("Var_VBAT");
-				field.innerText = parseInt(message.substr(3), 16);
+				field.innerText = (parseInt(message.substr(3), 16) * (5/1024.0) * 11).toFixed(2);
 				break;
 			case constants.RESPONSE_THRESHOLD:
 				var field = document.getElementById("RSSIthreshold" + pilot_num);
