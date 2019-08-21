@@ -136,6 +136,8 @@
 #define EXTENDED_CALIBRATE_START 'r'
 #define EXTENDED_EEPROM_RESET 'E'
 #define EXTENDED_DISPLAY_TIMEOUT 'D'
+#define EXTENDED_WIFI_CHANNEL 'W'
+#define EXTENDED_WIFI_PROTOCOL 'w'
 
 // send item byte constants
 // Must correspond to sequence of numbers used in "send data" switch statement
@@ -715,12 +717,14 @@ void SendAllSettings(uint8_t NodeAddr) {
 // TODO: find a better way to handle this duplicate code. Add a function for every setting?
 void sendAllExtendedSettings() {
   sendExtendedCommandByte('S', '*', EXTENDED_RACE_NUM, getRaceNum());
+  sendExtendedCommandHalfByte('S', '*', EXTENDED_WIFI_CHANNEL, EepromSettings.WiFiChannel);
+  sendExtendedCommandHalfByte('S', '*', EXTENDED_WIFI_PROTOCOL, EepromSettings.WiFiProtocol);
+  sendExtendedCommandHalfByte('S', '*', EXTENDED_VOLTAGE_TYPE, (uint8_t)EepromSettings.ADCVBATmode);
+  sendExtendedCommandInt('S', '*', EXTENDED_VOLTAGE_CALIB, EepromSettings.VBATcalibration * 1000);
+  sendExtendedCommandInt('S', '*', EXTENDED_DISPLAY_TIMEOUT, EepromSettings.display_timeout_ms / 1000);
   for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
     if(i < getNumReceivers()) sendExtendedCommandInt('S', i, EXTENDED_CALIB_MIN, EepromSettings.RxCalibrationMin[i]);
     if(i < getNumReceivers()) sendExtendedCommandInt('S', i, EXTENDED_CALIB_MAX, EepromSettings.RxCalibrationMax[i]);
-    sendExtendedCommandHalfByte('S', '*', EXTENDED_VOLTAGE_TYPE, (uint8_t)EepromSettings.ADCVBATmode);
-    sendExtendedCommandInt('S', '*', EXTENDED_VOLTAGE_CALIB, EepromSettings.VBATcalibration * 1000);
-    sendExtendedCommandInt('S', '*', EXTENDED_DISPLAY_TIMEOUT, EepromSettings.display_timeout_ms / 1000);
   }
 }
 
@@ -744,6 +748,16 @@ void handleExtendedCommands(uint8_t* data, uint8_t length) {
       case EXTENDED_DISPLAY_TIMEOUT:
         EepromSettings.display_timeout_ms = HEX_TO_UINT16(data + 3) * 1000;
         sendExtendedCommandInt('S', '*', control_byte, EepromSettings.display_timeout_ms / 1000);
+        setSaveRequired();
+        break;
+      case EXTENDED_WIFI_CHANNEL:
+        EepromSettings.WiFiChannel = TO_BYTE(data[3]);
+        sendExtendedCommandHalfByte('S', '*', control_byte, EepromSettings.WiFiChannel);
+        setSaveRequired();
+        break;
+      case EXTENDED_WIFI_PROTOCOL:
+        EepromSettings.WiFiProtocol = TO_BYTE(data[3]);
+        sendExtendedCommandHalfByte('S', '*', control_byte, EepromSettings.WiFiProtocol);
         setSaveRequired();
         break;
     }
