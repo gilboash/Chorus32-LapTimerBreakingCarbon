@@ -125,9 +125,17 @@
 // Extended commands. These are 100% unofficial
 #define EXTENDED_PREFIX   'E'
 
+#define EXTENDED_ALL_SETTINGS 'a'
+
 #define EXTENDED_RACE_NUM 'R'
 #define EXTENDED_CALIB_MIN 'c'
 #define EXTENDED_CALIB_MAX 'C'
+#define EXTENDED_VOLTAGE_TYPE 'v'
+#define EXTENDED_VOLTAGE_CALIB 'V'
+#define EXTENDED_NUM_MODULES 'M'
+#define EXTENDED_CALIBRATE_START 'r'
+#define EXTENDED_RESET_EEPROM 'E'
+#define EXTENDED_DISPLAY_TIMOUT 'D'
 
 // send item byte constants
 // Must correspond to sequence of numbers used in "send data" switch statement
@@ -214,6 +222,19 @@ void sendExtendedCommandByte(uint8_t set, uint8_t node, uint8_t cmd, uint8_t dat
   uint8_t buf[2];
   byteToHex(buf, data);
   addToSendQueue(buf, 2);
+  addToSendQueue('\n');
+}
+
+void sendExtendedCommandHalfByte(uint8_t set, uint8_t node, uint8_t cmd, uint8_t data) {
+  addToSendQueue(EXTENDED_PREFIX);
+  addToSendQueue('S');
+  if(node == '*') {
+    addToSendQueue(node);
+  } else {
+    addToSendQueue(TO_HEX(node));
+  }
+  addToSendQueue(cmd);
+  addToSendQueue(TO_HEX(data));
   addToSendQueue('\n');
 }
 
@@ -691,16 +712,40 @@ void SendAllSettings(uint8_t NodeAddr) {
   update_outputs(); // Flush output after each node to prevent lost messages
 }
 
+// TODO: find a better way to handle this duplicate code. Add a function for every setting?
+void sendAllExtendedSettings() {
+  sendExtendedCommandByte('S', '*', EXTENDED_RACE_NUM, getRaceNum());
+  for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
+    if(i < getNumReceivers()) sendExtendedCommandInt('S', i, EXTENDED_CALIB_MIN, EepromSettings.RxCalibrationMin[i]);
+    if(i < getNumReceivers()) sendExtendedCommandInt('S', i, EXTENDED_CALIB_MAX, EepromSettings.RxCalibrationMax[i]);
+    sendExtendedCommandHalfByte('S', '*', EXTENDED_VOLTAGE_TYPE, (uint8_t)EepromSettings.ADCVBATmode);
+    sendExtendedCommandInt('S', '*', EXTENDED_VOLTAGE_CALIB, EepromSettings.VBATcalibration * 1000);
+  }
+}
 
-void handleExtendedCommands(char* data, uint8_t length) {
+
+void handleExtendedCommands(uint8_t* data, uint8_t length) {
   uint8_t node_addr = TO_BYTE(data[1]);
   uint8_t control_byte = data[2];
   //set commands
-  if(data[0] == 'S') {
-
-
-  } else if(data[0] == 'R') {
+  if(length > 4) {
     switch(control_byte) {
+      case EXTENDED_VOLTAGE_TYPE:
+        EepromSettings.ADCVBATmode = (ADCVBATmode_)TO_BYTE(data[3]);
+        sendExtendedCommandHalfByte('S', '*', EXTENDED_VOLTAGE_TYPE, EepromSettings.ADCVBATmode);
+        break;
+      case EXTENDED_VOLTAGE_CALIB:
+        uint16_t volt = HEX_TO_UINT16(data + 3);
+        Serial.printf("Got data %d float %f\n", volt, volt/1000.0);
+        EepromSettings.VBATcalibration = volt / 1000.0;
+        sendExtendedCommandInt('S', '*', EXTENDED_VOLTAGE_CALIB, EepromSettings.VBATcalibration * 1000);
+        break;
+    }
+
+  } else {
+    switch(control_byte) {
+      case EXTENDED_ALL_SETTINGS:
+        sendAllExtendedSettings();
       case EXTENDED_RACE_NUM:
         sendExtendedCommandByte('S', '*', EXTENDED_RACE_NUM, getRaceNum());
         break;
@@ -709,6 +754,12 @@ void handleExtendedCommands(char* data, uint8_t length) {
         break;
       case EXTENDED_CALIB_MAX:
         if(node_addr < getNumReceivers()) sendExtendedCommandInt('S', node_addr, EXTENDED_CALIB_MAX, EepromSettings.RxCalibrationMax[node_addr]);
+        break;
+      case EXTENDED_VOLTAGE_TYPE:
+        sendExtendedCommandHalfByte('S', '*', EXTENDED_VOLTAGE_TYPE, (uint8_t)EepromSettings.ADCVBATmode);
+        break;
+      case EXTENDED_VOLTAGE_CALIB:
+        sendExtendedCommandInt('S', '*', EXTENDED_VOLTAGE_CALIB, EepromSettings.VBATcalibration * 1000);
         break;
     }
   }
@@ -733,7 +784,7 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
   // our unofficial extension commands
   if(ControlByte == EXTENDED_PREFIX) {
     // We are removing the prefix here to make handling easier and if we ever decide to use another method
-    handleExtendedCommands(controlData + 1, length - 1);
+    handleExtendedCommands((uint8_t*)controlData + 1, length - 1);
     return;
   }
 

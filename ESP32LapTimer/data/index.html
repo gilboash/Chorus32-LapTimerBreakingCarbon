@@ -111,34 +111,29 @@
 									<th>Enable</th>
 									<th>Disable multiplexing</th>
 								</tr>
-							</table> 
+							</table>
 						</div>
 
 						<input type="submit" value="&nbsp;Update&nbsp;">
 					</fieldset>
 				</form>
 
-				<form action="/ADCVBATsettings">
-					<fieldset>
-						<legend>
-							<h2><b>VBAT Configuration</b></h2>
-						</legend>
-						VBAT Measurement Mode:<br>
-						<select name="ADCVBATmode" id="ADCVBATmode">
-							<option value="0">OFF (6CH Mode, no VBAT)</option>
-							<option value="1">VBAT ADC Channel 5 (GPIO 32)</option>
-							<option value="2">VBAT ADC Channel 6 (GPIO 33)</option>
-							<option value="3">VBAT INA219 (6 Channel Mode)</option>
-							<option selected value="4"></option>
-						</select>
-						<br>
-						ADC calibration Constant:<br>
-						<input type="float" name="ADCcalibValue" min="0" max="999999999" value="" id="ADCcalibValue">
-						<br>
-						<br>
-						<input type="submit" value="&nbsp;Update&nbsp;">
-					</fieldset>
-				</form>
+				<legend>
+					<h2><b>VBAT Configuration</b></h2>
+				</legend>
+				VBAT Measurement Mode:<br>
+				<select name="ADCVBATmode" id="ADCVBATmode">
+					<option value="0">OFF (6CH Mode, no VBAT)</option>
+					<option value="1">VBAT ADC Channel 5 (GPIO 32)</option>
+					<option value="2">VBAT ADC Channel 6 (GPIO 33)</option>
+					<option value="3">VBAT INA219 (6 Channel Mode)</option>
+					<option selected value="4"></option>
+				</select>
+				<br>
+				ADC calibration Constant:<br>
+				<input type="float" name="ADCcalibValue" min="0" max="65" value="" id="ADCcalibValue">
+				<br>
+				<br>
 
 				<form action="/WiFisettings">
 					<fieldset>
@@ -225,5 +220,5 @@
 	</section>
 
 </body>
-<script src="GetStaticVars.js"></script>
+<script src="settings_socket.js" type="module"></script>
 </html>
