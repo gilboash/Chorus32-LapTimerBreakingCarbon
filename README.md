@@ -14,9 +14,11 @@ This fork adds (mostly backend):
  * Support for LoRa
  * Support for using a TCP connection. This should improve the connection quality (needs my fork of the app)
  * Some other changes I don't remember
- * Almost entirely usable without the app. Navigate to http://192.168.4.1/laptimes.html for in browser lap times (still needs to be reloaded if you change the number of pilots and the number of displayed laps is fixed for now)
+ * Almost entirely usable without the app. Navigate to http://192.168.4.1/laptimes.html for in browser lap times. If your system supports text to speech the lap times will be spoken (for Linux speech-dispacher is responsible. You can test it with "spd-say 'hello world'")
  * Currently testing new peak detection method. See the wiki for some test results.
    * Compile with "DEBUG_SIGNAL_LOG" enabled, to print out (using USB) the last second of data after a lap has finished (this blocks the esp for a short while, so this is strictly used for data collection)
+ * Much faster webinterface. Changing the settings is now much easier just enter a new value and be done. Green outline means the value is confirmed by the timer, orange means we are still waiting for a confirmation
+    * You'll need to download  https://github.com/me-no-dev/ESPAsyncWebServer and https://github.com/me-no-dev/AsyncTCP as a .zip and add them in the Arduino IDE with "Sketch -> Include Library -> Add .ZIP Library..."
 
 TODO:
  * Add race times to OSD (not sure how useful this will be, but I'll at least implement it)
