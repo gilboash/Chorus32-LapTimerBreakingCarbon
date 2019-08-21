@@ -3,7 +3,12 @@ import * as constants from './constants.js';
 var ws = null;
 
 function send_extended_data(type, data, bits) {
-	ws.send(`ER*${type}${(data).toString(bits).padStart(bits/4, '0').toUpperCase()}\n`);
+	ws.send(`ER*${type}${(data).toString(16).padStart(bits/4, '0').toUpperCase()}\n`);
+}
+
+function update_all_values() {
+	ws.send("ER*a\n"); // get all extended settings
+	ws.send("R*a\n"); // get all normal settings
 }
 
 function startWebsocket(websocketServerLocation){
@@ -14,8 +19,7 @@ function startWebsocket(websocketServerLocation){
         setTimeout(function(){startWebsocket(websocketServerLocation)}, 5000);
     };
 	ws.onopen = function() {
-		ws.send("ER*a\n"); // get all extended settings
-		ws.send("R*a\n"); // get all normal settings
+		update_all_values();
 	};
 }
 
@@ -26,7 +30,6 @@ function set_value_pending(object) {
 function set_value_received(object) {
 	object.style.border = "1px solid green";
 }
-
 
 function handle_message(message) {
 	var extended = message[0] == 'E';
@@ -48,6 +51,11 @@ function handle_message(message) {
 				var field = document.getElementById("ADCcalibValue");
 				field.value = parseInt(message.substr(3), 16) / 1000.0;
 				set_value_received(field);
+				break;
+			case constants.EXTENDED_EEPROM_RESET:
+				var field = document.getElementById("eepromReset");
+				set_value_received(field);
+				update_all_values();
 				break;
 		}
 	} else {
@@ -77,4 +85,9 @@ document.getElementById("ADCcalibValue").oninput = function() {
 		return;
 	}
 	send_extended_data(constants.EXTENDED_VOLTAGE_CALIB, parseInt(this.value * 1000), 16);
+};
+
+document.getElementById("eepromReset").onclick = function () {
+	set_value_pending(this);
+	ws.send(`ER*${constants.EXTENDED_EEPROM_RESET}\n`);
 };

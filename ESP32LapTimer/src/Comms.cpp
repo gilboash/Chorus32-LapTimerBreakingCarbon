@@ -134,8 +134,8 @@
 #define EXTENDED_VOLTAGE_CALIB 'V'
 #define EXTENDED_NUM_MODULES 'M'
 #define EXTENDED_CALIBRATE_START 'r'
-#define EXTENDED_RESET_EEPROM 'E'
-#define EXTENDED_DISPLAY_TIMOUT 'D'
+#define EXTENDED_EEPROM_RESET 'E'
+#define EXTENDED_DISPLAY_TIMEOUT 'D'
 
 // send item byte constants
 // Must correspond to sequence of numbers used in "send data" switch statement
@@ -720,6 +720,7 @@ void sendAllExtendedSettings() {
     if(i < getNumReceivers()) sendExtendedCommandInt('S', i, EXTENDED_CALIB_MAX, EepromSettings.RxCalibrationMax[i]);
     sendExtendedCommandHalfByte('S', '*', EXTENDED_VOLTAGE_TYPE, (uint8_t)EepromSettings.ADCVBATmode);
     sendExtendedCommandInt('S', '*', EXTENDED_VOLTAGE_CALIB, EepromSettings.VBATcalibration * 1000);
+    sendExtendedCommandInt('S', '*', EXTENDED_DISPLAY_TIMEOUT, EepromSettings.display_timeout_ms / 1000);
   }
 }
 
@@ -733,12 +734,17 @@ void handleExtendedCommands(uint8_t* data, uint8_t length) {
       case EXTENDED_VOLTAGE_TYPE:
         EepromSettings.ADCVBATmode = (ADCVBATmode_)TO_BYTE(data[3]);
         sendExtendedCommandHalfByte('S', '*', EXTENDED_VOLTAGE_TYPE, EepromSettings.ADCVBATmode);
+        setSaveRequired();
         break;
       case EXTENDED_VOLTAGE_CALIB:
-        uint16_t volt = HEX_TO_UINT16(data + 3);
-        Serial.printf("Got data %d float %f\n", volt, volt/1000.0);
-        EepromSettings.VBATcalibration = volt / 1000.0;
+        EepromSettings.VBATcalibration = HEX_TO_UINT16(data + 3) / 1000.0;
         sendExtendedCommandInt('S', '*', EXTENDED_VOLTAGE_CALIB, EepromSettings.VBATcalibration * 1000);
+        setSaveRequired();
+        break;
+      case EXTENDED_DISPLAY_TIMEOUT:
+        EepromSettings.display_timeout_ms = HEX_TO_UINT16(data + 3) * 1000;
+        sendExtendedCommandInt('S', '*', control_byte, EepromSettings.display_timeout_ms / 1000);
+        setSaveRequired();
         break;
     }
 
@@ -746,6 +752,7 @@ void handleExtendedCommands(uint8_t* data, uint8_t length) {
     switch(control_byte) {
       case EXTENDED_ALL_SETTINGS:
         sendAllExtendedSettings();
+        break;
       case EXTENDED_RACE_NUM:
         sendExtendedCommandByte('S', '*', EXTENDED_RACE_NUM, getRaceNum());
         break;
@@ -760,6 +767,13 @@ void handleExtendedCommands(uint8_t* data, uint8_t length) {
         break;
       case EXTENDED_VOLTAGE_CALIB:
         sendExtendedCommandInt('S', '*', EXTENDED_VOLTAGE_CALIB, EepromSettings.VBATcalibration * 1000);
+        break;
+      case EXTENDED_DISPLAY_TIMEOUT:
+        sendExtendedCommandInt('S', '*', control_byte, EepromSettings.display_timeout_ms / 1000);
+        break;
+      case EXTENDED_EEPROM_RESET:
+        EepromSettings.defaults();
+        sendExtendedCommandHalfByte('S', '*', control_byte, 1);
         break;
     }
   }
