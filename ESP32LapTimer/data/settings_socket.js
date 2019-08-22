@@ -134,7 +134,7 @@ function create_pilots() {
 		var input_html = "";
 		// band selection
 		cell = row.insertCell(-1);
-		input_html = "<select style=\"width: 80%;\" name=\"band" + i + "\" id=\"band" + i + "\">";
+		input_html = "<select style=\"width:auto;\" name=\"band" + i + "\" id=\"band" + i + "\">";
 		input_html += "<option selected=\"\" value=\"0\">R</option><option value=\"1\">A</option><option value=\"2\">B</option><option value=\"3\">E</option><option value=\"4\">F</option><option value=\"5\">D</option><option value=\"6\">Connex</option><option value=\"7\">Connex2</option></select>";
 		cell.innerHTML = input_html;
 		cell.lastChild.onclick = function () {
@@ -143,7 +143,7 @@ function create_pilots() {
 		}
 		// channel selection
 		cell = row.insertCell(-1);
-		input_html = "<select name=\"channel" + i + "\" id=\"channel" + i + "\" style=\"width: 100%;\"><option value=\"0\">1</option><option value=\"1\">2</option><option value=\"2\">3</option><option value=\"3\">4</option><option value=\"4\">5</option><option value=\"5\">6</option><option value=\"6\">7</option><option value=\"7\">8</option></select>";
+		input_html = "<select name=\"channel" + i + "\" id=\"channel" + i + "\" style=\"width:auto;\"><option value=\"0\">1</option><option value=\"1\">2</option><option value=\"2\">3</option><option value=\"3\">4</option><option value=\"4\">5</option><option value=\"5\">6</option><option value=\"6\">7</option><option value=\"7\">8</option></select>";
 		cell.innerHTML = input_html;
 		cell.lastChild.onclick = function () {
 			set_value_pending(this);
@@ -152,7 +152,7 @@ function create_pilots() {
 
 		// RSSI threshold
 		cell = row.insertCell(-1);
-		input_html = "<input type=\"number\" id=\"RSSIthreshold" + i + "\" min=\"0\" max=\"342\" step=\"1\">";
+		input_html = "<input type=\"number\" id=\"RSSIthreshold" + i + "\" min=\"0\" max=\"342\" step=\"1\" style=\"width:3.5em\">";
 		cell.innerHTML = input_html;
 		cell.lastChild.onclick = function () {
 			set_value_pending(this);
