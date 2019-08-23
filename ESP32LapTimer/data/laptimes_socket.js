@@ -19,6 +19,14 @@ function speak_lap(pilot, lap_number, time) {
 	speechSynthesis.speak(su);
 }
 
+function set_value_pending(object) {
+	object.style.outline = "1px solid orange";
+}
+
+function set_value_received(object) {
+	object.style.outline = "1px solid green";
+}
+
 
 function startWebsocket(websocketServerLocation){
     ws = new WebSocket(websocketServerLocation);
@@ -29,7 +37,7 @@ function startWebsocket(websocketServerLocation){
     };
 	ws.oncerror = ws.onclose;
 	ws.onopen = function() {
-		ws.send("ER*R\n"); // get current race number
+		ws.send("ER*a\n"); // get all extended settings
 		ws.send("R*a\n"); // just get all settings to get all laps
 	};
 }
@@ -47,7 +55,7 @@ function build_table(race_num, num_laps) {
 		var i;
 		for(i = num_laps; i != 0 ; i--) {
 			var cell = table.rows[0].insertCell(cells_before_lap);
-			cell.outerHTML = "<th align=\"center\">Lap " + i + "</th>";
+			cell.outerHTML = "<th align=\"center\">Lap " + (i - (count_first == 0)) + "</th>";
 		}
 		for (i = 0; i < num_pilots; i++) {
 			var row = table.insertRow(-1);
@@ -55,9 +63,15 @@ function build_table(race_num, num_laps) {
 			var cell = row.insertCell(-1);
 			cell.innerHTML = "<input id=\"pilot_active_box_" + i + "\" value=" + i + " type=\"checkbox\"></input>";
 			cell.firstChild.onclick = function () {
+				set_value_pending(this);
+				pilot_active[parseInt(this.value)] = undefined;
 				ws.send(`R${this.value}A${this.checked ? 1 : 0}\n`);
 			};
 			cell.firstChild.checked = pilot_active[i];
+			set_value_received(cell.firstChild);
+			if(pilot_active[i] == undefined) {
+				set_value_pending(cell.firstChild);
+			}
 			// pilot name
 			cell = row.insertCell(-1);
 			var pilot_name = localStorage.getItem("pilot_name_" + i);
@@ -198,7 +212,7 @@ function add_lap(race_num, pilot_num, lap_num, lap_time) {
 		best_lap = Math.min(best_lap, lap_time);
 		if(get_lap(race_num, pilot_num, lap_num) == 0) {
 			var pilot_name = get_pilot_name(race_num, pilot_num);
-			speak_lap(pilot_name, lap_num, (lap_time).toFixed(2));
+			speak_lap(pilot_name, lap_num + (count_first), (lap_time).toFixed(2));
 			set_total_time(race_num, pilot_num, (get_total_time(race_num, pilot_num) + lap_time).toFixed(3));
 			update_pilots_positions(race_num);
 		}
@@ -248,6 +262,10 @@ function handle_message(message) {
 				break;
 			case 'A':
 				pilot_active[pilot_num] = message[3] == '1';
+				var row = get_pilot_row(current_race, pilot_num);
+				var box = row.cells[0].lastChild;
+				set_value_received(box);
+				box.checked = pilot_active[pilot_num];
 				break;
 			case 'R':
 				document.getElementById('race_mode').innerHTML = parseInt(message[3]) ? "Racing" : "Finished";
