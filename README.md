@@ -127,12 +127,16 @@ To upload the files for the webpage you'll need to download https://github.com/m
 
 #### Libraries
 
-First head to "Sketch -> Include Library -> Manage Libraries" and search for "adafruit ina219" and "ssd1306 esp32" and install them both. Now head to https://github.com/me-no-dev/ESPAsyncWebServer and https://github.com/me-no-dev/AsyncTCP and click on "Clone or download -> Download ZIP". In the Arduino IDE nagivate to "Sketch -> Include Library -> Add .ZIP Library" and add them both.
+First head to "Sketch -> Include Library -> Manage Libraries" and search for "adafruit ina219" and "ssd1306 esp32" and install them both.
+Now head to https://github.com/me-no-dev/ESPAsyncWebServer and https://github.com/me-no-dev/AsyncTCP and click on "Clone or download -> Download ZIP".
+In the Arduino IDE nagivate to "Sketch -> Include Library -> Add .ZIP Library" and add them both.
 
 #### Flashing
 Now hit the upload button (with an arrow to the right) to upload the code to the board. After that upload the webpage data by clicking on "Tools -> ESP32 Sketch Data Upload". This should be done on every update!
 
 You can edit file "HardwareConfig.h" to specify your board type and for some advanced configuration.
+
+##### For this branch you'll also need to change the default board in HardwareConfig.h to "BOARD_DEFAULT"
 
 #### Updating
 
