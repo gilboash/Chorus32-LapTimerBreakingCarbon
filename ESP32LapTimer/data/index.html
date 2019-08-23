@@ -124,9 +124,32 @@
 					</legend>
 					If the values of your different modules differ too much run this calibration with a VTX powered up at 25mW on any channel. <br>
 					If you ever run this without an active VTX your timer won't work properly and you'll need to recalibrate. <br><br>
-					<form method='POST' action='/calibrateRSSI'>
-						<input type='submit' name='calibrateRSSI' value="Calibrate RSSI">
-					</form>
+					<button id="calibrate_button" name='calibrateRSSI' value="Calibrate RSSI">Calibrate RSSI</button>
+					<table id="calib_table">
+						<tr>
+							<th>Module</th>
+							<th>Min</th>
+							<th>Max</th>
+						</tr>
+						<tr>
+							<td>1</td><td></td><td></td>
+						</tr>
+						<tr>
+							<td>2</td><td></td><td></td>
+						</tr>
+						<tr>
+							<td>3</td><td></td><td></td>
+						</tr>
+						<tr>
+							<td>4</td><td></td><td></td>
+						</tr>
+						<tr>
+							<td>5</td><td></td><td></td>
+						</tr>
+						<tr>
+							<td>6</td><td></td><td></td>
+						</tr>
+					</table>
 				</fieldset>
 				<legend>
 					<h2><b>Reset Eeprom values</b></h2>

@@ -24,6 +24,7 @@
 #include "OLED.h"
 #include "Timer.h"
 #include "Utils.h"
+#include "Comms.h"
 
 static int calibrationFreqIndex = 0;
 static bool isCurrentlyCalibrating = false;
@@ -72,6 +73,7 @@ void rssiCalibrationUpdate() {
       isCurrentlyCalibrating = false;
       setSaveRequired();
       setDisplayScreenNumber(0);
+      sendCalibrationFinished();
     }
   }
 }

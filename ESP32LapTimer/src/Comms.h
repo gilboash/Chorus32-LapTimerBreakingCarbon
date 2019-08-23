@@ -34,5 +34,6 @@ bool isInRaceMode();
 void startRace();
 void stopRace();
 bool isExperimentalModeOn();
+void sendCalibrationFinished();
 
 #endif // __COMMS_H__

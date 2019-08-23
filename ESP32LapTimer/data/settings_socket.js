@@ -94,6 +94,20 @@ function handle_message(message) {
 				field.checked = parseInt(message[3]) == 1;
 				set_value_received(field);
 				break;
+			case constants.EXTENDED_CALIB_MIN:
+				var field = document.getElementById("calib_table");
+				var row = field.rows[pilot_num + 1];
+				row.cells[1].innerText = parseInt(message.substr(3), 16);
+				break;
+			case constants.EXTENDED_CALIB_MAX:
+				var field = document.getElementById("calib_table");
+				var row = field.rows[pilot_num + 1];
+				row.cells[2].innerText = parseInt(message.substr(3), 16);
+				break;
+			case constants.EXTENDED_CALIB_STATUS:
+				var field = document.getElementById("calibrate_button");
+				set_value_received(field);
+				break;
 		}
 	} else {
 		switch(cmd) {
@@ -230,6 +244,11 @@ document.getElementById("RXFilterCutoff").oninput = function () {
 document.getElementById("NumRXs").oninput = function () {
 	set_value_pending(this);
 	send_extended_data(constants.EXTENDED_NUM_MODULES, parseInt(this.value*1), 4);
+};
+
+document.getElementById("calibrate_button").onclick = function () {
+	set_value_pending(this);
+	ws.send(`ER*${constants.EXTENDED_CALIB_START}\n`);
 };
 
 function get_voltage() {

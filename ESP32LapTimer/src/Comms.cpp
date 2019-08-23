@@ -46,6 +46,7 @@
 #include "settings_eeprom.h"
 #include "Laptime.h"
 #include "ADC.h"
+#include "Calibration.h"
 
 ///////This is mostly from the original Chorus Laptimer, need to cleanup unused functions and variables
 
@@ -130,6 +131,8 @@
 #define EXTENDED_RACE_NUM 'R'
 #define EXTENDED_CALIB_MIN 'c'
 #define EXTENDED_CALIB_MAX 'C'
+#define EXTENDED_CALIB_START 's'
+#define EXTENDED_CALIB_STATUS 'S'
 #define EXTENDED_VOLTAGE_TYPE 'v'
 #define EXTENDED_VOLTAGE_CALIB 'V'
 #define EXTENDED_NUM_MODULES 'M'
@@ -240,6 +243,10 @@ void sendExtendedCommandHalfByte(uint8_t set, uint8_t node, uint8_t cmd, uint8_t
   addToSendQueue(cmd);
   addToSendQueue(TO_HEX(data));
   addToSendQueue('\n');
+}
+
+void sendCalibrationFinished() {
+  sendExtendedCommandHalfByte('S', '*', EXTENDED_CALIB_STATUS, 1);
 }
 
 static void sendThresholdMode(uint8_t node) {
@@ -796,6 +803,9 @@ void handleExtendedCommands(uint8_t* data, uint8_t length) {
       case EXTENDED_CALIB_MAX:
         if(node_addr < getNumReceivers()) sendExtendedCommandInt('S', node_addr, EXTENDED_CALIB_MAX, EepromSettings.RxCalibrationMax[node_addr]);
         break;
+      case EXTENDED_CALIB_START:
+        rssiCalibration();
+        sendExtendedCommandHalfByte('S', node_addr, EXTENDED_CALIB_START, 1);
       case EXTENDED_VOLTAGE_TYPE:
         sendExtendedCommandHalfByte('S', '*', EXTENDED_VOLTAGE_TYPE, (uint8_t)EepromSettings.ADCVBATmode);
         break;
