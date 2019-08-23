@@ -25,8 +25,9 @@ function startWebsocket(websocketServerLocation){
     ws.onmessage = on_websocket_event;
     ws.onclose = function(){
         // Try to reconnect in 5 seconds
-        setTimeout(function(){startWebsocket(websocketServerLocation)}, 5000);
+        setTimeout(function(){startWebsocket(websocketServerLocation)}, 1000);
     };
+	ws.oncerror = ws.onclose;
 	ws.onopen = function() {
 		ws.send("ER*R\n"); // get current race number
 		ws.send("R*a\n"); // just get all settings to get all laps
@@ -68,6 +69,8 @@ function build_table(race_num, num_laps) {
 			for(var j = 0; j < num_laps ; ++j) {
 				row.insertCell(-1);
 			}
+			row.insertCell(-1); // Total
+			row.insertCell(-1); // Position
 			row.insertCell(-1); // avg
 			var best = row.insertCell(-1); // best
 			best.innerText = "99999";
@@ -90,17 +93,51 @@ function build_table(race_num, num_laps) {
 	}
 }
 
+function get_lap(race_num, pilot_num, lap_num) {
+	var table = document.getElementById("lap_table_" + race_num);
+	var row = table.rows[pilot_num+1];
+	return parseFloat(row.cells[lap_num+cells_before_lap].innerText);
+}
+
+function transpose(matrix) {
+  return matrix[0].map((col, i) => matrix.map(row => row[i]));
+}
+
+function update_pilots_positions(race_num) {
+	var table = document.getElementById("lap_table_" + race_num);
+	var times = [];
+	for(var i = 0; i < num_pilots; ++i) {
+		var row = table.rows[i+1];
+		var total_time = parseFloat(row.cells[row.cells.length - 4].innerText);
+		if(total_time > 0) {
+			times[times.length] = { num: i, time: total_time};
+		}
+	}
+	times.sort(function (a,b) {
+		return a.time - b.time;
+	});
+	for(var i = 0; i < times.length; ++i) {
+		var pilot_num = times[i].num
+		var row = table.rows[pilot_num + 1];
+		row.cells[row.cells.length - 3].innerText = i;
+	}
+
+}
+
 function add_lap(race_num, pilot_num, lap_num, lap_time) {
+	if(lap_num >= max_laps) return;
 	var table = document.getElementById("lap_table_" + race_num);
 	var row = table.rows[pilot_num + 1];
 	// actually get val from table
-	var best_lap = parseInt(row.cells[row.childElementCount - 1].innerText * 1000.0);
+	var best_lap = parseFloat(row.cells[row.childElementCount - 1].innerText * 1000.0);
 	var avg_lap = 0;
 	if(!(count_first == 0 && lap_num == 0)) { // skip lap 0 for avg and best if we don't count it
 		best_lap = Math.min(best_lap, lap_time);
 		if(row.cells[lap_num+cells_before_lap].innerText == "") {
 			var pilot_name = row.cells[1].children[0].value;
 			speak_lap(pilot_name, lap_num, (lap_time/1000.0).toFixed(2));
+			row.cells[row.cells.length - 4].innerText = parseFloat(row.cells[row.cells.length - 4].innerText*1) + parseFloat(lap_time/1000.0);
+			update_pilots_positions(race_num);
 		}
 	}
 	row.cells[lap_num+cells_before_lap].innerText = lap_time/1000.0;
@@ -113,8 +150,8 @@ function add_lap(race_num, pilot_num, lap_num, lap_time) {
 		avg_lap += lap;
 	}
 	avg_lap /= i - (count_first == 0) - cells_before_lap;
-	row.cells[row.cells.length - 2].innerText = avg_lap;
-	row.cells[row.cells.length - 1].innerText = best_lap/1000.0;
+	row.cells[row.cells.length - 2].innerText = avg_lap.toFixed(2);
+	row.cells[row.cells.length - 1].innerText = (best_lap/1000.0).toFixed(2);
 }
 
 function handle_message(message) {
