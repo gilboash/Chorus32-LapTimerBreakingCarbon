@@ -93,16 +93,78 @@ function build_table(race_num, num_laps) {
 	}
 }
 
-function get_lap(race_num, pilot_num, lap_num) {
+// TODO: add more generic function to reduce the overall count!
+function get_pilot_row(race_num, pilot_num) {
 	var table = document.getElementById("lap_table_" + race_num);
-	var row = table.rows[pilot_num+1];
-	return parseFloat(row.cells[lap_num+cells_before_lap].innerText);
+	return table.rows[pilot_num+1];
+}
+
+function get_lap_cell(race_num, pilot_num, lap_num) {
+	var row = get_pilot_row(race_num, pilot_num);
+	return row.cells[lap_num+cells_before_lap];
+}
+
+function get_lap(race_num, pilot_num, lap_num) {
+	return parseFloat(get_lap_cell(race_num, pilot_num, lap_num).innerText*1);
 }
 
 function set_lap(race_num, pilot_num, lap_num, time) {
-	var table = document.getElementById("lap_table_" + race_num);
-	var row = table.rows[pilot_num+1];
+	var row = get_pilot_row(race_num, pilot_num);
 	row.cells[lap_num+cells_before_lap].innerText = time;
+}
+
+function get_total_time_cell(race_num, pilot_num) {
+	var row = get_pilot_row(race_num, pilot_num);
+	return row.cells[row.cells.length - 4];
+}
+
+function get_total_time(race_num, pilot_num) {
+	return parseFloat(get_total_time_cell(race_num, pilot_num).innerText*1);
+}
+
+function set_total_time(race_num, pilot_num, time) {
+	get_total_time_cell(race_num, pilot_num).innerText = time;
+}
+
+function get_avg_time_cell(race_num, pilot_num) {
+	var row = get_pilot_row(race_num, pilot_num);
+	return row.cells[row.cells.length - 2];
+}
+
+function get_avg_time(race_num, pilot_num) {
+	return parseFloat(get_avg_time_cell(race_num, pilot_num).innerText);
+}
+
+function set_avg_time(race_num, pilot_num, time) {
+	get_avg_time_cell(race_num, pilot_num).innerText = time;
+}
+
+function get_best_time_cell(race_num, pilot_num) {
+	var row = get_pilot_row(race_num, pilot_num);
+	return row.cells[row.cells.length - 1];
+}
+
+function get_best_time(race_num, pilot_num) {
+	return parseFloat(get_best_time_cell(race_num, pilot_num).innerText);
+}
+
+function set_best_time(race_num, pilot_num, time) {
+	get_best_time_cell(race_num, pilot_num).innerText = time;
+}
+
+function get_pilot_name(race_num, pilot_num) {
+	var row = get_pilot_row(race_num, pilot_num);
+	return row.cells[1].lastChild.value;
+}
+
+function get_pilot_position(race_num, pilot_num) {
+	var row = get_pilot_row(race_num, pilot_num);
+	return parseInt(row.cells[row.cells.length - 3].innerText);
+}
+
+function set_pilot_position(race_num, pilot_num, pos) {
+	var row = get_pilot_row(race_num, pilot_num);
+	row.cells[row.cells.length - 3].innerText = pos;
 }
 
 function transpose(matrix) {
@@ -110,11 +172,9 @@ function transpose(matrix) {
 }
 
 function update_pilots_positions(race_num) {
-	var table = document.getElementById("lap_table_" + race_num);
 	var times = [];
 	for(var i = 0; i < num_pilots; ++i) {
-		var row = table.rows[i+1];
-		var total_time = parseFloat(row.cells[row.cells.length - 4].innerText);
+		var total_time = get_total_time(race_num, i);
 		if(total_time > 0) {
 			times[times.length] = { num: i, time: total_time};
 		}
@@ -124,28 +184,34 @@ function update_pilots_positions(race_num) {
 	});
 	for(var i = 0; i < times.length; ++i) {
 		var pilot_num = times[i].num
-		var row = table.rows[pilot_num + 1];
-		row.cells[row.cells.length - 3].innerText = i;
+		set_pilot_position(race_num, pilot_num, i+1);
 	}
 }
 
 function add_lap(race_num, pilot_num, lap_num, lap_time) {
 	if(lap_num >= max_laps) return;
-	var table = document.getElementById("lap_table_" + race_num);
-	var row = table.rows[pilot_num + 1];
 	// actually get val from table
-	var best_lap = parseFloat(row.cells[row.childElementCount - 1].innerText * 1000.0);
+	var best_lap = get_best_time(race_num, pilot_num);
 	var avg_lap = 0;
+	lap_time /= 1000.0; // convert to seconds
 	if(!(count_first == 0 && lap_num == 0)) { // skip lap 0 for avg and best if we don't count it
 		best_lap = Math.min(best_lap, lap_time);
-		if(row.cells[lap_num+cells_before_lap].innerText == "") {
-			var pilot_name = row.cells[1].children[0].value;
-			speak_lap(pilot_name, lap_num, (lap_time/1000.0).toFixed(2));
-			row.cells[row.cells.length - 4].innerText = parseFloat(row.cells[row.cells.length - 4].innerText*1) + parseFloat(lap_time/1000.0);
+		if(get_lap(race_num, pilot_num, lap_num) == 0) {
+			var pilot_name = get_pilot_name(race_num, pilot_num);
+			speak_lap(pilot_name, lap_num, (lap_time).toFixed(2));
+			set_total_time(race_num, pilot_num, (get_total_time(race_num, pilot_num) + lap_time).toFixed(3));
 			update_pilots_positions(race_num);
 		}
+		if(best_lap == lap_time) {
+			var cell = get_lap_cell(race_num, pilot_num, lap_num);
+			// TODO: find a better way to clear the bg color
+			for(var i = 0; i < max_laps; ++i) {
+				get_lap_cell(race_num, pilot_num, i).style.background = "";
+			}
+			cell.style.background = "lightgreen";
+		}
 	}
-	set_lap(race_num, pilot_num, lap_num, lap_time/1000.0);
+	set_lap(race_num, pilot_num, lap_num, lap_time);
 	var avg_lap = 0;
 	var i;
 	for(i = (count_first == 0); i < max_laps; ++i) {
@@ -154,8 +220,8 @@ function add_lap(race_num, pilot_num, lap_num, lap_time) {
 		avg_lap += lap;
 	}
 	avg_lap /= i - (count_first == 0);
-	row.cells[row.cells.length - 2].innerText = avg_lap.toFixed(2);
-	row.cells[row.cells.length - 1].innerText = (best_lap/1000.0).toFixed(2);
+	set_avg_time(race_num, pilot_num, avg_lap.toFixed(2));
+	set_best_time(race_num, pilot_num, best_lap.toFixed(2));
 }
 
 function handle_message(message) {
