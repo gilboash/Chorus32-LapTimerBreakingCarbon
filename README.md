@@ -136,6 +136,8 @@ Now hit the upload button (with an arrow to the right) to upload the code to the
 
 You can edit file "HardwareConfig.h" to specify your board type and for some advanced configuration.
 
+Now hit the upload button (with an arrow to the right) to upload the code to the board. After that upload the webpage data by clicking on "Tools -> ESP32 Sketch Data Upload". This should be done on every update!
+
 ##### For this branch you'll also need to change the default board in HardwareConfig.h to "BOARD_DEFAULT"
 
 #### Updating
