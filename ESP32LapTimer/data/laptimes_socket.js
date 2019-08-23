@@ -99,6 +99,12 @@ function get_lap(race_num, pilot_num, lap_num) {
 	return parseFloat(row.cells[lap_num+cells_before_lap].innerText);
 }
 
+function set_lap(race_num, pilot_num, lap_num, time) {
+	var table = document.getElementById("lap_table_" + race_num);
+	var row = table.rows[pilot_num+1];
+	row.cells[lap_num+cells_before_lap].innerText = time;
+}
+
 function transpose(matrix) {
   return matrix[0].map((col, i) => matrix.map(row => row[i]));
 }
@@ -121,7 +127,6 @@ function update_pilots_positions(race_num) {
 		var row = table.rows[pilot_num + 1];
 		row.cells[row.cells.length - 3].innerText = i;
 	}
-
 }
 
 function add_lap(race_num, pilot_num, lap_num, lap_time) {
@@ -140,16 +145,15 @@ function add_lap(race_num, pilot_num, lap_num, lap_time) {
 			update_pilots_positions(race_num);
 		}
 	}
-	row.cells[lap_num+cells_before_lap].innerText = lap_time/1000.0;
-	// + 1 to skip the pilot field. - 2 because of best/avg lap
+	set_lap(race_num, pilot_num, lap_num, lap_time/1000.0);
 	var avg_lap = 0;
 	var i;
-	for(i = (count_first == 0) + cells_before_lap; i < row.cells.length - 2; ++i) {
-		var lap = parseFloat(row.cells[i].innerText);
+	for(i = (count_first == 0); i < max_laps; ++i) {
+		var lap = get_lap(race_num, pilot_num, i);
 		if(lap == 0 || isNaN(lap)) break;
 		avg_lap += lap;
 	}
-	avg_lap /= i - (count_first == 0) - cells_before_lap;
+	avg_lap /= i - (count_first == 0);
 	row.cells[row.cells.length - 2].innerText = avg_lap.toFixed(2);
 	row.cells[row.cells.length - 1].innerText = (best_lap/1000.0).toFixed(2);
 }
