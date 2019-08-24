@@ -35,14 +35,13 @@ function startWebsocket(websocketServerLocation){
         // Try to reconnect in 5 seconds
         setTimeout(function(){startWebsocket(websocketServerLocation)}, 1000);
     };
-	ws.oncerror = ws.onclose;
 	ws.onopen = function() {
 		ws.send("ER*a\n"); // get all extended settings
 		ws.send("R*a\n"); // just get all settings to get all laps
 	};
 }
 
-// TODO: add support for hiding or disabling pilots. Not sure what of those to do
+// TODO: move pilot activation out of the result list
 function build_table(race_num, num_laps) {
 	console.log("Building table with race_num " + race_num);
 	// build the table template with the given parameters from the node
@@ -216,13 +215,13 @@ function add_lap(race_num, pilot_num, lap_num, lap_time) {
 			set_total_time(race_num, pilot_num, (get_total_time(race_num, pilot_num) + lap_time).toFixed(3));
 			update_pilots_positions(race_num);
 		}
-		if(best_lap == lap_time) {
+		if(best_lap.toFixed(3) == lap_time.toFixed(3)) {
 			var cell = get_lap_cell(race_num, pilot_num, lap_num);
 			// TODO: find a better way to clear the bg color
 			for(var i = 0; i < max_laps; ++i) {
-				get_lap_cell(race_num, pilot_num, i).style.background = "";
+				get_lap_cell(race_num, pilot_num, i).classList.remove("best_lap");
 			}
-			cell.style.background = "lightgreen";
+			cell.classList.add("best_lap");
 		}
 	}
 	set_lap(race_num, pilot_num, lap_num, lap_time);
@@ -234,8 +233,8 @@ function add_lap(race_num, pilot_num, lap_num, lap_time) {
 		avg_lap += lap;
 	}
 	avg_lap /= i - (count_first == 0);
-	set_avg_time(race_num, pilot_num, avg_lap.toFixed(2));
-	set_best_time(race_num, pilot_num, best_lap.toFixed(2));
+	set_avg_time(race_num, pilot_num, avg_lap.toFixed(3));
+	set_best_time(race_num, pilot_num, best_lap.toFixed(3));
 }
 
 function handle_message(message) {
