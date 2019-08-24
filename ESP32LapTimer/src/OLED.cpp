@@ -262,7 +262,7 @@ void summary_page_update(void* data) {
   uint8_t skipped = 0;
   uint8_t first_pilot = my_data->first_pilot;
   for (uint8_t i = 0; i < SUMMARY_PILOTS_PER_PAGE + skipped && (i + first_pilot) < MAX_NUM_PILOTS; ++i) {
-    if(isPilotActive(i)) {
+    if(isPilotActive(i+first_pilot)) {
       display.drawString(0, 9 + (i - skipped) * 9, String(i+1+first_pilot) + ":" + getBandLabel(getRXBandPilot(i + first_pilot)) + String(getRXChannelPilot(i + first_pilot) + 1) + "," + String(getRSSI(i + first_pilot) / 12));
       display.drawProgressBar(RSSI_BAR_X_OFFSET, 10 + (i - skipped) * 9, RSSI_BAR_LENGTH, RSSI_BAR_HEIGHT, map(getRSSI(i + first_pilot), RSSI_ADC_READING_MIN, RSSI_ADC_READING_MAX, 0, 100));
       display.drawVerticalLine(RSSI_BAR_X_OFFSET + map(MAX(getRSSIThreshold(i + first_pilot), RSSI_ADC_READING_MIN), RSSI_ADC_READING_MIN, RSSI_ADC_READING_MAX, 0, RSSI_BAR_LENGTH),  10 + (i - skipped) * 9, RSSI_BAR_HEIGHT); // line to show the RSSIthresholds
