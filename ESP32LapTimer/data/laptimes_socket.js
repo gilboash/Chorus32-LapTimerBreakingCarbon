@@ -293,31 +293,38 @@ document.getElementById("stop_race_button").onclick = function () {
 	ws.send("R*R0\n");
 }
 
-const voiceSelect = document.getElementById('voices');
-var voices = speechSynthesis.getVoices();
-// XXX: sometimes the first call returns null :/
-voices = speechSynthesis.getVoices();
-voices = speechSynthesis.getVoices();
+function load_voices() {
+	const voiceSelect = document.getElementById('voices');
+	var voices = speechSynthesis.getVoices();
 
-voices.forEach((voice) => {
-	const option = document.createElement('option');
-	option.value = voice.name;
-	option.innerHTML = voice.name;
-	option.id = voice.name;
-	voiceSelect.appendChild(option);
-	// just hope we get an english voice with this
-	if(voice.name.includes("english")) {
-		voiceSelect.value = voice.name;
+	// This was the most reliable way of getting the voices to load :/
+	if(voices.length == 0) {
+		setTimeout(() => {load_voices(),1000});
+		return;
 	}
-});
 
-var selected_voice = localStorage.getItem("voice");
-if(selected_voice != null) {
-	voiceSelect.value = selected_voice;
+	voices.forEach((voice) => {
+		const option = document.createElement('option');
+		option.value = voice.name;
+		option.innerHTML = voice.name;
+		option.id = voice.name;
+		voiceSelect.appendChild(option);
+		// just hope we get an english voice with this
+		if(voice.name.includes("english")) {
+			voiceSelect.value = voice.name;
+		}
+	});
+
+	var selected_voice = localStorage.getItem("voice");
+	if(selected_voice != null) {
+		voiceSelect.value = selected_voice;
+	}
+
+	voiceSelect.addEventListener('change', (e) => {
+	  localStorage.setItem("voice", voiceSelect.value);
+	});
 }
 
-voiceSelect.addEventListener('change', (e) => {
-  localStorage.setItem("voice", voiceSelect.value);
-});
+load_voices();
 
 document.getElementById("max_laps").value = max_laps;
