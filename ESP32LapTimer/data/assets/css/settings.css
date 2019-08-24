@@ -1,0 +1,9 @@
+td, th {
+  text-align: center;
+  vertical-align: middle;
+}
+
+#calib_table * {
+	border: 1px solid black;
+	width: 5em;
+}
