@@ -3,7 +3,7 @@ import * as constants from './constants.js';
 var ws = null;
 
 function send_data_to_prefix(prefix, to, type, data, bits) {
-	ws.send(`${PREFIX}R${to}${type}${(data).toString(16).padStart(bits/4, '0').toUpperCase()}\n`);
+	ws.send(`${prefix}R${to}${type}${(data).toString(16).padStart(bits/4, '0').toUpperCase()}\n`);
 }
 
 function send_extended_data_to(to, type, data, bits) {
