@@ -7,3 +7,15 @@ td, th {
 	border: 1px solid black;
 	width: 5em;
 }
+
+#pilot_table {
+	width: 100%;
+}
+
+.band_select, .channel_select {
+	width: auto;
+}
+
+.rssi_select {
+	width:3.5em;
+}
