@@ -32,7 +32,7 @@ int IRAM_ATTR queue_enqueue(queue_t* queue, void* data){
   if(queue == NULL){
     return -1;
   }
-  if(queue->curr_size + 1 >= queue->max_size) {
+  if(queue->curr_size + 1 > queue->max_size) {
     return QUEUE_ERROR_FULL;
   }
   queue->data[queue->curr_size] = data;
