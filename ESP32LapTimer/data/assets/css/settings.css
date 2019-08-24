@@ -19,3 +19,15 @@ td, th {
 .rssi_select {
 	width:3.5em;
 }
+
+[val_state="pending"] {
+	outline: 1px solid orange;
+}
+
+[val_state="received"] {
+	outline: 1px solid green;
+}
+
+[val_state="error"] {
+	outline: 1px solid red;
+}

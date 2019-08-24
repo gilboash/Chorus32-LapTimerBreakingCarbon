@@ -30,12 +30,17 @@ function startWebsocket(websocketServerLocation){
 	};
 }
 
+
 function set_value_pending(object) {
-	object.style.outline = "1px solid orange";
+	object.setAttribute("val_state","pending");
 }
 
 function set_value_received(object) {
-	object.style.outline = "1px solid green";
+	object.setAttribute("val_state","received");
+}
+
+function set_value_error(object) {
+	object.setAttribute("val_state","error");
 }
 
 function handle_message(message) {
@@ -210,7 +215,7 @@ document.getElementById("ADCVBATmode").oninput = function() {
 document.getElementById("ADCcalibValue").oninput = function() {
 	set_value_pending(this);
 	if(this.value.endsWith('.')) {
-		this.style.outline = "1px solid red";
+		set_value_error(this);
 		return;
 	}
 	send_extended_data(constants.EXTENDED_VOLTAGE_CALIB, parseInt(this.value * 1000), 16);
