@@ -143,7 +143,7 @@ function create_pilots() {
 	for(var i = 0; i < 8; ++i) {
 		var table = document.getElementById('pilot_table');
 		var row = table.insertRow(-1);
-		row.insertCell(-1).innerText = i;
+		row.insertCell(-1).innerText = (i+1);
 		var cell;
 		var input_html = "";
 		// band selection
