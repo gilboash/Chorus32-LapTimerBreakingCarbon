@@ -2,15 +2,20 @@ import * as constants from './constants.js';
 
 var ws = null;
 
-// TODO: cleanup this mess and make a single funcion
+function send_data_to_prefix(prefix, to, type, data, bits) {
+	ws.send(`${PREFIX}R${to}${type}${(data).toString(16).padStart(bits/4, '0').toUpperCase()}\n`);
+}
+
 function send_extended_data_to(to, type, data, bits) {
-	ws.send(`ER${to}${type}${(data).toString(16).padStart(bits/4, '0').toUpperCase()}\n`);
+	send_data_to_prefix(constants.EXTENDED_PREFIX, to, type, data, bits);
 }
+
 function send_extended_data(type, data, bits) {
-	ws.send(`ER*${type}${(data).toString(16).padStart(bits/4, '0').toUpperCase()}\n`);
+	send_extended_data_to("*", type, data, bits);
 }
+
 function send_data_to(to, type, data, bits) {
-	ws.send(`R${to}${type}${(data).toString(16).padStart(bits/4, '0').toUpperCase()}\n`);
+	send_data_to_prefix("", to, type, data, bits);
 }
 
 function update_all_values() {
