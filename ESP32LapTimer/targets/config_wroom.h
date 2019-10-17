@@ -28,3 +28,7 @@
 
 #define I2C_SDA 23
 #define I2C_SCL 22
+
+#ifdef OLED
+#undef OLED
+#endif
