@@ -258,6 +258,8 @@ void InitWebServer() {
         log_e("%s\n", Update.errorString());
         isHTTPUpdating = false;
       }
+      uint8_t progress = (Update.progress() / Update.size()) * 100;
+      sendUpdateProgress(progress);
     }
     if(final){
       if(Update.end(true)){

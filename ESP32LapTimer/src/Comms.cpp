@@ -143,6 +143,7 @@
 #define EXTENDED_WIFI_PROTOCOL 'w'
 #define EXTENDED_FILTER_CUTOFF 'F'
 #define EXTENDED_MULTIPLEX_OFF 'm'
+#define EXTENDED_UPDATE_PROGRESS 'U'
 
 // send item byte constants
 // Must correspond to sequence of numbers used in "send data" switch statement
@@ -1067,4 +1068,8 @@ void stopRace() {
 
 bool isExperimentalModeOn() {
   return use_experimental;
+}
+
+void sendUpdateProgress(uint8_t progress) {
+  sendExtendedCommandHalfByte('S', '*', EXTENDED_UPDATE_PROGRESS, progress);
 }
