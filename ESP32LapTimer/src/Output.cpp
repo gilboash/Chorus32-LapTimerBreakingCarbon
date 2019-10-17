@@ -130,6 +130,7 @@ void init_outputs() {
 }
 
 void output_input_callback(uint8_t* buf, uint32_t size) {
+  if(isUpdating()) return; // ignore _ALL_ inputs during update
 #ifdef INPUT_DEBUG
   Serial.println("Input packet: ");
   Serial.write(buf, size);

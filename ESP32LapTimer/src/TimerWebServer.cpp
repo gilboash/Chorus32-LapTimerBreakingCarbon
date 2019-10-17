@@ -166,7 +166,6 @@ void onWebsocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, Aw
 }
 
 void read_websocket(void* output) {
-  if(isHTTPUpdating) return; // ignore all incoming messages during update
   if(xSemaphoreTake(websocket_lock, 1)){
     if(websocket_buffer_pos > 0) {
       output_t* out = (output_t*)output;
