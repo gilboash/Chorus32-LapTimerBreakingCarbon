@@ -38,7 +38,8 @@
 
 #include "Filter.h"
 
-static Adafruit_INA219 ina219; // A0+A1=GND
+static Adafruit_INA219 ina219;
+static TwoWire i2c_wire(0);
 
 static esp_adc_cal_characteristics_t adc_chars;
 
@@ -182,7 +183,8 @@ void ConfigureADC(bool disable_all_modules) {
   //since the reference voltage can range from 1000mV to 1200mV we are using 1100mV as a default
   esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_6db, ADC_WIDTH_BIT_12, 1100, &adc_chars);
 
-  ina219.begin();
+  ina219.begin(&i2c_wire);
+  i2c_wire.begin(I2C_SDA, I2C_SCL);
   ReadVBAT_INA219();
   uint16_t cutoff = getRXADCfilterCutoff();
 

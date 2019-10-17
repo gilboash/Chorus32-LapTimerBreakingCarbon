@@ -39,7 +39,7 @@ static bool display_standby_status = false;
 
 static Timer oledTimer = Timer(oledRefreshTime);
 
-static SSD1306 display(0x3c, 21, 22);  // 21 and 22 are default pins
+static SSD1306 display(0x3c, I2C_SCL, I2C_SDA);  // 21 and 22 are default pins
 
 typedef struct oled_page_s {
   void* data;
