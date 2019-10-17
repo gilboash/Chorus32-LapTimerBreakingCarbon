@@ -142,6 +142,41 @@ void stopRace_button(AsyncWebServerRequest* req) {
   req->send(200, "text/plain", "");
 }
 
+void onWebsocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
+  if(isHTTPUpdating) return; // ignore all incoming messages during update
+  Serial.print("Got websocket message: ");
+  Serial.write(data, len);
+  Serial.println("");
+  if(xSemaphoreTake(websocket_lock, portMAX_DELAY)){
+    //Handle WebSocket event
+    if(type == WS_EVT_DATA){
+      //data packet
+      AwsFrameInfo * info = (AwsFrameInfo*)arg;
+      if(info->final && info->index == 0 && info->len == len){
+        //the whole message is in a single frame and we got all of it's data
+        // we'll ignore fragmented messages for now
+        if(websocket_buffer_pos + len < WEBSOCKET_BUF_SIZE) {
+          memcpy(websocket_buffer + websocket_buffer_pos, data, len);
+          websocket_buffer_pos += len;
+        }
+      }
+    }
+    xSemaphoreGive(websocket_lock);
+  }
+}
+
+void read_websocket(void* output) {
+  if(isHTTPUpdating) return; // ignore all incoming messages during update
+  if(xSemaphoreTake(websocket_lock, 1)){
+    if(websocket_buffer_pos > 0) {
+      output_t* out = (output_t*)output;
+      out->handle_input_callback(websocket_buffer, websocket_buffer_pos);
+      websocket_buffer_pos = 0;
+    }
+    xSemaphoreGive(websocket_lock);
+  }
+}
+
 void send_websocket(void* output, uint8_t* data, size_t len) {
   ws.textAll(data, len);
 }
