@@ -163,9 +163,11 @@
 						<h2>Firmware Update:</h2>
 					</legend>
 
-
-					<form method='POST' action='/update' enctype='multipart/form-data'> <input type='file' name='update'> <input type='submit' value='Update'></form>
-					</form>
+					<div id="update_progress">
+						<div id="update_bar">0%</div>
+					</div>
+					<input type='file' name='update' id="update_file"> <button name='update' value="Update" id="update_button">Update Firmware</button>
+					
 				</fieldset>
 
 
@@ -178,4 +180,5 @@
 
 </body>
 <script src="settings_socket.js" type="module"></script>
+<script src="update_upload.js"></script>
 </html>

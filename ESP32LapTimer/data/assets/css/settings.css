@@ -31,3 +31,17 @@ td, th {
 [val_state="error"] {
 	outline: 1px solid red;
 }
+
+#update_progress {
+  width: 100%;
+  background-color: grey;
+}
+
+#update_bar {
+  width: 1%;
+  height: 30px;
+  background-color: green;
+  text-align: center;
+  line-height: 30px;
+  color: white;
+}
