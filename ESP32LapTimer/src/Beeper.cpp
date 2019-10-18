@@ -22,47 +22,47 @@
 
 #include <Arduino.h>
 
-static Timer beeperTimer = Timer(50);
+#define BEEP_MAX_QUEUE 4
 
-void beep() {
-  digitalWrite(BEEPER, HIGH);
-  delay(50);
-  digitalWrite(BEEPER, LOW);
-  beeperTimer.reset();
-}
+static queue_t beep_queue;
+static pattern_t* beep_queue_data[BEEP_MAX_QUEUE];
 
-void doubleBeep() {
-  int i=0;
-  for (i=0; i<=1; i++) {
-    digitalWrite(BEEPER, HIGH);
-    delay(50);
-    digitalWrite(BEEPER, LOW);
-    delay(50);
-  }
-}
+static pattern_t* current_pattern = NULL;
+static uint32_t start_time = 0;
+static uint8_t repeat_count = 0;
 
-void chirps() {
-  int i = 0;
-  for (i = 0; i <=5; i++) {
-    digitalWrite(BEEPER, HIGH);
-    delay(10);
-    digitalWrite(BEEPER, LOW);
-    delay(10);
-  }
-}
-
-void fiveBeep() {
-  int i=0;
-  for (i=0; i<=4; i++) {
-    digitalWrite(BEEPER, HIGH);
-    delay(100);
-    digitalWrite(BEEPER, LOW);
-    delay(50);
-  }
+void beeper_add_to_queue(const pattern_t* pattern) {
+  queue_enqueue(&beep_queue, (void*)pattern);
 }
 
 void beeperUpdate() {
-  if (beeperTimer.hasTicked()) {
-    digitalWrite(BEEPER, LOW);
+  // currently playing one pattern
+  if(current_pattern) {
+    if(millis() - start_time < current_pattern->on_time) {
+      digitalWrite(BEEPER, HIGH);
+    }
+    else if (millis() - start_time < current_pattern->off_time) {
+      digitalWrite(BEEPER, LOW);
+    }
+    else { // pattern end
+      ++repeat_count;
+      start_time = millis();
+      if(repeat_count >= current_pattern->repeat) {
+        current_pattern = NULL;
+      }
+    }
   }
+  else {
+    // get new pattern
+    current_pattern = (pattern_t*)queue_dequeue(&beep_queue);
+    start_time = millis();
+    repeat_count = 0;
+  }
+}
+
+
+void beeper_init() {
+  beep_queue.curr_size = 0;
+  beep_queue.max_size = BEEP_MAX_QUEUE;
+  beep_queue.data = (void**)beep_queue_data;
 }

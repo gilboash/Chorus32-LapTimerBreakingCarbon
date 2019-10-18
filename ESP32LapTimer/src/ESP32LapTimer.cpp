@@ -116,6 +116,7 @@ void setup() {
   newButtonSetup();
 #endif
   resetLaptimes();
+  beeper_init();
 
   EepromSettings.setup();
   setRXADCfilterCutoff(EepromSettings.RXADCfilterCutoff);
