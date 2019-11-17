@@ -71,27 +71,23 @@ static output_t outputs[] = {
 
 #define OUTPUT_SIZE (sizeof(outputs)/sizeof(outputs[0]))
 
-
-bool IRAM_ATTR addToSendQueue(uint8_t item) {
+bool IRAM_ATTR addToSendQueue(uint8_t * buf, uint32_t length) {
   if(xSemaphoreTake(queue_semaphore, portMAX_DELAY)) {
-    if(output_buffer_pos >= MAX_OUTPUT_BUFFER_SIZE) {
+    if(output_buffer_pos + length > MAX_OUTPUT_BUFFER_SIZE) {
+		Serial.printf("%d + %d > %d\n", output_buffer_pos, length, MAX_OUTPUT_BUFFER_SIZE);
       xSemaphoreGive(queue_semaphore);
       return false;
     }
-    output_buffer[output_buffer_pos++] = item;
+    memcpy(output_buffer + output_buffer_pos, buf, length);
+    output_buffer_pos += length;
     xSemaphoreGive(queue_semaphore);
     return true;
   }
   return false;
 }
 
-uint8_t IRAM_ATTR addToSendQueue(uint8_t * buff, uint32_t length) {
-  for (int i = 0; i < length; ++i) {
-    if(!addToSendQueue(buff[i])) {
-      return i;
-    }
-  }
-  return length;
+bool IRAM_ATTR addToSendQueue(uint8_t item) {
+  return addToSendQueue(&item, 1);
 }
 
 void update_outputs() {
