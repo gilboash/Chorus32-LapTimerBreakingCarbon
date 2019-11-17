@@ -214,18 +214,18 @@ static uint8_t thresholdSetupMode[MAX_NUM_PILOTS];
 
 // TODO: unify those functions
 void sendExtendedCommandInt(uint8_t set, uint8_t node, uint8_t cmd, int data) {
-  addToSendQueue(EXTENDED_PREFIX);
-  addToSendQueue('S');
+  uint8_t buf[9];
+  buf[0] = EXTENDED_PREFIX;
+  buf[1] = 'S';
   if(node == '*') {
-    addToSendQueue(node);
+    buf[2] = node;
   } else {
-    addToSendQueue(TO_HEX(node));
+    buf[2] = TO_HEX(node);
   }
-  addToSendQueue(cmd);
-  uint8_t buf[4];
-  intToHex(buf, data);
-  addToSendQueue(buf, 4);
-  addToSendQueue('\n');
+  buf[3] = cmd;
+  intToHex(buf + 4, data);
+  buf[8] = '\n';
+  addToSendQueue(buf, 9);
 }
 
 void sendExtendedCommandByte(uint8_t set, uint8_t node, uint8_t cmd, uint8_t data) {
