@@ -144,6 +144,14 @@
 #define EXTENDED_FILTER_CUTOFF 'F'
 #define EXTENDED_MULTIPLEX_OFF 'm'
 #define EXTENDED_UPDATE_PROGRESS 'U'
+#define EXTENDED_RSSI 'R' // Time, RSSI
+
+// Binary commands. These are used for messages which are sent very often to reduce the overhead. e.g. for RSSI updates
+// Prefix | CMD  | data (contains node id if needed)
+// 8bit   | 8bit | variable | newline (for compatability)
+// TODO: on hold for now, because of javascript
+#define BINARY_PREFIX 'B'
+#define BINARY_RSSI 1 // node id(8), time(32), rssi(16)
 
 // send item byte constants
 // Must correspond to sequence of numbers used in "send data" switch statement
@@ -177,6 +185,8 @@ static uint16_t rssiThreshold = 190;
 static uint32_t lastRSSIsent;
 
 static uint16_t rssiMonitorInterval = 0; // zero means the RSSI monitor is OFF
+
+static uint16_t extendedRssiMonitorInterval = 0; // zero means the RSSI monitor is OFF
 
 #define RSSI_SETUP_INITIALIZE 0
 #define RSSI_SETUP_NEXT_STEP 1
@@ -244,6 +254,29 @@ void sendExtendedCommandHalfByte(uint8_t set, uint8_t node, uint8_t cmd, uint8_t
   addToSendQueue(cmd);
   addToSendQueue(TO_HEX(data));
   addToSendQueue('\n');
+}
+
+void sendBinaryRSSI(uint8_t node, uint32_t time, uint16_t rssi) {
+  uint8_t buf[10];
+  buf[0] = BINARY_PREFIX;
+  buf[1] = BINARY_RSSI;
+  buf[2] = node;
+  memcpy(buf + 3, &time, 4);
+  memcpy(buf + 7, &rssi, 2);
+  buf[9] = '\n';
+  addToSendQueue(buf, 10);
+}
+
+void sendExtendedRSSI(uint8_t node, uint32_t time, uint16_t rssi) {
+  uint8_t buf[17];
+  buf[0] = EXTENDED_PREFIX;
+  buf[1] = 'S';
+  buf[2] = TO_HEX(node);
+  buf[3] = EXTENDED_RSSI;
+  longToHex(buf + 4, time); // ends at 11
+  intToHex(buf + 12, rssi); // ends at 15
+  buf[16] = '\n';
+  addToSendQueue(buf, 17);
 }
 
 void sendCalibrationFinished() {
@@ -379,6 +412,21 @@ void SendCurrRSSI(uint8_t NodeAddr) {
   //MirrorToSerial = true;
   lastRSSIsent = millis();
 
+}
+
+void ExtendedRSSILoop() {
+  static uint32_t last_extended_sent = 0;
+  if (extendedRssiMonitorInterval == 0) {
+    return;
+  }
+  if (millis() > extendedRssiMonitorInterval + last_extended_sent) {
+    last_extended_sent = millis();
+    for (int i = 0; i < MAX_NUM_PILOTS; ++i) {
+      if(isPilotActive(i)) {
+        sendExtendedRSSI(i, millis(), getRSSI(i));
+      }
+    }
+  }
 }
 
 void SendCurrRSSIloop() {
@@ -788,6 +836,10 @@ void handleExtendedCommands(uint8_t* data, uint8_t length) {
         setPilotMultiplexOff(node_addr, TO_BYTE(data[3]));
         sendExtendedCommandHalfByte('S', node_addr, control_byte, isPilotMultiplexOff(node_addr));
         break;
+      case EXTENDED_RSSI:
+        extendedRssiMonitorInterval = HEX_TO_UINT16(data + 3);
+        sendExtendedCommandInt('S', '*', control_byte, extendedRssiMonitorInterval);
+        break;
     }
 
   } else {
@@ -1072,4 +1124,9 @@ bool isExperimentalModeOn() {
 
 void sendUpdateProgress(uint8_t progress) {
   sendExtendedCommandHalfByte('S', '*', EXTENDED_UPDATE_PROGRESS, progress);
+}
+
+void update_comms() {
+  SendCurrRSSIloop();
+  ExtendedRSSILoop();
 }

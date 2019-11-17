@@ -39,7 +39,7 @@
 #include "HardwareConfig.h"
 #include <freertos/semphr.h>
 
-#define MAX_OUTPUT_BUFFER_SIZE 2000
+#define MAX_OUTPUT_BUFFER_SIZE 4000
 
 static uint8_t output_buffer[MAX_OUTPUT_BUFFER_SIZE];
 static int output_buffer_pos = 0; //Keep track of where we are in the Queue

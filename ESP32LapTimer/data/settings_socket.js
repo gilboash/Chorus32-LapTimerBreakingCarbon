@@ -49,102 +49,116 @@ function set_value_error(object) {
 }
 
 function handle_message(message) {
-	var extended = message[0] == 'E';
-	if(extended) {
-		message = message.substr(1);
-	}
-	var pilot_num = parseInt(message[1]);
-	var cmd = message[2];
-
-	// Extended commands
-	if(extended) {
+	var binary = message[0] == 'B';
+	
+	if(binary) {
+		var cmd = message[1];
 		switch(cmd) {
-			case constants.EXTENDED_VOLTAGE_TYPE:
-				var field = document.getElementById("ADCVBATmode");
-				field.value = parseInt(message[3], 16);
-				set_value_received(field);
-				break;
-			case constants.EXTENDED_VOLTAGE_CALIB:
-				var field = document.getElementById("ADCcalibValue");
-				field.value = parseInt(message.substr(3), 16) / 1000.0;
-				set_value_received(field);
-				break;
-			case constants.EXTENDED_EEPROM_RESET:
-				var field = document.getElementById("eepromReset");
-				set_value_received(field);
-				update_all_values();
-				break;
-			case constants.EXTENDED_DISPLAY_TIMEOUT:
-				var field = document.getElementById("displayTimeout");
-				field.value = parseInt(message.substr(3), 16);
-				set_value_received(field);
-				break;
-			case constants.EXTENDED_WIFI_CHANNEL:
-				var field = document.getElementById("WiFiChannel");
-				field.value = parseInt(message[3], 16);
-				set_value_received(field);
-				break;
-			case constants.EXTENDED_WIFI_PROTOCOL:
-				var field = document.getElementById("WiFiProtocol");
-				field.value = parseInt(message[3], 16);
-				set_value_received(field);
-				break;
-			case constants.EXTENDED_FILTER_CUTOFF:
-				var field = document.getElementById("RXFilterCutoff");
-				field.value = parseInt(message.substr(3), 16);
-				set_value_received(field);
-				break;
-			case constants.EXTENDED_NUM_MODULES:
-				var field = document.getElementById("NumRXs");
-				field.value = parseInt(message[3], 16);
-				set_value_received(field);
-				break;
-			case constants.EXTENDED_MULTIPLEX_OFF:
-				var field = document.getElementById("pilot_multuplex_off_" + pilot_num);
-				field.checked = parseInt(message[3]) == 1;
-				set_value_received(field);
-				break;
-			case constants.EXTENDED_CALIB_MIN:
-				var field = document.getElementById("calib_table");
-				var row = field.rows[pilot_num + 1];
-				row.cells[1].innerText = parseInt(message.substr(3), 16);
-				break;
-			case constants.EXTENDED_CALIB_MAX:
-				var field = document.getElementById("calib_table");
-				var row = field.rows[pilot_num + 1];
-				row.cells[2].innerText = parseInt(message.substr(3), 16);
-				break;
-			case constants.EXTENDED_CALIB_STATUS:
-				var field = document.getElementById("calibrate_button");
-				set_value_received(field);
+			case constants.BINARY_RSSI:
+				var time = ((message[2] << 24) & 0xffff) | ((message[3] << 16) & 0xffff) | ((message[4] << 8) & 0xffff) | (message[5] & 0xffff);
+				var rssi =(((message[6] & 0xff) << 8) | (message[7] & 0xff));
+				console.log("Got binary! with time " + time + " and rssi " + rssi + " message: " + message);
+				
 				break;
 		}
 	} else {
-		switch(cmd) {
-			case constants.RESPONSE_VOLTAGE:
-				var field = document.getElementById("Var_VBAT");
-				field.innerText = (parseInt(message.substr(3), 16) * (5/1024.0) * 11).toFixed(2);
-				break;
-			case constants.RESPONSE_THRESHOLD:
-				var field = document.getElementById("RSSIthreshold" + pilot_num);
-				field.value = parseInt(message.substr(3), 16);
-				set_value_received(field);
-				break;
-			case constants.RESPONSE_PILOT_ACTIVE:
-				var field = document.getElementById("pilot_enabled_" + pilot_num);
-				field.checked = parseInt(message[3]) == 1;
-				set_value_received(field);
-				break;
-			case constants.RESPONSE_BAND:
-				var field = document.getElementById("band" + pilot_num);
-				field.value = message[3];
-				set_value_received(field);
-				break;
-			case constants.RESPONSE_CHANNEL:
-				var field = document.getElementById("channel" + pilot_num);
-				field.value = message[3];
-				set_value_received(field);
-				break;
+		var extended = message[0] == 'E';
+		if(extended) {
+			message = message.substr(1);
+		}
+		var pilot_num = parseInt(message[1]);
+		var cmd = message[2];
+
+		// Extended commands
+		if(extended) {
+			switch(cmd) {
+				case constants.EXTENDED_VOLTAGE_TYPE:
+					var field = document.getElementById("ADCVBATmode");
+					field.value = parseInt(message[3], 16);
+					set_value_received(field);
+					break;
+				case constants.EXTENDED_VOLTAGE_CALIB:
+					var field = document.getElementById("ADCcalibValue");
+					field.value = parseInt(message.substr(3), 16) / 1000.0;
+					set_value_received(field);
+					break;
+				case constants.EXTENDED_EEPROM_RESET:
+					var field = document.getElementById("eepromReset");
+					set_value_received(field);
+					update_all_values();
+					break;
+				case constants.EXTENDED_DISPLAY_TIMEOUT:
+					var field = document.getElementById("displayTimeout");
+					field.value = parseInt(message.substr(3), 16);
+					set_value_received(field);
+					break;
+				case constants.EXTENDED_WIFI_CHANNEL:
+					var field = document.getElementById("WiFiChannel");
+					field.value = parseInt(message[3], 16);
+					set_value_received(field);
+					break;
+				case constants.EXTENDED_WIFI_PROTOCOL:
+					var field = document.getElementById("WiFiProtocol");
+					field.value = parseInt(message[3], 16);
+					set_value_received(field);
+					break;
+				case constants.EXTENDED_FILTER_CUTOFF:
+					var field = document.getElementById("RXFilterCutoff");
+					field.value = parseInt(message.substr(3), 16);
+					set_value_received(field);
+					break;
+				case constants.EXTENDED_NUM_MODULES:
+					var field = document.getElementById("NumRXs");
+					field.value = parseInt(message[3], 16);
+					set_value_received(field);
+					break;
+				case constants.EXTENDED_MULTIPLEX_OFF:
+					var field = document.getElementById("pilot_multuplex_off_" + pilot_num);
+					field.checked = parseInt(message[3]) == 1;
+					set_value_received(field);
+					break;
+				case constants.EXTENDED_CALIB_MIN:
+					var field = document.getElementById("calib_table");
+					var row = field.rows[pilot_num + 1];
+					row.cells[1].innerText = parseInt(message.substr(3), 16);
+					break;
+				case constants.EXTENDED_CALIB_MAX:
+					var field = document.getElementById("calib_table");
+					var row = field.rows[pilot_num + 1];
+					row.cells[2].innerText = parseInt(message.substr(3), 16);
+					break;
+				case constants.EXTENDED_CALIB_STATUS:
+					var field = document.getElementById("calibrate_button");
+					set_value_received(field);
+					break;
+			}
+		} else {
+			switch(cmd) {
+				case constants.RESPONSE_VOLTAGE:
+					var field = document.getElementById("Var_VBAT");
+					field.innerText = (parseInt(message.substr(3), 16) * (5/1024.0) * 11).toFixed(2);
+					break;
+				case constants.RESPONSE_THRESHOLD:
+					var field = document.getElementById("RSSIthreshold" + pilot_num);
+					field.value = parseInt(message.substr(3), 16);
+					set_value_received(field);
+					break;
+				case constants.RESPONSE_PILOT_ACTIVE:
+					var field = document.getElementById("pilot_enabled_" + pilot_num);
+					field.checked = parseInt(message[3]) == 1;
+					set_value_received(field);
+					break;
+				case constants.RESPONSE_BAND:
+					var field = document.getElementById("band" + pilot_num);
+					field.value = message[3];
+					set_value_received(field);
+					break;
+				case constants.RESPONSE_CHANNEL:
+					var field = document.getElementById("channel" + pilot_num);
+					field.value = message[3];
+					set_value_received(field);
+					break;
+			}
 		}
 	}
 }
