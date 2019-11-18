@@ -6,9 +6,11 @@ var max_laps = 4;
 
 var pilot_active = [];
 var pilot_log = [[]];
-var chart_length = 100;
+var chart_length = 1000;
 
 var max_time = 0;
+var chart_autoscroll = true;
+var chart_current_end = 0;
 
 const cells_before_lap = 2;
 function speak_lap(pilot, lap_number, time) {
@@ -346,6 +348,8 @@ function get_chart_data(starttime, endtime) {
 	if(starttime == undefined) starttime = 0;
 	for(var i = 0; i < num_pilots; ++i) {
 		if(pilot_active[i] && pilot_log[i] != undefined) {
+			var index = series.length;
+			series[index] = {name: "Pilot" + i, data: []};
 			for(var t = pilot_log[i].length - 1; t >= 0; --t) {
 				var rssi = pilot_log[i][t].rssi;
 				var time = pilot_log[i][t].time;
@@ -354,12 +358,9 @@ function get_chart_data(starttime, endtime) {
 				if(time < starttime) break;
 				if(time > endtime) continue;
 				
-				if(series[i] == undefined) {
-					series[i] = [];
-				}
-				series[i].push({x: time, y:rssi});
+				series[index].data.push({x: time, y:rssi});
 			}
-			series[i].reverse();
+			series[index].data.reverse();
 		}
 	}
 	return series;
@@ -367,11 +368,16 @@ function get_chart_data(starttime, endtime) {
 
 
 var chart_options = {
+	low: 0,
+	high: 1000,
 	showPoint: false,
 	lineSmooth: false,
 	axisX: {
 		type: Chartist.AutoScaleAxis,
-		onlyInteger: true
+		onlyInteger: true,
+		labelInterpolationFnc: function(value, index) {
+			return index % 13 === 0 ? value/1000 : null;
+		}
 	}
 }
 
@@ -379,8 +385,41 @@ var count = 0;
 var myChart = new Chartist.Line('.ct-chart', {}, chart_options);
 
 function update_graph() {
-	myChart.update({ series: get_chart_data(Math.max(0, max_time - chart_length))});
+	if(chart_autoscroll) {
+		start = Math.max(0, max_time - chart_length);
+		end = undefined;
+		chart_current_end = max_time;
+	} else {
+		end = chart_current_end;
+		start = Math.max(0, end - chart_length);
+	}
+	myChart.update({series: get_chart_data(start, end)});
 }
+
+const graph_div = document.getElementById('graph_div');
+graph_div.addEventListener('wheel',function(event){
+	chart_length += event.deltaY * 100;
+	chart_length = Math.max(chart_length, 100);
+	event.preventDefault();
+    return false; 
+}, false);
+
+var dragging = false;
+
+graph_div.addEventListener('mousedown', function(event) {
+	dragging = true;
+}, false);
+
+graph_div.addEventListener('mouseup', function(event) {
+	dragging = false;
+}, false);
+
+graph_div.addEventListener('mousemove', function(event) {
+	if(dragging) {
+		chart_autoscroll = false;
+		chart_current_end = Math.min(Math.max( chart_current_end - event.movementX*(chart_length/1000), 0), max_time);
+	}
+}, false);
 
 function clamp(num, min, max) {
   return num <= min ? min : num >= max ? max : num;
@@ -392,7 +431,7 @@ function fake_data() {
 	var rssi2 = clamp(pilot_log[1][pilot_log[1].length - 1].rssi + (Math.random()*100 - 50), 0, 1000);
 	pilot_log[0].push({time:count, rssi:rssi1});
 	pilot_log[1].push({time:count, rssi:rssi2});
-	count+=1;
+	count+=50;
 	max_time = count;
 }
 
