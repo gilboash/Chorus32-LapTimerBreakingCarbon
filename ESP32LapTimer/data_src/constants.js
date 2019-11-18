@@ -59,6 +59,6 @@ export const EXTENDED_WIFI_PROTOCOL = 'w';
 export const EXTENDED_FILTER_CUTOFF = 'F';
 export const EXTENDED_MULTIPLEX_OFF = 'm';
 export const EXTENDED_UPDATE_PROGRESS = 'U';
-export const EXTENDED_ENABLE_BINARY_RSSI = 'R';
+export const EXTENDED_RSSI = 'y';
 export const BINARY_PREFIX = 'B';
 export const BINARY_RSSI = 1;

@@ -1,3 +1,5 @@
+//import * as constants from './constants.js';
+
 var current_race = 0;
 var ws = null;
 var num_pilots = 8;
@@ -431,7 +433,7 @@ function fake_data() {
 
 setInterval(update_graph, 100);
 
-/*
+
 pilot_log[0] = [{time:0, rssi:5}]
 pilot_log[1] = [{time:0, rssi:8}]
 pilot_active[0] = true
