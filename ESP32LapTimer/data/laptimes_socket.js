@@ -417,7 +417,10 @@ graph_div.addEventListener('mouseup', function(event) {
 graph_div.addEventListener('mousemove', function(event) {
 	if(dragging) {
 		chart_autoscroll = false;
-		chart_current_end = Math.min(Math.max( chart_current_end - event.movementX*(chart_length/1000), 0), max_time);
+		var new_end = Math.min(Math.max( chart_current_end - event.movementX*(chart_length/1000), 0), max_time);
+		if(new_end - chart_length > 0) {
+			chart_current_end = new_end;
+		}
 	}
 }, false);
 
