@@ -404,20 +404,11 @@ graph_div.addEventListener('wheel',function(event){
     return false; 
 }, false);
 
-var dragging = false;
-
-graph_div.addEventListener('mousedown', function(event) {
-	dragging = true;
-}, false);
-
-graph_div.addEventListener('mouseup', function(event) {
-	dragging = false;
-}, false);
 
 graph_div.addEventListener('mousemove', function(event) {
-	if(dragging) {
+	if(event.buttons == 1) {
 		chart_autoscroll = false;
-		var new_end = Math.min(Math.max( chart_current_end - event.movementX*(chart_length/1000), 0), max_time);
+		var new_end = Math.min(Math.max(chart_current_end - event.movementX*(chart_length/1000), 0), max_time);
 		if(new_end - chart_length > 0) {
 			chart_current_end = new_end;
 		}
