@@ -144,7 +144,7 @@
 #define EXTENDED_FILTER_CUTOFF 'F'
 #define EXTENDED_MULTIPLEX_OFF 'm'
 #define EXTENDED_UPDATE_PROGRESS 'U'
-#define EXTENDED_RSSI 'R' // Time, RSSI
+#define EXTENDED_RSSI 'y' // Time, RSSI
 
 // Binary commands. These are used for messages which are sent very often to reduce the overhead. e.g. for RSSI updates
 // Prefix | CMD  | data (contains node id if needed)
