@@ -5,6 +5,10 @@ var count_first = 0;
 var max_laps = 4;
 
 var pilot_active = [];
+var pilot_log = [[]];
+var chart_length = 100;
+
+var max_time = 0;
 
 const cells_before_lap = 2;
 function speak_lap(pilot, lap_number, time) {
@@ -102,7 +106,7 @@ function build_table(race_num, num_laps) {
 		console.log(button_div);
 		button_div.innerHTML += "<button class='tablinks' onclick='openRound(event," + race_num + ")'>Round " + race_num + "</button>\n"
 		button_div.children[button_div.childElementCount - 1].click();
-		window.scrollTo(0, document.body.scrollHeight);
+		//window.scrollTo(0, document.body.scrollHeight);
 	}
 }
 
@@ -251,6 +255,15 @@ function handle_message(message) {
 			case 'R':
 				current_race = parseInt(message.substr(3), 16);
 				break;
+			case  'y':
+				var time = parseInt(message.substr(3,8), 16);
+				var rssi = parseInt(message.substr(11,4), 16);
+				if(pilot_log[pilot_num] == undefined) {
+					pilot_log[pilot_num] = [];
+				}
+				pilot_log[pilot_num].push({time: time, rssi: rssi});
+				max_time = Math.max(max_time, time);
+				break;
 		}
 	} else {
 		switch(cmd) {
@@ -274,7 +287,7 @@ function handle_message(message) {
 }
 
 function on_websocket_event(event) {
-	console.log(event.data);
+	//console.log(event.data);
 	var messages = event.data.split('\n');
 	for(var i = 0; i < messages.length; ++i) {
 		handle_message(messages[i]);
@@ -327,3 +340,68 @@ function load_voices() {
 load_voices();
 
 document.getElementById("max_laps").value = max_laps;
+
+function get_chart_data(starttime, endtime) {
+	var series = [];
+	if(starttime == undefined) starttime = 0;
+	for(var i = 0; i < num_pilots; ++i) {
+		if(pilot_active[i] && pilot_log[i] != undefined) {
+			for(var t = pilot_log[i].length - 1; t >= 0; --t) {
+				var rssi = pilot_log[i][t].rssi;
+				var time = pilot_log[i][t].time;
+
+				if(endtime == undefined) endtime = time;
+				if(time < starttime) break;
+				if(time > endtime) continue;
+				
+				if(series[i] == undefined) {
+					series[i] = [];
+				}
+				series[i].push({x: time, y:rssi});
+			}
+			series[i].reverse();
+		}
+	}
+	return series;
+}
+
+
+var chart_options = {
+	showPoint: false,
+	lineSmooth: false,
+	axisX: {
+		type: Chartist.AutoScaleAxis,
+		onlyInteger: true
+	}
+}
+
+var count = 0;
+var myChart = new Chartist.Line('.ct-chart', {}, chart_options);
+
+function update_graph() {
+	myChart.update({ series: get_chart_data(Math.max(0, max_time - chart_length))});
+}
+
+function clamp(num, min, max) {
+  return num <= min ? min : num >= max ? max : num;
+}
+
+var count = 1;
+function fake_data() {
+	var rssi1 = clamp(pilot_log[0][pilot_log[0].length - 1].rssi + (Math.random()*100 - 50), 0, 1000);
+	var rssi2 = clamp(pilot_log[1][pilot_log[1].length - 1].rssi + (Math.random()*100 - 50), 0, 1000);
+	pilot_log[0].push({time:count, rssi:rssi1});
+	pilot_log[1].push({time:count, rssi:rssi2});
+	count+=1;
+	max_time = count;
+}
+
+setInterval(update_graph, 100);
+
+/*
+pilot_log[0] = [{time:0, rssi:5}]
+pilot_log[1] = [{time:0, rssi:8}]
+pilot_active[0] = true
+pilot_active[1] = true
+setInterval(fake_data, 50);
+/**/
