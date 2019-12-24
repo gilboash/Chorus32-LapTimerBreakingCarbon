@@ -46,6 +46,7 @@ function startWebsocket(websocketServerLocation){
 	ws.onopen = function() {
 		ws.send("ER*a\n"); // get all extended settings
 		ws.send("R*a\n"); // just get all settings to get all laps
+		ws.send("ES*y0010\n"); // enable rssi monitoring
 	};
 }
 
@@ -370,8 +371,8 @@ function get_chart_data(starttime, endtime) {
 
 
 var chart_options = {
-	low: 0,
-	high: 1000,
+	//low: 0,
+	//high: 1000,
 	showPoint: false,
 	lineSmooth: false,
 	axisX: {
@@ -434,9 +435,10 @@ function fake_data() {
 setInterval(update_graph, 100);
 
 
-pilot_log[0] = [{time:0, rssi:5}]
+/*pilot_log[0] = [{time:0, rssi:5}]
 pilot_log[1] = [{time:0, rssi:8}]
 pilot_active[0] = true
 pilot_active[1] = true
 setInterval(fake_data, 50);
 /**/
+//# sourceMappingURL=file:///tmp/laptimes_socket.js.map
