@@ -46,7 +46,7 @@ function startWebsocket(websocketServerLocation){
 	ws.onopen = function() {
 		ws.send("ER*a\n"); // get all extended settings
 		ws.send("R*a\n"); // just get all settings to get all laps
-		ws.send("ES*y0010\n"); // enable rssi monitoring
+		ws.send("ES*y0030\n"); // enable rssi monitoring
 	};
 }
 
@@ -360,7 +360,7 @@ function get_chart_data(starttime, endtime) {
 				if(endtime == undefined) endtime = time;
 				if(time < starttime) break;
 				if(time > endtime) continue;
-				
+
 				series[index].data.push({x: time, y:rssi});
 			}
 			series[index].data.reverse();
@@ -404,7 +404,7 @@ graph_div.addEventListener('wheel',function(event){
 	chart_length += event.deltaY * 100;
 	chart_length = Math.max(chart_length, 100);
 	event.preventDefault();
-    return false; 
+    return false;
 }, false);
 
 
