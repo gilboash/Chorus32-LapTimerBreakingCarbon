@@ -33,7 +33,7 @@
 #include "Lora.h"
 #endif
 #ifdef USE_WEBSOCKET_OUTPUT
-#include "WebServer.h"
+#include "TimerWebServer.h"
 #endif
 
 #include "HardwareConfig.h"
