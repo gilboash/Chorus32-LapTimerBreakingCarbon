@@ -371,8 +371,8 @@ function get_chart_data(starttime, endtime) {
 
 
 var chart_options = {
-	//low: 0,
-	//high: 1000,
+	low: 800,
+	high: 3000,
 	showPoint: false,
 	lineSmooth: false,
 	axisX: {
