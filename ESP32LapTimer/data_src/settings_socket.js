@@ -50,7 +50,7 @@ function set_value_error(object) {
 
 function handle_message(message) {
 	var binary = message[0] == 'B';
-	
+
 	if(binary) {
 		var cmd = message[1];
 		switch(cmd) {
@@ -58,7 +58,7 @@ function handle_message(message) {
 				var time = ((message[2] << 24) & 0xffff) | ((message[3] << 16) & 0xffff) | ((message[4] << 8) & 0xffff) | (message[5] & 0xffff);
 				var rssi =(((message[6] & 0xff) << 8) | (message[7] & 0xff));
 				console.log("Got binary! with time " + time + " and rssi " + rssi + " message: " + message);
-				
+
 				break;
 		}
 	} else {
@@ -130,6 +130,10 @@ function handle_message(message) {
 				case constants.EXTENDED_CALIB_STATUS:
 					var field = document.getElementById("calibrate_button");
 					set_value_received(field);
+					for(var i = 0; i < 6; ++i){
+						ws.send(`ER${i}${constants.EXTENDED_CALIB_MIN}\n`);
+						ws.send(`ER${i}${constants.EXTENDED_CALIB_MAX}\n`);
+					}
 					break;
 			}
 		} else {
