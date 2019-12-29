@@ -20,15 +20,15 @@
 #define LEDs 2
 
 #define USE_CLASSIC_BUTTONS
-  
+
 #define BUTTON1 13
 #define BUTTON2 12
 
-#define MOSI 23
-#define SCK 25
+#define VRX_MOSI 23
+#define VRX_SCK 25
 
 #define CS1 16
-#define CS2 4 
+#define CS2 4
 #define CS3 4
 #define CS4 4
 #define CS5 4
