@@ -35,7 +35,6 @@ void startRace();
 void stopRace();
 bool isExperimentalModeOn();
 void sendCalibrationFinished();
-void sendUpdateProgress(uint8_t progress);
 void sendExtendedRSSI(uint8_t node, uint32_t time, uint16_t rssi);
 void update_comms();
 

@@ -99,32 +99,6 @@ void updateRx (int band, int channel, int rx) {
   setPilotChannel(rx, channel);
 }
 
-
-void send_laptimes(AsyncWebServerRequest* req) {
-  // example json: '{"race_num": 5, "lap_data" : [ {"pilot" : 0, "laps" : [4, 2, 3]}]}'
-  String json_string = "{\"race_mode\": " + String(isInRaceMode()) + ",\"race_num\" : " + String(getRaceNum()) + ", \"count_first\": " + String(getCountFirstLap());
-  if(getActivePilots() > 0) {
-    json_string += ", \"lap_data\" : [";
-    for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
-      if(isPilotActive(i)) {
-        json_string += String("{\"pilot\" : ") + i + ", \"laps\" : [";
-        for(int j = 0; j < getCurrentLap(i); ++j) {
-          json_string += getLaptimeRel(i, j + 1);
-          if(j +1 != getCurrentLap(i)) {
-            json_string += ",";
-          }
-        }
-        json_string += "]},";
-      }
-    }
-    json_string.remove(json_string.length() - 1); // remove last ,
-    json_string += "]";
-  }
-  json_string += "}";
-  req->send(200, "application/json", json_string);
-}
-
-
 void calibrateRSSI(AsyncWebServerRequest* req) {
   rssiCalibration();
   req->redirect("/redirect.html");
@@ -257,8 +231,6 @@ void InitWebServer() {
         log_e("%s\n", Update.errorString());
         isHTTPUpdating = false;
       }
-      uint8_t progress = (Update.progress() / Update.size()) * 100;
-      sendUpdateProgress(progress);
     }
     if(final){
       if(Update.end(true)){
