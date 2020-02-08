@@ -135,6 +135,15 @@ function handle_message(message) {
 						ws.send(`ER${i}${constants.EXTENDED_CALIB_MAX}\n`);
 					}
 					break;
+				case constants.EXTENDED_DEBUG_FREE_HEAP:
+					document.getElementById("heap_free").innerText = (parseInt(message.substr(3), 16)/1024.0).toFixed(2);
+					break;
+				case constants.EXTENDED_DEBUG_MIN_FREE_HEAP:
+					document.getElementById("heap_low").innerText = (parseInt(message.substr(3), 16)/1024.0).toFixed(2);
+					break;
+				case constants.EXTENDED_DEBUG_MAX_BLOCK_HEAP:
+					document.getElementById("heap_max_block").innerText = (parseInt(message.substr(3), 16)/1024.0).toFixed(2);
+					break;
 			}
 		} else {
 			switch(cmd) {
@@ -280,8 +289,11 @@ document.getElementById("calibrate_button").onclick = function () {
 	ws.send(`ER*${constants.EXTENDED_CALIB_START}\n`);
 };
 
-function get_voltage() {
+function get_variable_settings() {
 	ws.send("R*v\n");
+	ws.send("ER*h\n");
+	ws.send("ER*H\n");
+	ws.send("ER*B\n");
 }
 
-setInterval(get_voltage, 2000);
+setInterval(get_variable_settings, 2000);

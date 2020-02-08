@@ -145,6 +145,9 @@
 #define EXTENDED_MULTIPLEX_OFF 'm'
 #define EXTENDED_UPDATE_PROGRESS 'U'
 #define EXTENDED_RSSI 'y' // Time, RSSI
+#define EXTENDED_DEBUG_FREE_HEAP 'H'
+#define EXTENDED_DEBUG_MIN_FREE_HEAP 'h'
+#define EXTENDED_DEBUG_MAX_BLOCK_HEAP 'B'
 
 // Binary commands. These are used for messages which are sent very often to reduce the overhead. e.g. for RSSI updates
 // Prefix | CMD  | data (contains node id if needed)
@@ -212,7 +215,22 @@ static uint8_t use_experimental = 0;
 
 static uint8_t thresholdSetupMode[MAX_NUM_PILOTS];
 
+void sendExtendedCommandInt32(uint8_t set, uint8_t node, uint8_t cmd, uint32_t data) {
+  uint8_t buf[13];
+  buf[0] = EXTENDED_PREFIX;
+  buf[1] = 'S';
+  if(node == '*') {
+    buf[2] = node;
+  } else {
+    buf[2] = TO_HEX(node);
+  }
+  buf[3] = cmd;
+  longToHex(buf + 4, data);
+  buf[12] = '\n';
+  addToSendQueue(buf, 13);
+}
 // TODO: unify those functions
+// this is 16bit
 void sendExtendedCommandInt(uint8_t set, uint8_t node, uint8_t cmd, int data) {
   uint8_t buf[9];
   buf[0] = EXTENDED_PREFIX;
@@ -871,6 +889,15 @@ void handleExtendedCommands(uint8_t* data, uint8_t length) {
       case EXTENDED_EEPROM_RESET:
         EepromSettings.defaults();
         sendExtendedCommandHalfByte('S', '*', control_byte, 1);
+        break;
+      case EXTENDED_DEBUG_FREE_HEAP:
+        sendExtendedCommandInt32('S', '*', control_byte, ESP.getFreeHeap());
+        break;
+      case EXTENDED_DEBUG_MAX_BLOCK_HEAP:
+        sendExtendedCommandInt32('S', '*', control_byte, ESP.getMaxAllocHeap());
+        break;
+      case EXTENDED_DEBUG_MIN_FREE_HEAP:
+        sendExtendedCommandInt32('S', '*', control_byte, ESP.getMinFreeHeap());
         break;
     }
   }
