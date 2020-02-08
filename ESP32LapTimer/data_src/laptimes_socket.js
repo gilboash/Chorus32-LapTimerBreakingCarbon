@@ -14,6 +14,8 @@ var max_time = 0;
 var chart_autoscroll = true;
 var chart_current_end = 0;
 
+var rssi_interval = 0;
+
 const cells_before_lap = 2;
 function speak_lap(pilot, lap_number, time) {
 	var su = new SpeechSynthesisUtterance();
@@ -35,6 +37,9 @@ function set_value_received(object) {
 	object.style.outline = "1px solid green";
 }
 
+function update_rssi_interval() {
+	ws.send("ES*y" + String(rssi_interval).padStart(4, '0') + "\n");
+}
 
 function startWebsocket(websocketServerLocation){
     ws = new WebSocket(websocketServerLocation);
@@ -46,7 +51,7 @@ function startWebsocket(websocketServerLocation){
 	ws.onopen = function() {
 		ws.send("ER*a\n"); // get all extended settings
 		ws.send("R*a\n"); // just get all settings to get all laps
-		ws.send("ES*y0030\n"); // enable rssi monitoring
+		update_rssi_interval();
 	};
 }
 
@@ -309,6 +314,17 @@ document.getElementById("start_race_button").onclick = function () {
 document.getElementById("stop_race_button").onclick = function () {
 	ws.send("R*R0\n");
 }
+
+rssi_interval = parseInt(localStorage.getItem("rssi_interval"));
+if (isNaN(rssi_interval)) {
+	rssi_interval = 0;
+}
+document.getElementById("rssi_interval").value = rssi_interval;
+document.getElementById("rssi_interval").addEventListener('input', function () {
+	rssi_interval = parseInt(document.getElementById("rssi_interval").value);
+	localStorage.setItem("rssi_interval", rssi_interval);
+	update_rssi_interval();
+});
 
 function load_voices() {
 	const voiceSelect = document.getElementById('voices');
