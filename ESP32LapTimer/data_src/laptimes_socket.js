@@ -431,6 +431,9 @@ graph_div.addEventListener('mousemove', function(event) {
 		if(new_end - chart_length > 0) {
 			chart_current_end = new_end;
 		}
+		if(chart_current_end == max_time) {
+			chart_autoscroll = true;
+		}
 	}
 }, false);
 
