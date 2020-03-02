@@ -88,6 +88,9 @@ uint32_t getLaptimeRel(uint8_t receiver) {
 }
 
 uint8_t addLap(uint8_t receiver, uint32_t time) {
+  if(lap_counter[receiver] >= MAX_LAPS_NUM - 1) {
+    return 0; // just don't add any more laps, so other pilots still get their time
+  }
   ++lap_counter[receiver];
   LapTimes[receiver][lap_counter[receiver]] = time;
   if((getLaptimeRel(receiver) < getLaptimeRel(receiver, best_lap_num[receiver]) || getLaptimeRel(receiver, best_lap_num[receiver]) == 0)) {
