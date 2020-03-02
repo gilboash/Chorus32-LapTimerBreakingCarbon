@@ -3,8 +3,21 @@
 #include <esp_attr.h>
 #include <string.h>
 
+void queue_init(queue_t* queue, void** data, uint32_t max_size) {
+  queue->curr_size = 0;
+  queue->data = data;
+  queue->max_size = max_size;
+}
+
 int queue_empty(queue_t* queue){
   return queue->curr_size != 0;
+}
+
+void* queue_get(queue_t* queue, uint32_t index) {
+  if(index < queue->curr_size) {
+    return queue->data[index];
+  }
+  return NULL;
 }
 
 void* IRAM_ATTR queue_peek(queue_t* queue) {

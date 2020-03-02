@@ -16,7 +16,9 @@ typedef struct queue_s{
   uint32_t max_size;
 } queue_t;
 
+void queue_init(queue_t* queue, void** data, uint32_t max_size);
 int queue_empty(queue_t* queue);
+void* queue_get(queue_t* queue, uint32_t index);
 void* queue_dequeue(queue_t* queue);
 int queue_enqueue(queue_t* queue, void* data);
 void* queue_peek(queue_t* queue);
