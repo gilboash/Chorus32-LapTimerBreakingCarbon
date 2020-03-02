@@ -45,7 +45,7 @@ void sendNewLaps() {
   for (int i = 0; i < MAX_NUM_PILOTS; ++i) {
     int laps_to_send = lap_counter[i] - last_lap_sent[i];
     if(laps_to_send > 0) {
-      for(int j = 0; j < laps_to_send; ++j) {
+      for(int j = 0; j < laps_to_send && j <= MAX_LAPS_NUM; ++j) {
         sendLap(lap_counter[i] - j, i);
       }
       last_lap_sent[i] += laps_to_send;
@@ -70,6 +70,11 @@ uint32_t getLaptimeRel(uint8_t receiver, uint8_t lap) {
     return getLaptime(receiver, lap) - start_time;
   } else if(lap == 0) {
     return 0;
+  }
+  uint32_t lap_time = getLaptime(receiver, lap);
+  uint32_t prev_lap_time = getLaptime(receiver, lap - 1);
+  if(lap_time < prev_lap_time) {
+    Serial.printf("Prev lap > current lap!!!! prev: %d curr: %d curr#: %d curr call: %d\n", prev_lap_time, lap_time, lap, getLaptime(receiver, lap));
   }
   return getLaptime(receiver, lap) - getLaptime(receiver, lap - 1);
 }

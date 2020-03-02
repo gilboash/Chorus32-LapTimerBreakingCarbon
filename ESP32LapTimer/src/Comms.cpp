@@ -566,6 +566,7 @@ void IRAM_ATTR sendLap(uint8_t Lap, uint8_t NodeAddr) {
     RequestedLap = getLaptimeRelToStart(NodeAddr, Lap);  //absolute mode
   } else {
     Serial.println("Error: Invalid RaceMode Set");
+    return;
   }
 
   uint8_t buf1[2];
