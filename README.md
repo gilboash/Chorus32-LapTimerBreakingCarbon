@@ -3,7 +3,6 @@
 Some notes on using this fork:
  * Bluetooth is enabled by default, so you'll need to change the partition scheme to "HUGE APP" or something similar, so the sketch fits
  * Currently the initial power state of the modules is off, if the voltage reading is below 6V (this is to protect my already weak USB-Port during developement with multiple modules)
- * The standard baud rate for serial is changed to 230400 (is used for faster dater retrival)
  * The module will always report 8 pilots. If the number of activated pilots is greater than the number of modules, multiplexing is enabled. If the number is lower the unsused modules are powered down. You can disable multiplexing for specific pilots on the settings page
  * EEPROM will be saved after a max of 10 sec
  * I'll regularly rebase and force push this branch ;)
