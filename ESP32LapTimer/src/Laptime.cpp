@@ -18,7 +18,6 @@
 #include "Laptime.h"
 
 #include <stdint.h>
-#include <string.h>
 #include <Arduino.h>
 
 #include "HardwareConfig.h"
@@ -26,10 +25,9 @@
 #include "Comms.h"
 
 static uint32_t LapTimes[MAX_NUM_PILOTS][MAX_LAPS_NUM];
-static uint16_t lap_counter[MAX_NUM_PILOTS]; //Keep track of what lap we are up too
-static uint16_t lap_offset[MAX_NUM_PILOTS]; // Save lap offset to allow for more laps than MAX_LAPS_NUM
-static uint16_t best_lap_num[MAX_NUM_PILOTS];
-static uint16_t last_lap_sent[MAX_NUM_PILOTS]; // number of the last lap we sent
+static uint8_t lap_counter[MAX_NUM_PILOTS]; //Keep track of what lap we are up too
+static uint8_t best_lap_num[MAX_NUM_PILOTS];
+static int last_lap_sent[MAX_NUM_PILOTS];
 
 static uint32_t MinLapTime = 5000;  //this is in millis
 static uint32_t start_time = 0;
@@ -39,7 +37,6 @@ static uint16_t race_num = 0; // number of races
 void resetLaptimes() {
   memset(LapTimes, 0, MAX_NUM_PILOTS * MAX_LAPS_NUM * sizeof(LapTimes[0][0]));
   memset(lap_counter, 0, MAX_NUM_PILOTS * sizeof(lap_counter[0]));
-  memset(lap_offset, 0, MAX_NUM_PILOTS * sizeof(lap_offset[0]));
   memset(best_lap_num, 0, MAX_NUM_PILOTS * sizeof(best_lap_num[0]));
   memset(last_lap_sent, 0, MAX_NUM_PILOTS * sizeof(last_lap_sent[0]));
 }
@@ -48,7 +45,7 @@ void sendNewLaps() {
   for (int i = 0; i < MAX_NUM_PILOTS; ++i) {
     int laps_to_send = lap_counter[i] - last_lap_sent[i];
     if(laps_to_send > 0) {
-      for(int j = 0; j < laps_to_send && j <= MAX_LAPS_NUM; ++j) {
+      for(int j = 0; j < laps_to_send; ++j) {
         sendLap(lap_counter[i] - j, i);
       }
       last_lap_sent[i] += laps_to_send;
@@ -57,8 +54,8 @@ void sendNewLaps() {
 }
 
 uint32_t getLaptime(uint8_t receiver, uint8_t lap) {
-  if(receiver < MAX_NUM_PILOTS && lap - lap_offset[receiver] < MAX_LAPS_NUM) {
-    return LapTimes[receiver][lap - lap_offset[receiver]];
+  if(receiver < MAX_NUM_PILOTS && lap < MAX_LAPS_NUM) {
+    return LapTimes[receiver][lap];
   }
   return 0;
 }
@@ -87,12 +84,7 @@ uint32_t getLaptimeRel(uint8_t receiver) {
 
 uint8_t addLap(uint8_t receiver, uint32_t time) {
   ++lap_counter[receiver];
-  // check if lap fits. if not we move the whole array and phase out old times
-  if(lap_counter[receiver] - lap_offset[receiver] >= MAX_LAPS_NUM) {
-    memmove(LapTimes[receiver], LapTimes[receiver] + 10, 10* sizeof(LapTimes[receiver]));
-    lap_offset[receiver] += 10;
-  }
-  LapTimes[receiver][lap_counter[receiver] - lap_offset[receiver]] = time;
+  LapTimes[receiver][lap_counter[receiver]] = time;
   if((getLaptimeRel(receiver) < getLaptimeRel(receiver, best_lap_num[receiver]) || getLaptimeRel(receiver, best_lap_num[receiver]) == 0)) {
     // skip best time if we skip the first lap
     if(!(lap_counter[receiver] == 1 && !count_first_lap)) {
