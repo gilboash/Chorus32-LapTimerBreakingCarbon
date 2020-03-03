@@ -47,6 +47,7 @@
 #include "Laptime.h"
 #include "ADC.h"
 #include "Calibration.h"
+#include "Logging.h"
 
 ///////This is mostly from the original Chorus Laptimer, need to cleanup unused functions and variables
 
@@ -148,6 +149,7 @@
 #define EXTENDED_DEBUG_FREE_HEAP 'H'
 #define EXTENDED_DEBUG_MIN_FREE_HEAP 'h'
 #define EXTENDED_DEBUG_MAX_BLOCK_HEAP 'B'
+#define EXTENDED_DEBUG_LOG 'L' // one halfbyte 0: off 1: on
 
 // Binary commands. These are used for messages which are sent very often to reduce the overhead. e.g. for RSSI updates
 // Prefix | CMD  | data (contains node id if needed)
@@ -858,6 +860,9 @@ void handleExtendedCommands(uint8_t* data, uint8_t length) {
       case EXTENDED_RSSI:
         extendedRssiMonitorInterval = HEX_TO_UINT16(data + 3);
         sendExtendedCommandInt('S', '*', control_byte, extendedRssiMonitorInterval);
+        break;
+      case EXTENDED_DEBUG_LOG:
+        set_chorus_log(TO_BYTE(data[3]));
         break;
     }
 
