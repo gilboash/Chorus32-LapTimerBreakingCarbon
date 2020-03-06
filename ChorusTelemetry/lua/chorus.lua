@@ -13,9 +13,17 @@ local send_interval = 500
 local last_lap = {}
 local last_lap_int = 0
 
+local wifi_status = 0
+local connection_status = 0
+
 local function resend_lap()
 	protocol.mspWrite(MSP_ADD_LAP, last_lap)
 	mspProcessTxQ()
+end
+
+local function get_connection_status()
+	serialWrite("PR*w\n")
+	serialWrite("PR*c\n")
 end
 
 local function send_lap(pilot, lap, laptime)
@@ -46,11 +54,23 @@ local function process_extended_cmd(cmd)
 
 end
 
+local function process_proxy_cmd(cmd)
+	local chorus_cmd = string.sub(cmd, 3,3)
+	if(chorus_cmd == "w") then
+		wifi_status = tonumber(string.sub(cmd, 4), 16)
+	elseif (chorus_cmd == 'c') then
+		connection_status = tonumber(string.sub(cmd, 4), 16)
+	end
+
+end
+
 local function process_cmd(cmd)
 	local type = string.sub(cmd, 1,1)
 
 	if (type == "E") then
 		process_extended_cmd(string.sub(cmd, 2))
+	elseif (type == "P") then
+		process_proxy_cmd(string.sub(cmd, 2))
 	else
 		local node = string.sub(cmd, 2,2)
 		local chorus_cmd = string.sub(cmd, 3,3)
@@ -73,6 +93,10 @@ local run = function ()
 		last_cmd = rx
 		process_cmd(last_cmd)
 	end
+	lcd.drawText(0, 21, "WiFi status:", 0)
+	lcd.drawText(lcd.getLastPos()+2, 21, wifi_status,0)
+	lcd.drawText(0, 31, "Connection status:", 0)
+	lcd.drawText(lcd.getLastPos()+2, 31, connection_status,0)
 	lcd.drawText(0, 41, "Last rx: ",0)
 	lcd.drawText(lcd.getLastPos()+2, 41, last_cmd,0)
 	lcd.drawText(lcd.getLastPos()+2, 21, ms_to_string(last_lap_int),0)
@@ -80,6 +104,7 @@ local run = function ()
 	if(last_sent + send_interval < getTime()) then
 		resend_lap()
 		last_sent = getTime()
+		get_connection_status()
 	end
 	return 0
 end
