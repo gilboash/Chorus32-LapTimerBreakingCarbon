@@ -43,6 +43,7 @@
 #include "Utils.h"
 #include "Laptime.h"
 #include "Wireless.h"
+#include "Logging.h"
 
 #include "CrashDetection.h"
 #ifdef USE_ARDUINO_OTA
