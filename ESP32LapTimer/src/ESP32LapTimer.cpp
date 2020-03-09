@@ -50,8 +50,6 @@
 #include <ArduinoOTA.h>
 #endif
 
-//#define BluetoothEnabled //uncomment this to use bluetooth (experimental, ble + wifi appears to cause issues)
-
 static TaskHandle_t adc_task_handle = NULL;
 
 void IRAM_ATTR adc_read() {
