@@ -276,10 +276,10 @@ void IRAM_ATTR CheckRSSIthresholdExceeded(uint8_t pilot) {
   if ( pilots[pilot].ADCvalue > pilots[pilot].RSSIthreshold) {
     pilots[pilot].samples = 0;
     if (CurrTime > (getMinLapTime() + getLaptime(pilot))) {
-      if(pilots[pilot].ADCvalue > pilots[pilot].max_adc && isExperimentalModeOn()) {
+      if(pilots[pilot].ADCvalue > pilots[pilot].max_adc && get_trigger_mode() == TRIGGER_PEAK) {
         pilots[pilot].max_adc = pilots[pilot].ADCvalue;
         pilots[pilot].max_time = CurrTime;
-      } else if(!isExperimentalModeOn()){ // normal mode
+      } else if(get_trigger_mode() == TRIGGER_NORMAL){ // normal mode
         addLap(pilot, CurrTime);
         pilots[pilot].max_adc = 0;
         pilots[pilot].max_time = 0;

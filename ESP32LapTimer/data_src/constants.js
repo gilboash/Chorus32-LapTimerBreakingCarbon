@@ -63,5 +63,7 @@ export const EXTENDED_RSSI = 'y';
 export const EXTENDED_DEBUG_FREE_HEAP = 'H';
 export const EXTENDED_DEBUG_MIN_FREE_HEAP = 'h';
 export const EXTENDED_DEBUG_MAX_BLOCK_HEAP = 'B';
+export const EXTENDED_DEBUG_LOG = 'L';
+export const EXTENDED_TRIGGER_MODE = 'T';
 export const BINARY_PREFIX = 'B';
 export const BINARY_RSSI = 1;

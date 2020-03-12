@@ -38,4 +38,8 @@ void sendCalibrationFinished();
 void sendExtendedRSSI(uint8_t node, uint32_t time, uint16_t rssi);
 void update_comms();
 
+#define TRIGGER_NORMAL 0
+#define TRIGGER_PEAK 1
+uint8_t get_trigger_mode();
+
 #endif // __COMMS_H__

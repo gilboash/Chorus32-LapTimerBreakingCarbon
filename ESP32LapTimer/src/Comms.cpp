@@ -150,6 +150,7 @@
 #define EXTENDED_DEBUG_MIN_FREE_HEAP 'h'
 #define EXTENDED_DEBUG_MAX_BLOCK_HEAP 'B'
 #define EXTENDED_DEBUG_LOG 'L' // one halfbyte 0: off 1: on
+#define EXTENDED_TRIGGER_MODE 'T' // byte
 
 // Binary commands. These are used for messages which are sent very often to reduce the overhead. e.g. for RSSI updates
 // Prefix | CMD  | data (contains node id if needed)
@@ -214,6 +215,7 @@ static uint8_t raceMode = 0; // 0: race mode is off; 1: lap times are counted re
 //static uint8_t isSoundEnabled = 1; // TODO: implement this option
 static uint8_t isConfigured = 0; //changes to 1 if any input changes the state of the device. it will mean that externally stored preferences should not be applied
 static uint8_t use_experimental = 0;
+static uint8_t trigger_mode = 0; // trigger mode to use for laps
 
 static uint8_t thresholdSetupMode[MAX_NUM_PILOTS];
 
@@ -863,6 +865,11 @@ void handleExtendedCommands(uint8_t* data, uint8_t length) {
         break;
       case EXTENDED_DEBUG_LOG:
         set_chorus_log(TO_BYTE(data[3]));
+        sendExtendedCommandHalfByte('S', '*', control_byte, TO_BYTE(data[3]));
+        break;
+      case EXTENDED_TRIGGER_MODE:
+        trigger_mode = HEX_TO_BYTE(data[3], data[4]);
+        sendExtendedCommandByte('S', '*', control_byte, trigger_mode);
         break;
     }
 
@@ -1170,4 +1177,8 @@ bool isExperimentalModeOn() {
 void update_comms() {
   SendCurrRSSIloop();
   ExtendedRSSILoop();
+}
+
+uint8_t get_trigger_mode(){
+  return trigger_mode;
 }
