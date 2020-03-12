@@ -135,13 +135,13 @@
 #define EXTENDED_CALIB_START 's'
 #define EXTENDED_CALIB_STATUS 'S'
 #define EXTENDED_VOLTAGE_TYPE 'v'
-#define EXTENDED_VOLTAGE_CALIB 'V'
-#define EXTENDED_NUM_MODULES 'M'
+#define EXTENDED_VOLTAGE_CALIB 'V' // uint16
+#define EXTENDED_NUM_MODULES 'M' // half byte
 #define EXTENDED_CALIBRATE_START 'r'
 #define EXTENDED_EEPROM_RESET 'E'
 #define EXTENDED_DISPLAY_TIMEOUT 'D'
-#define EXTENDED_WIFI_CHANNEL 'W'
-#define EXTENDED_WIFI_PROTOCOL 'w'
+#define EXTENDED_WIFI_CHANNEL 'W' // half byte
+#define EXTENDED_WIFI_PROTOCOL 'w' // half byte
 #define EXTENDED_FILTER_CUTOFF 'F'
 #define EXTENDED_MULTIPLEX_OFF 'm'
 #define EXTENDED_UPDATE_PROGRESS 'U'
@@ -913,6 +913,9 @@ void handleExtendedCommands(uint8_t* data, uint8_t length) {
         break;
       case EXTENDED_WIFI_PROTOCOL:
         sendExtendedCommandHalfByte('S', '*', control_byte, EepromSettings.WiFiProtocol);
+        break;
+      case EXTENDED_FILTER_CUTOFF:
+        sendExtendedCommandInt('S', '*', control_byte, EepromSettings.RXADCfilterCutoff);
         break;
     }
   }
