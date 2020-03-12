@@ -43,10 +43,10 @@ void loop() {
 		String line = client.readStringUntil('\n');
 
 		// Only forward specific messages for now
-		if(line[2] == 'L') {
+		//if(line[2] == 'L') {
 			Serial1.println(line);
 			Serial.printf("Forwarding to taranis: %s\n", line.c_str());
-		}
+		//}
 	}
 
 	while(Serial1.available()) {
