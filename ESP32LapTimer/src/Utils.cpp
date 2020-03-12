@@ -28,6 +28,10 @@ uint16_t IRAM_ATTR HEX_TO_UINT16 (uint8_t * buf) {
   return (HEX_TO_BYTE(buf[0], buf[1]) << 8) + (HEX_TO_BYTE(buf[2], buf[3]));
 }
 
+uint32_t IRAM_ATTR HEX_TO_UINT32 (uint8_t * buf) {
+  return (HEX_TO_BYTE(buf[0], buf[1]) << 24) | (HEX_TO_BYTE(buf[2], buf[3]) << 16) | (HEX_TO_BYTE(buf[4], buf[5]) << 8) | (HEX_TO_BYTE(buf[6], buf[7]));
+}
+
 int32_t IRAM_ATTR HEX_TO_SIGNED_LONG (uint8_t * buf) {
 #define LEN 8
   int32_t temp = 0;

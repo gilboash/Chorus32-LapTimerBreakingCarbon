@@ -23,6 +23,7 @@
 
 uint8_t IRAM_ATTR HEX_TO_BYTE (uint8_t hi, uint8_t lo);
 uint16_t IRAM_ATTR HEX_TO_UINT16 (uint8_t * buf);
+uint32_t IRAM_ATTR HEX_TO_UINT32 (uint8_t * buf);
 int32_t IRAM_ATTR HEX_TO_SIGNED_LONG (uint8_t * buf);
 void IRAM_ATTR halfByteToHex(uint8_t *buf, uint8_t val);
 void IRAM_ATTR byteToHex(uint8_t *buf, uint8_t val);
