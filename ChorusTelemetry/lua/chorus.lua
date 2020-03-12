@@ -21,6 +21,7 @@ local current_item = 0
 local is_editing = false
 
 local msp_string = "Msp msg: none"
+local debug_string = "debug string!"
 
 -- settings
 
@@ -30,8 +31,9 @@ local last_sent = 0
 local send_interval = 500
 
 local last_lap = {}
-local last_lap_int = 1
+local last_lap_int = 0
 local last_lap_ack_needed = 0
+local lap_sent = false
 
 local wifi_status = 0
 local connection_status = 0
@@ -95,13 +97,19 @@ local function get_connection_status()
 	serialWrite("PR*c\n")
 end
 
+local busy_count = 0
 local function send_msp(values)
-	protocol.mspWrite(MSP_ADD_LAP, values)
 	mspProcessTxQ()
-	process_msp_reply(mspPollReply())
+	if protocol.mspWrite(MSP_ADD_LAP, values) == nil then
+		busy_count = busy_count + 1
+		debug_string = "MSP busy!" .. tostring(busy_count)
+	end
+	mspProcessTxQ()
+	--process_msp_reply(mspPollReply())
 end
 
 local function convert_lap(pilot, lap, laptime)
+	msp_string = "Last lap " .. pilot .. "L" .. lap .. "T" .. laptime
 	local values = {}
 	values[1] = pilot
 	values[2] = lap
@@ -163,7 +171,8 @@ local function process_cmd(cmd)
 			last_lap_int = new_time
 			last_lap = convert_lap(node, lap, new_time)
 			last_lap_ack = false
-			send_msp(last_lap)
+			--send_msp(last_lap)
+			lap_sent = false
 			last_lap_ack_needed = last_lap_ack_needed + 1
 		end
 
@@ -172,14 +181,15 @@ end
 
 local function draw_race_screen()
 	lcd.drawScreenTitle("Racing", 1, 2)
-	lcd.drawText(0, 21, "WiFi status:", 0)
-	lcd.drawText(lcd.getLastPos()+2, 21, wifi_status,0)
-	lcd.drawText(lcd.getLastPos()+2, 21, ms_to_string(last_lap_int),0)
-	lcd.drawText(0, 31, "Connection status:", 0)
-	lcd.drawText(lcd.getLastPos()+2, 31, connection_status,0)
-	lcd.drawText(0, 41, "Last rx: ",0)
-	lcd.drawText(lcd.getLastPos()+2, 41, last_cmd,0)
-	lcd.drawText(0, 51, msp_string,0)
+	lcd.drawText(0, 11, "WiFi status:", 0)
+	lcd.drawText(lcd.getLastPos()+2, 11, wifi_status,0)
+	lcd.drawText(lcd.getLastPos()+2, 11, ms_to_string(last_lap_int),0)
+	lcd.drawText(0, 21, "Connection status:", 0)
+	lcd.drawText(lcd.getLastPos()+2, 21, connection_status,0)
+	lcd.drawText(0, 31, "Last rx: ",0)
+	lcd.drawText(lcd.getLastPos()+2, 31, last_cmd,0)
+	lcd.drawText(0, 41, msp_string,0)
+	lcd.drawText(0, 51, debug_string,0)
 end
 
 local function check_setting_pos(setting)
@@ -277,6 +287,10 @@ local function handle_input(event)
 
 end
 
+local function run_bg()
+	mspProcessTxQ()
+	return 0
+end
 
 local run = function (event)
 	handle_input(event)
@@ -291,13 +305,25 @@ local run = function (event)
 	end
 
 	if(last_sent + send_interval < getTime()) then
-		if(last_lap_ack_needed > 0) then
-			send_msp(last_lap)
-		end
+		--if(last_lap_ack_needed > 0) then
+		--	send_msp(last_lap)
+		--end
 		last_sent = getTime()
 		get_connection_status()
+	end
+	mspProcessTxQ()
+	if last_lap_int ~= 0 then
+		if lap_sent == false then
+			--send_msp(last_lap)
+			if protocol.mspWrite(MSP_ADD_LAP, last_lap) ~= nil then
+				lap_sent = true
+				debug_string = "Lap sent!"
+			else
+				debug_string = "MSP is busy"
+			end
+		end
 	end
 	return 0
 end
 
-return {run=run}
+return {run=run, run_bg=run_bg}
