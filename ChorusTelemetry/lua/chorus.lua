@@ -23,6 +23,8 @@ local last_lap_int = 0
 local last_lap_ack_needed = 0
 local lap_sent = false
 
+local laps_int = {{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}}
+
 local wifi_status = 0
 local connection_status = 0
 
@@ -35,6 +37,7 @@ local CHORUS_CMD_FILTER_CUTOFF = 6
 local CHORUS_CMD_MIN_LAPTIME = 7
 local CHORUS_CMD_SOUNDS = 8
 local CHORUS_CMD_SKIP_FIRST = 9
+local CHORUS_CMD_RACE_MODE = 10
 local chorus_cmds = {}
 
 chorus_cmds[CHORUS_CMD_NUM_RX] =  { cmd="ER*M", bits=4, last_val=nil }
@@ -46,6 +49,7 @@ chorus_cmds[CHORUS_CMD_FILTER_CUTOFF] =  { cmd="ER*F", bits=16, last_val=nil }
 chorus_cmds[CHORUS_CMD_MIN_LAPTIME] =  { cmd="R*M", bits=8, last_val=nil }
 chorus_cmds[CHORUS_CMD_SOUNDS] =  { cmd="R*S", bits=4, last_val=nil }
 chorus_cmds[CHORUS_CMD_SKIP_FIRST] =  { cmd="R*1", bits=4, last_val=nil }
+chorus_cmds[CHORUS_CMD_RACE_MODE] =  { cmd="R*R", bits=4, last_val=nil }
 
 local settings_labels = {}
 local settings_fields = {}
@@ -55,6 +59,11 @@ local x = 0
 local function inc_y(val)
 	y = y + val
 	return y
+end 
+
+local function inc_x(val)
+	x = x + val
+	return x
 end 
 local linespacing = 9
 settings_labels[#settings_labels +1] = {t="Num Rx", x=x, y=inc_y(linespacing)}
@@ -89,6 +98,14 @@ local settings_page = { title = "Chorus32 Settings", labels=settings_labels, fie
 
 local race_labels = {}
 
+local function chorus_get_value(cmd_id)
+	serialWrite(chorus_cmds[cmd_id].cmd .. "\n")
+end
+
+local function chorus_set_value(cmd_id, value)
+	serialWrite(chorus_cmds[cmd_id].cmd .. string.format("%0" .. math.floor(chorus_cmds[cmd_id].bits/4) .. "X\n", value))
+end
+
 local function ms_to_string(ms)
 	local seconds = ms/1000
 	local minutes = math.floor(seconds/60)
@@ -96,7 +113,7 @@ local function ms_to_string(ms)
 	return  (string.format("%02d:%05.2f", minutes, seconds))
 end
 
-local function draw_race_screen()
+local function draw_debug_screen()
 	lcd.drawScreenTitle("Racing", 1, 2)
 	lcd.drawText(0, 11, "WiFi status:", 0)
 	lcd.drawText(lcd.getLastPos()+2, 11, wifi_status,0)
@@ -109,18 +126,45 @@ local function draw_race_screen()
 	lcd.drawText(0, 51, debug_string,0)
 end
 
-local race_page = { custom_draw_func=draw_race_screen }
-local pages = {race_page, settings_page}
+local function draw_race_screen()
+	local race_status = chorus_cmds[CHORUS_CMD_RACE_MODE].last_val
+	if race_status == nil then
+		chorus_get_value(CHORUS_CMD_RACE_MODE)
+	end
+	lcd.drawScreenTitle("Racing Status: " .. tostring(race_status), 1, 1)
+	local textopt = SMLSIZE;
+	local y_offset = 8
+	linespacing = 9
+	y = y_offset
+	x = 0
+	lcd.drawText(x, y, "Laps", textopt)
+	for i=1,5 do
+		lcd.drawLine(0, inc_y(linespacing), 212, y, SOLID, 0)
+			lcd.drawText(x+2, y+2, "Pilot " .. i, textopt)
+	end
+	local x_spacing = 40
+	x = 0
+	y = y_offset
+	for i=1,4 do
+		lcd.drawLine(inc_x(x_spacing), y_offset, x, 64, SOLID, 0)
+		lcd.drawText(x+2, y+2, i, textopt)
+	end
+	
+	for i=1,#laps_int do
+		for j=1, #(laps_int[i]) do
+			if laps_int[i][j] ~= 0 then
+				lcd.drawText(x_spacing*j+2, y_offset + linespacing*i+2, ms_to_string(laps_int[i][j]), textopt)
+			end
+		end
+	end
+end
+
+local race_page = {custom_draw_func=draw_race_screen}
+local debug_page = { custom_draw_func=draw_debug_screen }
+local pages = {race_page, debug_page, settings_page}
 
 local last_chorus_update = 0
 
-local function chorus_get_value(cmd_id)
-	serialWrite(chorus_cmds[cmd_id].cmd .. "\n")
-end
-
-local function chorus_set_value(cmd_id, value)
-	serialWrite(chorus_cmds[cmd_id].cmd .. string.format("%0" .. math.floor(chorus_cmds[cmd_id].bits/4) .. "X\n", value))
-end
 
 local function process_msp_reply(cmd,rx_buf)
 	if cmd == MSP_ADD_LAP then
@@ -186,17 +230,22 @@ local function process_cmd(cmd)
 	elseif (type == "P") then
 		process_proxy_cmd(string.sub(cmd, 2))
 	else
-		local node = string.sub(cmd, 2,2)
+		local node = tonumber(string.sub(cmd, 2,2))
 		local chorus_cmd = string.sub(cmd, 3,3)
-		if (chorus_cmd == "L" and node == "1") then -- laptime. for now only for pilot 1
+		if (chorus_cmd == "L") then -- laptime. for now only for pilot 1
 			local new_time = tonumber(string.sub(cmd, 6), 16)
 			local lap = tonumber(string.sub(cmd, 4, 5), 16)
-			last_lap_int = new_time
-			last_lap = convert_lap(node, lap, new_time)
-			last_lap_ack = false
-			--send_msp(last_lap)
-			lap_sent = false
-			last_lap_ack_needed = last_lap_ack_needed + 1
+			
+			if lap < 5 and lap > 0 then -- just limit the number of laps for now
+				laps_int[node + 1][lap] = new_time
+			end
+			if node == 1 then
+				last_lap_int = new_time
+				last_lap = convert_lap(node, lap, new_time)
+				last_lap_ack = false
+				lap_sent = false
+				last_lap_ack_needed = last_lap_ack_needed + 1
+			end
 		end
 		for i=1,#chorus_cmds do
 			if string.sub(chorus_cmds[i].cmd, 3, 3) == chorus_cmd then
@@ -290,15 +339,23 @@ local function handle_input(event)
 		if current_screen > #(pages) then
 			current_screen = 1
 		end
-	elseif(event == EVT_MINUS_BREAK) then
-		current_item = current_item + 1
-		if(current_item > #(pages[current_screen].fields)) then
-			current_item = 1
+	elseif pages[current_screen].fields ~= nil then
+		if(event == EVT_MINUS_BREAK) then
+			current_item = current_item + 1
+			if(current_item > #(pages[current_screen].fields)) then
+				current_item = 1
+			end
+		elseif(event == EVT_PLUS_BREAK) then
+			current_item = current_item - 1
+			if(current_item < 0) then
+				current_item = #(pages[current_screen].fields)
+			end
 		end
-	elseif(event == EVT_PLUS_BREAK) then
-		current_item = current_item - 1
-		if(current_item < 0) then
-			current_item = #(pages[current_screen].fields)
+	elseif event == EVT_MENU_BREAK then
+		if chorus_cmds[CHORUS_CMD_RACE_MODE].last_val == 0 then
+			chorus_set_value(CHORUS_CMD_RACE_MODE, 1)
+		else
+			chorus_set_value(CHORUS_CMD_RACE_MODE, 0)
 		end
 	end
 
@@ -313,7 +370,7 @@ local run = function (event)
 	handle_input(event)
 	draw_ui()
 	--if type(serialReadLine) == "function" then
-	local rx = serialReadLine()
+	--local rx = serialReadLine()
 	--end
 	if(rx ~= nil) then
 		last_cmd = rx
