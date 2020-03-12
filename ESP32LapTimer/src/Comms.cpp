@@ -905,6 +905,15 @@ void handleExtendedCommands(uint8_t* data, uint8_t length) {
       case EXTENDED_DEBUG_MIN_FREE_HEAP:
         sendExtendedCommandInt32('S', '*', control_byte, ESP.getMinFreeHeap());
         break;
+      case EXTENDED_NUM_MODULES:
+        sendExtendedCommandHalfByte('S', '*', control_byte, EepromSettings.NumReceivers);
+        break;
+      case EXTENDED_WIFI_CHANNEL:
+        sendExtendedCommandHalfByte('S', '*', control_byte, EepromSettings.WiFiChannel);
+        break;
+      case EXTENDED_WIFI_PROTOCOL:
+        sendExtendedCommandHalfByte('S', '*', control_byte, EepromSettings.WiFiProtocol);
+        break;
     }
   }
 }
