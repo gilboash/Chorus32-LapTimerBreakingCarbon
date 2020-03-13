@@ -1142,6 +1142,9 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
       case CONTROL_GET_IS_CONFIGURED:
         SendIsModuleConfigured();
         break;
+      case CONTROL_PILOT_ACTIVE:
+        sendPilotActive(NodeAddrByte);
+        break;
     }
   }
 }
