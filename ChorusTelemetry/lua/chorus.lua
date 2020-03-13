@@ -38,6 +38,9 @@ local CHORUS_CMD_MIN_LAPTIME = 7
 local CHORUS_CMD_SOUNDS = 8
 local CHORUS_CMD_SKIP_FIRST = 9
 local CHORUS_CMD_RACE_MODE = 10
+local CHORUS_CMD_BAND = 11
+local CHORUS_CMD_CHANNEL = 12
+local CHORUS_CMD_ACTIVE = 13
 local chorus_cmds = {}
 
 chorus_cmds[CHORUS_CMD_NUM_RX] =  { cmd="ER*M", bits=4, last_val=nil }
@@ -50,21 +53,27 @@ chorus_cmds[CHORUS_CMD_MIN_LAPTIME] =  { cmd="R*M", bits=8, last_val=nil }
 chorus_cmds[CHORUS_CMD_SOUNDS] =  { cmd="R*S", bits=4, last_val=nil }
 chorus_cmds[CHORUS_CMD_SKIP_FIRST] =  { cmd="R*1", bits=4, last_val=nil }
 chorus_cmds[CHORUS_CMD_RACE_MODE] =  { cmd="R*R", bits=4, last_val=nil }
+chorus_cmds[CHORUS_CMD_BAND] =  { cmd="R*B", bits=4, last_val=nil, individual=true}
+chorus_cmds[CHORUS_CMD_CHANNEL] =  { cmd="R*C", bits=4, last_val=nil, individual=true}
+chorus_cmds[CHORUS_CMD_ACTIVE] =  { cmd="R*A", bits=4, last_val=nil, individual=true }
+
 
 local settings_labels = {}
 local settings_fields = {}
+
+local pages = {}
 
 local y = 0
 local x = 0
 local function inc_y(val)
 	y = y + val
 	return y
-end 
+end
 
 local function inc_x(val)
 	x = x + val
 	return x
-end 
+end
 local linespacing = 9
 settings_labels[#settings_labels +1] = {t="Num Rx", x=x, y=inc_y(linespacing)}
 settings_labels[#settings_labels + 1] = {t="ADC Type", x=x, y=inc_y(linespacing)}
@@ -96,10 +105,50 @@ settings_fields[#settings_fields + 1] = {x= x, y=inc_y(linespacing), min = 0, ma
 
 local settings_page = { title = "Chorus32 Settings", labels=settings_labels, fields=settings_fields}
 
+local rx_labels = {}
+local rx_fields = {}
+x = 0
+y = 0
+for i=1, 6 do
+	rx_labels[#rx_labels +1] = {t="Pilot " .. tostring(i), x=x, y=inc_y(linespacing)}
+end
+
+y = 0
+for i=1,6 do
+	x = 40
+	rx_fields[#rx_fields + 1] = {x= x, y=inc_y(linespacing), min = 0, max = 7, cmd_id=CHORUS_CMD_BAND, labels={"R", "A", "B", "E", "F", "D", "Connex", "Connex2"}, node=i-1}
+	rx_fields[#rx_fields + 1] = {x= inc_x(15), y=y, min = 0, max = 7, labels={"1", "2", "3", "4", "5", "6", "7", "8"}, cmd_id=CHORUS_CMD_CHANNEL, node = i-1}
+	rx_fields[#rx_fields + 1] = {x= inc_x(20), y=y, min = 0, max = 1, labels={"OFF","ON"}, cmd_id=CHORUS_CMD_ACTIVE, node=i-1}
+	-- TODO: add RSSI bar
+	-- Add enter/leave command for pages
+	-- add custom function call for labels, to add a gauge lcd.drawGauge(x, y, w, h, fill, maxfill [, flags])
+end
+
+local rx_page = {title = "RX Configuration", labels=rx_labels, fields=rx_fields}
 local race_labels = {}
+
+local function fill_node_id(cmd_id, node)
+	local node_pos = 2
+	local cmd = chorus_cmds[cmd_id].cmd
+	if string.sub(cmd, 1, 1) == "E" then
+		node_pos = 3
+	end
+	return string.sub(cmd, 1, node_pos - 1) .. tostring(node) .. string.sub(cmd, node_pos + 1)
+end
+
+local function chorus_get_value_node(cmd_id, node)
+	local cmd = fill_node_id(cmd_id, node)
+	serialWrite(cmd .. "\n")
+end
 
 local function chorus_get_value(cmd_id)
 	serialWrite(chorus_cmds[cmd_id].cmd .. "\n")
+end
+
+
+local function chorus_set_value_node(cmd_id, value, node)
+	local cmd = fill_node_id(cmd_id, node)
+	serialWrite(cmd .. string.format("%0" .. math.floor(chorus_cmds[cmd_id].bits/4) .. "X\n", value))
 end
 
 local function chorus_set_value(cmd_id, value)
@@ -113,8 +162,18 @@ local function ms_to_string(ms)
 	return  (string.format("%02d:%05.2f", minutes, seconds))
 end
 
+local function draw_header(title)
+
+	local conn_status = "disconnected"
+	if connection_status == 3 then
+		conn_status = "conencted"
+	end
+	lcd.drawScreenTitle(title, current_screen, #pages)
+	lcd.drawText(120, 0, conn_status, INVERS)
+end
+
 local function draw_debug_screen()
-	lcd.drawScreenTitle("Racing", 1, 2)
+	draw_header("Debug")
 	lcd.drawText(0, 11, "WiFi status:", 0)
 	lcd.drawText(lcd.getLastPos()+2, 11, wifi_status,0)
 	lcd.drawText(lcd.getLastPos()+2, 11, ms_to_string(last_lap_int),0)
@@ -130,26 +189,27 @@ local function draw_race_screen()
 	local race_status = chorus_cmds[CHORUS_CMD_RACE_MODE].last_val
 	if race_status == nil then
 		chorus_get_value(CHORUS_CMD_RACE_MODE)
+		race_status = "--"
 	end
-	lcd.drawScreenTitle("Racing Status: " .. tostring(race_status), 1, 1)
+	draw_header("Racing Status: " .. tostring(race_status))
 	local textopt = SMLSIZE;
 	local y_offset = 8
-	linespacing = 9
+	linespacing = (64 - y_offset)/6
 	y = y_offset
 	x = 0
-	lcd.drawText(x, y, "Laps", textopt)
+	lcd.drawText(x+2, y+2, "Laps", textopt)
 	for i=1,5 do
 		lcd.drawLine(0, inc_y(linespacing), 212, y, SOLID, 0)
 			lcd.drawText(x+2, y+2, "Pilot " .. i, textopt)
 	end
-	local x_spacing = 40
+	local x_spacing = 212/5
 	x = 0
 	y = y_offset
 	for i=1,4 do
 		lcd.drawLine(inc_x(x_spacing), y_offset, x, 64, SOLID, 0)
-		lcd.drawText(x+2, y+2, i, textopt)
+		lcd.drawText(x+x_spacing/2 - 4, y+2, i, textopt)
 	end
-	
+
 	for i=1,#laps_int do
 		for j=1, #(laps_int[i]) do
 			if laps_int[i][j] ~= 0 then
@@ -161,7 +221,7 @@ end
 
 local race_page = {custom_draw_func=draw_race_screen}
 local debug_page = { custom_draw_func=draw_debug_screen }
-local pages = {race_page, debug_page, settings_page}
+pages = {race_page, debug_page, settings_page, rx_page}
 
 local last_chorus_update = 0
 
@@ -235,7 +295,7 @@ local function process_cmd(cmd)
 		if (chorus_cmd == "L") then -- laptime. for now only for pilot 1
 			local new_time = tonumber(string.sub(cmd, 6), 16)
 			local lap = tonumber(string.sub(cmd, 4, 5), 16)
-			
+
 			if lap < 5 and lap > 0 then -- just limit the number of laps for now
 				laps_int[node + 1][lap] = new_time
 			end
@@ -249,7 +309,14 @@ local function process_cmd(cmd)
 		end
 		for i=1,#chorus_cmds do
 			if string.sub(chorus_cmds[i].cmd, 3, 3) == chorus_cmd then
-				chorus_cmds[i].last_val = tonumber(string.sub(cmd, 4), 16)
+				if chorus_cmds[i].individual then
+					if chorus_cmds[i].last_val == nil then
+						chorus_cmds[i].last_val = {} -- TODO: make this better
+					end
+					chorus_cmds[i].last_val[node] = tonumber(string.sub(cmd,4), 16)
+				else
+					chorus_cmds[i].last_val = tonumber(string.sub(cmd, 4), 16)
+				end
 			end
 		end
 
@@ -279,13 +346,20 @@ local function draw_screen()
 	end
 	local labels = page.labels
 	local fields = page.fields
-	lcd.drawScreenTitle(page.title, 2, 2)
+	draw_header(page.title)
 	for i=1,#labels do
 		lcd.drawText(labels[i].x, labels[i].y, labels[i].t, SMLSIZE)
 	end
 
 	for i=1,#fields do
 		local val = chorus_cmds[fields[i].cmd_id].last_val
+		if val ~= nil and chorus_cmds[fields[i].cmd_id].individual then
+			if #val >= fields[i].node then
+			val = val[fields[i].node]
+			else
+				val = nil
+			end
+		end
 		local field_text = "--"
 		if val ~= nil then
 			if fields[i].labels ~= nil then -- apply custom labels
@@ -295,7 +369,11 @@ local function draw_screen()
 			end
 		else
 			if(getTime() - last_chorus_update > 10) then
-				chorus_get_value(fields[i].cmd_id)
+				if fields[i].node ~= nil then
+					chorus_get_value_node(fields[i].cmd_id, fields[i].node)
+				else
+					chorus_get_value(fields[i].cmd_id)
+				end
 				last_chorus_update = getTime()
 			end
 		end
@@ -311,16 +389,25 @@ local function draw_ui()
 end
 
 local function handle_input_edit(event)
-	if current_screen == PAGE_SETTINGS then
-		local setting = settings_fields[current_item]
-		local current_val = chorus_cmds[setting.cmd_id].last_val
-		if event == EVT_PLUS_BREAK then
-			if current_val + 1 <= setting.max then
-				chorus_set_value(setting.cmd_id, current_val + 1)
+	local field = pages[current_screen].fields[current_item]
+	local current_val = chorus_cmds[field.cmd_id].last_val
+	if chorus_cmds[field.cmd_id].individual then
+		current_val = current_val[field.node]
+	end
+	if event == EVT_PLUS_BREAK then
+		if current_val + 1 <= field.max then
+			if field.node ~= nil then
+				chorus_set_value_node(field.cmd_id, current_val + 1, field.node)
+			else
+				chorus_set_value(field.cmd_id, current_val + 1)
 			end
-		elseif event == EVT_MINUS_BREAK then
-			if current_val > setting.min then
-				chorus_set_value(setting.cmd_id, current_val - 1)
+		end
+	elseif event == EVT_MINUS_BREAK then
+		if current_val > field.min then
+			if field.node ~= nil then
+				chorus_set_value_node(field.cmd_id, current_val - 1, field.node)
+			else
+				chorus_set_value(field.cmd_id, current_val - 1)
 			end
 		end
 	end
@@ -369,9 +456,9 @@ end
 local run = function (event)
 	handle_input(event)
 	draw_ui()
-	--if type(serialReadLine) == "function" then
-	--local rx = serialReadLine()
-	--end
+	if type(serialReadLine) ~= "nil" then
+		local rx = serialReadLine()
+	end
 	if(rx ~= nil) then
 		last_cmd = rx
 		process_cmd(last_cmd)
