@@ -50,6 +50,10 @@
 #define I2C_SCL SCL
 #endif
 
+#if (!defined(OLED_SCL) || !defined(OLED_SDA)) && defined(OLED)
+#undef OLED
+#endif
+
 #if !defined(WIFI_MODE_CLIENT) && !defined(WIFI_MODE_ACCESSPOINT)
   #error "No WIFI_MODE selected"
 #endif
