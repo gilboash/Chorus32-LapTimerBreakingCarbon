@@ -43,5 +43,5 @@
 #define ADC5_GPIO 32
 #define ADC6_GPIO 33
 
-#define I2C_SCL 21
-#define I2C_SDA 22
+#define OLED_SCL 21
+#define OLED_SDA 22
