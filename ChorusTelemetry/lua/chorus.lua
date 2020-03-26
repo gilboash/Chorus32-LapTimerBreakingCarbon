@@ -41,6 +41,7 @@ local CHORUS_CMD_RACE_MODE = 10
 local CHORUS_CMD_BAND = 11
 local CHORUS_CMD_CHANNEL = 12
 local CHORUS_CMD_ACTIVE = 13
+local CHORUS_CMD_THRESHOLD = 14
 local chorus_cmds = {}
 
 chorus_cmds[CHORUS_CMD_NUM_RX] =  { cmd="ER*M", bits=4, last_val=nil }
@@ -56,6 +57,7 @@ chorus_cmds[CHORUS_CMD_RACE_MODE] =  { cmd="R*R", bits=4, last_val=nil }
 chorus_cmds[CHORUS_CMD_BAND] =  { cmd="R*B", bits=4, last_val=nil, individual=true}
 chorus_cmds[CHORUS_CMD_CHANNEL] =  { cmd="R*C", bits=4, last_val=nil, individual=true}
 chorus_cmds[CHORUS_CMD_ACTIVE] =  { cmd="R*A", bits=4, last_val=nil, individual=true }
+chorus_cmds[CHORUS_CMD_THRESHOLD] =  { cmd="R*T", bits=4, last_val={2000}, individual=true }
 
 
 local settings_labels = {}
@@ -119,6 +121,7 @@ for i=1,6 do
 	rx_fields[#rx_fields + 1] = {x= x, y=inc_y(linespacing), min = 0, max = 7, cmd_id=CHORUS_CMD_BAND, labels={"R", "A", "B", "E", "F", "D", "Connex", "Connex2"}, node=i-1}
 	rx_fields[#rx_fields + 1] = {x= inc_x(15), y=y, min = 0, max = 7, labels={"1", "2", "3", "4", "5", "6", "7", "8"}, cmd_id=CHORUS_CMD_CHANNEL, node = i-1}
 	rx_fields[#rx_fields + 1] = {x= inc_x(20), y=y, min = 0, max = 1, labels={"OFF","ON"}, cmd_id=CHORUS_CMD_ACTIVE, node=i-1}
+	rx_fields[#rx_fields + 1] = {x= inc_x(20), y=y, min = 1500, max = 3000, cmd_id=CHORUS_CMD_THRESHOLD, node=i-1, scaling=1/12}
 	-- TODO: add RSSI bar
 	-- Add enter/leave command for pages
 	-- add custom function call for labels, to add a gauge lcd.drawGauge(x, y, w, h, fill, maxfill [, flags])
@@ -148,11 +151,11 @@ end
 
 local function chorus_set_value_node(cmd_id, value, node)
 	local cmd = fill_node_id(cmd_id, node)
-	serialWrite(cmd .. string.format("%0" .. math.floor(chorus_cmds[cmd_id].bits/4) .. "X\n", value))
+	serialWrite(cmd .. string.format("%0" .. math.floor(chorus_cmds[cmd_id].bits/4) .. "X\n", math.floor(value)))
 end
 
 local function chorus_set_value(cmd_id, value)
-	serialWrite(chorus_cmds[cmd_id].cmd .. string.format("%0" .. math.floor(chorus_cmds[cmd_id].bits/4) .. "X\n", value))
+	serialWrite(chorus_cmds[cmd_id].cmd .. string.format("%0" .. math.floor(chorus_cmds[cmd_id].bits/4) .. "X\n", math.floor(value)))
 end
 
 local function ms_to_string(ms)
@@ -165,7 +168,7 @@ end
 local function draw_header(title)
 
 	local conn_status = "disconnected"
-	if connection_status == 3 then
+	if tonumber(connection_status) == 1 then
 		conn_status = "conencted"
 	end
 	lcd.drawScreenTitle(title, current_screen, #pages)
@@ -355,13 +358,16 @@ local function draw_screen()
 		local val = chorus_cmds[fields[i].cmd_id].last_val
 		if val ~= nil and chorus_cmds[fields[i].cmd_id].individual then
 			if #val >= fields[i].node then
-			val = val[fields[i].node]
+				val = val[fields[i].node]
 			else
 				val = nil
 			end
 		end
 		local field_text = "--"
 		if val ~= nil then
+			if fields[i].scaling ~= nil then
+				val = math.floor(val * fields[i].scaling)
+			end
 			if fields[i].labels ~= nil then -- apply custom labels
 				field_text = tostring(fields[i].labels[1 + val - fields[i].min])
 			else
@@ -394,10 +400,14 @@ local function handle_input_edit(event)
 	if chorus_cmds[field.cmd_id].individual then
 		current_val = current_val[field.node]
 	end
+	local scaling = 1
+	if field.scaling ~= nil then
+		scaling = 1/field.scaling
+	end
 	if event == EVT_PLUS_BREAK then
 		if current_val + 1 <= field.max then
 			if field.node ~= nil then
-				chorus_set_value_node(field.cmd_id, current_val + 1, field.node)
+				chorus_set_value_node(field.cmd_id, current_val + 1*scaling, field.node)
 			else
 				chorus_set_value(field.cmd_id, current_val + 1)
 			end
@@ -407,7 +417,7 @@ local function handle_input_edit(event)
 			if field.node ~= nil then
 				chorus_set_value_node(field.cmd_id, current_val - 1, field.node)
 			else
-				chorus_set_value(field.cmd_id, current_val - 1)
+				chorus_set_value(field.cmd_id, current_val - 1*scaling)
 			end
 		end
 	end
@@ -470,14 +480,14 @@ local run = function (event)
 	end
 	mspProcessTxQ()
 	if last_lap_int ~= 0 then
-		if lap_sent == false then
+		--if lap_sent == false then
 			if protocol.mspWrite(MSP_ADD_LAP, last_lap) ~= nil then
 				lap_sent = true
 				debug_string = "Lap sent!"
 			else
 				debug_string = "MSP is busy"
 			end
-		end
+		--end
 	end
 	return 0
 end
