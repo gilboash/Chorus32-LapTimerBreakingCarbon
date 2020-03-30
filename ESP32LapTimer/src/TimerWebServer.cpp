@@ -196,12 +196,10 @@ void InitWebServer() {
   });
 
 
-  webServer.on("/get_laptimes", send_laptimes);
   webServer.on("/start_race", startRace_button);
   webServer.on("/stop_race", stopRace_button);
 
   webServer.on("/calibrateRSSI",calibrateRSSI);
-
 
 
   webServer.on("/update", HTTP_POST, [](AsyncWebServerRequest* req) {

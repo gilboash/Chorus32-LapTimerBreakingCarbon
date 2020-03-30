@@ -459,6 +459,14 @@ void setPilotActive(uint8_t pilot, bool active) {
   xSemaphoreGive(pilots_lock);
 }
 
+bool isPilotMultiplexOff(uint8_t pilot) {
+  return pilots[pilot].disable_multiplexing;
+}
+
+void setPilotMultiplexOff(uint8_t pilot, bool off) {
+  pilots[pilot].disable_multiplexing = off;
+}
+
 void setPilotFilters(uint16_t cutoff) {
   for(uint8_t i = 0; i < MAX_NUM_PILOTS; ++i) {
     for(uint8_t j = 0; j < PILOT_FILTER_NUM; ++j) {
@@ -490,10 +498,3 @@ void setPilotBand(uint8_t pilot, uint8_t band) {
   }
 }
 
-bool isPilotMultiplexOff(uint8_t pilot) {
-	return pilots[pilot].disable_multiplexing;
-}
-
-void setilotMultiplexOff(uint8_t pilot, bool off) {
-	pilots[pilot].disable_multiplexing = off;
-}
