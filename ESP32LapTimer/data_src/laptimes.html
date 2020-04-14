@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<title>Chorus32 RF lap Timing System</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="stylesheet" href="assets/css/main.css" />
+	<link rel="stylesheet" href="assets/css/slider.css" />
+	<link rel="stylesheet" href="assets/css/laptimes.css" />
+	<link rel="stylesheet" href="assets/css/chartist.min.css">
+</head>
+
+<body>
+	<!-- OI you! get out of my source code!!! -->
+
+	<!-- Header -->
+	<!-- Disabled for now, since it just blocks too much space
+	<section id="header">
+		<div class="inner">
+			<img src="flag.svg" height="250" width="250" style="padding:20px;"></a>
+			<h1>Welcome to your <strong>Chorus32</strong><br /> configuration Page<br />
+			</h1>
+			<p>From here you can change any settings on your timer<br />
+				<p>
+
+					<b>Firmware Rev. </b><var id="FirmVersion">1.0</var>
+					<p>
+		</div>
+	</section>
+	-->
+
+
+	<section id="Status lap" class="main style1">
+		<div class="container">
+			<table style="width:100%">
+				<tr>
+					<th>Select Voice:</th>
+					<th><select name="voices" id="voices"></select></th>
+				</tr>
+				<tr>
+					<th>
+						Number of Laps
+					</th>
+					<th>
+						<input id="max_laps"></input>
+				</tr>
+				<tr>
+					<th>
+						Update interval for RSSI graph in ms
+					</th>
+					<th>
+						<input id="rssi_interval" type="number"></input>
+				</tr>
+				<tr>
+					<th>
+						Race Mode: <span id="race_mode">Finished</span>
+					</th>
+					<th>
+						 <button id="start_race_button" type="button">Start Race</button>
+					</th>
+					<th>
+						<button id="stop_race_button" type="button">Stop Race</button>
+					</th>
+					<!-- TODO: export times button -->
+				</tr>
+			</table>
+			<div id="button_table_container">
+			<div class="tab" id="round_buttons" style="width:100%">
+			</div>
+			<div id="table_container">
+			</div> <!-- end container for tabs -->
+			<div class="ct-chart ct-octave" id="graph_div"></div>
+			</div>
+		</div>
+	</section>
+
+
+<div style="display:none">
+<table style="width:100%" id="lap_table_default">
+	<tr align="center">
+		<th align="center">Active</th>
+		<th width=10% align="center">Pilot</th>
+		<th>Total</th>
+		<th>Place</th>
+		<th align="center">Avg Lap</th>
+		<th align="center">Best Lap</th>
+	</tr>
+</table>
+</div>
+
+<script>
+function update_default_pilot_name(num) {
+	var def_table = document.getElementById("lap_table_default");
+	var def_input = def_table.querySelector("[id='pilot_name_" + num + "']");
+	// only update the name from the last round (so you can retroactively change a name)
+	var last_pilot_input = document.getElementById("table_container").lastChild.querySelector("[id='pilot_name_" + num + "']");
+	def_input.value = last_pilot_input.value;
+	localStorage.setItem("pilot_name_" + num, last_pilot_input.value);
+}
+
+function openRound(evt, num) {
+  // Declare all variables
+  var i, tabcontent, tablinks;
+
+  // Get all elements with class="tabcontent" and hide them
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+
+  // Get all elements with class="tablinks" and remove the class "active"
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+
+  // Show the current tab, and add an "active" class to the button that opened the tab
+  document.getElementById("round_tab_content_" + num).style.display = "block";
+  evt.currentTarget.className += " active";
+}
+</script>
+<script src="chartist.min.js"></script>
+
+
+<script src="laptimes_socket.js"></script>
+
+</body>
+</html>

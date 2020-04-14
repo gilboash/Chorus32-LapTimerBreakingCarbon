@@ -1,0 +1,187 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<title>Chorus32 RF lap Timing System</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="stylesheet" href="assets/css/main.css" />
+	<link rel="stylesheet" href="assets/css/slider.css"/>
+	<link rel="stylesheet" href="assets/css/settings.css"/>
+</head>
+
+<body>
+	<!-- OI you! get out of my source code!!! -->
+
+	<!-- Header -->
+	<section id="header">
+		<div class="inner">
+			<img src="flag.svg" height="250" width="250" style="padding:20px;"></a>
+			<h1>Welcome to your <strong>Chorus32</strong><br /> configuration Page<br />
+			</h1>
+			<p>From here you can change any settings on your timer<br />
+				<p>
+
+					<b>Firmware Rev. </b><var id="FirmVersion">1.0</var>
+					<p>
+		</div>
+	</section>
+
+	<section id="Status RFPWR" class="main style1">
+		<div class="container">
+
+			<div align="left">
+				<legend>
+					<h2><b>Status:</b></h2>
+				</legend>
+						<b>VBAT: </b><span id="Var_VBAT" class="StatusText">0</span>V
+						<b>Free Heap: </b><span id="heap_free" class="StatusText">0</span>kB
+						<b>Lowest Heap: </b><span id="heap_low" class="StatusText">0</span>kB
+						<b>Heap max block: </b><span id="heap_max_block" class="StatusText">0</span>kB
+					<br>
+
+	</section>
+	<!-- One -->
+	<section id="one" class="main style1">
+		<div class="container">
+
+			<div align="left">
+				<legend>
+					<h2><b>General Configuration</b></h2>
+				</legend>
+				<br>Number of Receivers:</br>
+				<select name="NumRXs" id="NumRXs">
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+					<option value="6">6</option>
+					<option selected value="7"></option>
+				</select>
+				<!-- TODO: Disable checkboxes if config would result in a lockup -->
+				<div id="pilot_settings_div">
+					<h4>Pilot settings</h4>
+					<table id="pilot_table">
+						<tr>
+							<th>Pilot number</th>
+							<th>Band</th>
+							<th>Channel</th>
+							<th>RSSI Threshold</th>
+							<th>Enable</th>
+							<th>Disable multiplexing</th>
+						</tr>
+					</table>
+				</div>
+
+				<legend>
+					<h2><b>VBAT Configuration</b></h2>
+				</legend>
+				VBAT Measurement Mode:<br>
+				<select name="ADCVBATmode" id="ADCVBATmode">
+					<option value="0">OFF (6CH Mode, no VBAT)</option>
+					<option value="1">VBAT ADC Channel 5 (GPIO 32)</option>
+					<option value="2">VBAT ADC Channel 6 (GPIO 33)</option>
+					<option value="3">VBAT INA219 (6 Channel Mode)</option>
+					<option selected value="4"></option>
+				</select>
+				<br>
+				ADC calibration Constant:<br>
+				<input type="float" name="ADCcalibValue" min="0" max="65" value="" id="ADCcalibValue">
+				<br>
+				<br>
+
+				<legend>
+					<h2><b>WiFi Configuration</b></h2>
+				</legend>
+				WiFi Protocol:<br>
+				<select name="WiFiProtocol" id="WiFiProtocol">
+					<option value="0">b</option>
+					<option value="1">bgn</option>
+				</select>
+				<br>
+				WiFi Channel (1-13):<br>
+				<input type="int" name="WiFiChannel" min="0" max="13" value="" id="WiFiChannel">
+				<br>
+				<br>
+
+				<br>
+				<legend>
+					<h2><b>Filtering</b></h2>
+				</legend>
+				RX ADC Filter cutoff<br>
+				<input type="int" name="RXFilterCutoff" min="0" max="1000" value="" id="RXFilterCutoff">
+				<br>
+				<legend>
+					<h2><b>Display Settings</b></h2>
+				</legend>
+					Display timeout in seconds (0 to disable)<br>
+				<input type="int" name="displayTimeout" min="0" value="" id="displayTimeout">
+				<fieldset>
+					<legend>
+						<h2><b>Calibrate (optional)</b></h2>
+					</legend>
+					If the values of your different modules differ too much run this calibration with a VTX powered up at 25mW on any channel. <br>
+					If you ever run this without an active VTX your timer won't work properly and you'll need to recalibrate. <br><br>
+					<button id="calibrate_button" name='calibrateRSSI' value="Calibrate RSSI">Calibrate RSSI</button>
+					<br><br>
+					Calibration values:
+					<table id="calib_table">
+						<tr>
+							<th>Module</th>
+							<th>Min</th>
+							<th>Max</th>
+						</tr>
+						<tr>
+							<td>1</td><td></td><td></td>
+						</tr>
+						<tr>
+							<td>2</td><td></td><td></td>
+						</tr>
+						<tr>
+							<td>3</td><td></td><td></td>
+						</tr>
+						<tr>
+							<td>4</td><td></td><td></td>
+						</tr>
+						<tr>
+							<td>5</td><td></td><td></td>
+						</tr>
+						<tr>
+							<td>6</td><td></td><td></td>
+						</tr>
+					</table>
+				</fieldset>
+				<legend>
+					<h2><b>Reset Eeprom values</b></h2>
+				</legend>
+				<button name='eepromReset' value="Reset EEPROM" id="eepromReset">Reset EEPROM</button>
+
+				<fieldset>
+
+					Here you can update module firmware,
+					be careful to upload the correct file as it is possible to brick the timer. A bricked timer will require reflashing with a serial cable
+					<br><br>
+					<legend>
+						<h2>Firmware Update:</h2>
+					</legend>
+
+					<div id="update_progress">
+						<div id="update_bar">0%</div>
+					</div>
+					<input type='file' name='update' id="update_file" accept=".bin"> <button name='update' value="Update" id="update_button">Update Firmware</button>
+
+				</fieldset>
+
+
+
+			</div>
+		</div>
+		</div>
+		</div>
+	</section>
+
+</body>
+<script src="settings_socket.js" type="module"></script>
+<script src="update_upload.js"></script>
+</html>

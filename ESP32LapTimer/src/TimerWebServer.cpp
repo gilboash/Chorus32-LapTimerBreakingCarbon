@@ -88,7 +88,9 @@ bool handleFileRead(AsyncWebServerRequest* req, String path) { // send the right
   // If a folder is requested, send the index file
   String contentType = getContentType(path);            // Get the MIME type
   if (SPIFFS.exists(path)) {
-    req->send(SPIFFS, path, contentType);
+    AsyncWebServerResponse *response = req->beginResponse(SPIFFS, path, contentType);
+    response->addHeader("Content-Encoding", "gzip");
+    req->send(response);
     return true;
   }
   return false;                                         // If the file doesn't exist, return false
@@ -167,11 +169,11 @@ void InitWebServer() {
   if (!SPIFFS.exists("/index.html")) {
     Serial.println("SPIFFS filesystem was not found");
     webServer.on("/", HTTP_GET, [](AsyncWebServerRequest* req) {
-      req->redirect("/recovery.html");
+      handleFileRead(req, "/recovery.html");
     });
   } else {
     webServer.on("/", HTTP_GET, [](AsyncWebServerRequest* req) {
-      req->send(SPIFFS, "/index.html");
+      handleFileRead(req, "/index.html");
     });
   }
 
