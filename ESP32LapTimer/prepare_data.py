@@ -36,7 +36,8 @@ def generate_terser(terser_binary: str):
 
 
 def copy_files():
-	shutil.copytree("{}/data_src".format(SCRIPT_DIR), "{}/data".format(SCRIPT_DIR), dirs_exist_ok=True)
+	shutil.rmtree("{}/data".format(SCRIPT_DIR), ignore_errors=True)
+	shutil.copytree("{}/data_src".format(SCRIPT_DIR), "{}/data".format(SCRIPT_DIR))
 
 def generate_gzip():
 	# gzip all files
