@@ -9,8 +9,9 @@ from pathlib import Path
 
 from argparse import ArgumentParser, RawTextHelpFormatter
 
+import sys
 
-SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+SCRIPT_DIR = os.getcwd()
 
 def generate_constants():
 	# generate constants.js file
@@ -28,9 +29,9 @@ def generate_terser(terser_binary: str):
 	# use terser if present
 	if shutil.which(terser_binary) is not None or os.path.isfile(terser_binary):
 		print("Using terser")
-		for js_file in os.listdir("{}/data_src".format(SCRIPT_DIR)):
+		for js_file in os.listdir("{}/data".format(SCRIPT_DIR)):
 			if js_file.endswith(".js"):
-				cmd = [terser_binary, "-c", "toplevel", "-m", "reserved,toplevel,eval", "-o", "{}/data/{}".format(SCRIPT_DIR, js_file), "{}/data_src/{}".format(SCRIPT_DIR, js_file)]
+				cmd = [terser_binary, "-c", "toplevel", "-m", "reserved,toplevel,eval", "-o", "{}/data/{}".format(SCRIPT_DIR, js_file), "{}/data/{}".format(SCRIPT_DIR, js_file)]
 				subprocess.run(cmd)
 
 
@@ -49,12 +50,12 @@ def generate_gzip():
 				f.write(to_compress)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__" or __name__ == "SCons.Script":
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 	parser.add_argument("--terser", dest="terser", help="Terser cmd [Default: %(default)s]", type=str, default= "{}/node_modules/terser/bin/terser".format(str(Path.home())))
-	args = parser.parse_args()
-	
+	args, unknown = parser.parse_known_args()
+
 	generate_constants()
-	generate_terser(args.terser)
 	copy_files()
+	generate_terser(args.terser)
 	generate_gzip()
