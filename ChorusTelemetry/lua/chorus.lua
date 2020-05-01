@@ -169,7 +169,7 @@ local function draw_header(title)
 
 	local conn_status = "disconnected"
 	if tonumber(connection_status) == 1 then
-		conn_status = "conencted"
+		conn_status = "connected"
 	end
 	lcd.drawScreenTitle(title, current_screen, #pages)
 	lcd.drawText(120, 0, conn_status, INVERS)
