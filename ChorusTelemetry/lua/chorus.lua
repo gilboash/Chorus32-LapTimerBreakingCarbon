@@ -121,7 +121,7 @@ for i=1,6 do
 	rx_fields[#rx_fields + 1] = {x= x, y=inc_y(linespacing), min = 0, max = 7, cmd_id=CHORUS_CMD_BAND, labels={"R", "A", "B", "E", "F", "D", "Connex", "Connex2"}, node=i-1}
 	rx_fields[#rx_fields + 1] = {x= inc_x(15), y=y, min = 0, max = 7, labels={"1", "2", "3", "4", "5", "6", "7", "8"}, cmd_id=CHORUS_CMD_CHANNEL, node = i-1}
 	rx_fields[#rx_fields + 1] = {x= inc_x(20), y=y, min = 0, max = 1, labels={"OFF","ON"}, cmd_id=CHORUS_CMD_ACTIVE, node=i-1}
-	rx_fields[#rx_fields + 1] = {x= inc_x(20), y=y, min = 1500, max = 3000, cmd_id=CHORUS_CMD_THRESHOLD, node=i-1, scaling=1/12}
+	rx_fields[#rx_fields + 1] = {x= inc_x(20), y=y, min = 0, max = 300, cmd_id=CHORUS_CMD_THRESHOLD, node=i-1}
 	-- TODO: add RSSI bar
 	-- Add enter/leave command for pages
 	-- add custom function call for labels, to add a gauge lcd.drawGauge(x, y, w, h, fill, maxfill [, flags])
