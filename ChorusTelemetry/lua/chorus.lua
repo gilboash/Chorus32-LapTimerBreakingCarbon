@@ -57,7 +57,7 @@ chorus_cmds[CHORUS_CMD_RACE_MODE] =  { cmd="R*R", bits=4, last_val=nil }
 chorus_cmds[CHORUS_CMD_BAND] =  { cmd="R*B", bits=4, last_val=nil, individual=true}
 chorus_cmds[CHORUS_CMD_CHANNEL] =  { cmd="R*C", bits=4, last_val=nil, individual=true}
 chorus_cmds[CHORUS_CMD_ACTIVE] =  { cmd="R*A", bits=4, last_val=nil, individual=true }
-chorus_cmds[CHORUS_CMD_THRESHOLD] =  { cmd="R*T", bits=4, last_val=nil, individual=true }
+chorus_cmds[CHORUS_CMD_THRESHOLD] =  { cmd="R*T", bits=16, last_val=nil, individual=true }
 
 
 local settings_labels = {}
