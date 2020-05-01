@@ -409,13 +409,13 @@ local function handle_input_edit(event)
 			if field.node ~= nil then
 				chorus_set_value_node(field.cmd_id, current_val + 1*scaling, field.node)
 			else
-				chorus_set_value(field.cmd_id, current_val + 1)
+				chorus_set_value(field.cmd_id, current_val + 1*scaling)
 			end
 		end
 	elseif event == EVT_MINUS_BREAK then
 		if current_val > field.min then
 			if field.node ~= nil then
-				chorus_set_value_node(field.cmd_id, current_val - 1, field.node)
+				chorus_set_value_node(field.cmd_id, current_val - 1*scaling, field.node)
 			else
 				chorus_set_value(field.cmd_id, current_val - 1*scaling)
 			end
