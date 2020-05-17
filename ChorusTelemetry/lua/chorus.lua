@@ -1,5 +1,42 @@
 SCRIPT_HOME = "/SCRIPTS/BF"
-protocol = assert(loadScript(SCRIPT_HOME.."/protocols.lua"))()
+--protocol = assert(loadScript(SCRIPT_HOME.."/protocols.lua"))()
+
+-- copied from betaflight, since they changed how scripts are loaded
+local supportedProtocols =
+{
+    smartPort =
+    {
+        transport       = SCRIPT_HOME.."/MSP/sp.lua",
+        rssi            = function() return getValue("RSSI") end,
+        stateSensor     = "Tmp1",
+        push            = sportTelemetryPush,
+        maxTxBufferSize = 6,
+        maxRxBufferSize = 6,
+        saveMaxRetries  = 2,
+        saveTimeout     = 500
+    },
+    crsf =
+    {
+        transport       = SCRIPT_HOME.."/MSP/crsf.lua",
+        rssi            = function() return getValue("TQly") end,
+        stateSensor     = "1RSS",
+        push            = crossfireTelemetryPush,
+        maxTxBufferSize = 8,
+        maxRxBufferSize = 58,
+        saveMaxRetries  = 2,
+        saveTimeout     = 150
+    }
+}
+
+local function getProtocol()
+    if supportedProtocols.smartPort.push() ~= nil then
+        return supportedProtocols.smartPort
+    elseif supportedProtocols.crsf.push() ~= nil then
+        return supportedProtocols.crsf
+    end
+end
+
+protocol = assert(getProtocol(), "Telemetry protocol not supported!")
 
 assert(loadScript(protocol.transport))()
 assert(loadScript(SCRIPT_HOME.."/MSP/common.lua"))()
