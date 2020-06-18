@@ -503,10 +503,8 @@ end
 local run = function (event)
 	handle_input(event)
 	draw_ui()
---	if type(serialReadLine) ~= "nil" then
-		local rx = serialReadLine()
---	end
-	if(rx ~= nil) then
+	local rx = serialRead()
+	if(rx ~= nil and string.len(rx) > 0) then
 		last_cmd = rx
 		process_cmd(last_cmd)
 	end
