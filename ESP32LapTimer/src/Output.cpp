@@ -26,9 +26,6 @@
 #ifdef USE_TCP
 #include "TCP.h"
 #endif
-#ifdef USE_WEBSOCKET_OUTPUT
-#include "TimerWebServer.h"
-#endif
 #ifdef USE_LORA
 #include "Lora.h"
 #endif
@@ -58,9 +55,6 @@ static output_t outputs[] = {
 #ifdef USE_TCP
   {NULL, tcp_init, tcp_send_packet, tcp_update, output_input_callback},
 #endif // USE_TCP
-#ifdef USE_WEBSOCKET_OUTPUT
-  {NULL, NULL, send_websocket, read_websocket, output_input_callback},
-#endif // USE_WEBSOCKET_OUTPUT
 #ifdef USE_LORA
   {NULL, lora_init, lora_send_packet, lora_update, output_input_callback},
 #endif // USE_LORA
