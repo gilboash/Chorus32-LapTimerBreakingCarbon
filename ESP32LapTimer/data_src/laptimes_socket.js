@@ -315,6 +315,15 @@ document.getElementById("stop_race_button").onclick = function () {
 	ws.send("R*R0\n");
 }
 
+document.getElementById("fetch_result_button").onclick = function () {
+	//current_race += 1;
+	//max_laps = parseInt(document.getElementById("max_laps").value);
+	//build_table(current_race, max_laps);
+	//ws.send("l*\n");
+	ws.send("R*a\n"); // just get all settings to get all laps
+	console.log("Fetch last times");
+}
+
 rssi_interval = parseInt(localStorage.getItem("rssi_interval"));
 if (isNaN(rssi_interval)) {
 	rssi_interval = 0;

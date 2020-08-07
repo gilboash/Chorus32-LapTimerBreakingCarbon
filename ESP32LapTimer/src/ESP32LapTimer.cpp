@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -32,7 +32,9 @@
 #include "OLED.h"
 #endif
 #include "TimerWebServer.h"
+#ifdef BEEPER
 #include "Beeper.h"
+#endif
 #include "Calibration.h"
 #include "Output.h"
 #ifdef USE_BUTTONS
@@ -98,14 +100,14 @@ void setup() {
 
   InitSPI();
   InitHardwarePins();
-  RXPowerDownAll(); // Powers down all RX5808's
+  //RXPowerDownAll(); // Powers down all RX5808's, already called in InitSPI()
 
 #ifdef OLED
   oledSetup();
 #endif
 
   bool all_modules_off = false;
-  if(rtc_get_reset_reason(0) == 15 || rtc_get_reset_reason(1) == 15) {
+  if (rtc_get_reset_reason(0) == 15 || rtc_get_reset_reason(1) == 15) {
     all_modules_off = true;
     Serial.println("Rebooted from brownout...disabling all modules...");
   }
@@ -113,7 +115,9 @@ void setup() {
   newButtonSetup();
 #endif
   resetLaptimes();
+#ifdef BEEPER
   beeper_init();
+#endif
 
   EepromSettings.setup();
   setRXADCfilterCutoff(EepromSettings.RXADCfilterCutoff);
@@ -129,8 +133,6 @@ void setup() {
   delay(250);
 
   InitWifi();
-
-  InitWebServer();
 
   if (!EepromSettings.SanityCheck()) {
     EepromSettings.defaults();
@@ -186,7 +188,10 @@ void loop() {
   handleDNSRequests();
 #endif
 
+#ifdef BEEPER
   beeperUpdate();
+#endif
+
   if(UNLIKELY(!isInRaceMode())) {
     thresholdModeStep();
   }

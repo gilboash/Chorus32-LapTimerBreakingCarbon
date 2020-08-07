@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -116,6 +116,12 @@ void stopRace_button(AsyncWebServerRequest* req) {
   req->send(200, "text/plain", "");
 }
 
+void fetch_laptimes_button(AsyncWebServerRequest* req) {
+  Serial.println("Fetching laptimes...");
+  //stopRace();
+  req->send(200, "text/plain", "");
+}
+
 void onWebsocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
   if(isHTTPUpdating) return; // ignore all incoming messages during update
   Serial.print("Got websocket message: ");
@@ -198,6 +204,7 @@ void InitWebServer() {
 
   webServer.on("/start_race", startRace_button);
   webServer.on("/stop_race", stopRace_button);
+  webServer.on("/fetch_laptimes", fetch_laptimes_button);
 
   webServer.on("/calibrateRSSI",calibrateRSSI);
 

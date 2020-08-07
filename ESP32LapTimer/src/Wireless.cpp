@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,6 +20,7 @@
 #include <ESPmDNS.h>
 #include <esp_wifi.h>
 #include <DNSServer.h>
+#include <esp_now.h>
 
 #include "TimerWebServer.h"
 #include "settings_eeprom.h"
@@ -97,7 +98,21 @@ bool InitWifiClient() {
   return true;
 }
 
+void esp_now_recv_cb(const uint8_t *mac_addr, const uint8_t *data, int data_len)
+{
+  Serial.printf("ESP NOW CB called!\n");
+
+
+  char hello[] = "CHORUS_CB\n";
+  esp_now_send(mac_addr, (uint8_t*)hello, strlen(hello)); // send to all registered peers
+}
+
 void InitWifi() {
+#ifdef ESP_NOW_PEERS
+  wifi_interface_t if_type = ESP_IF_WIFI_AP;
+#endif
+  Serial.printf("My MAC Address: %s\n", WiFi.macAddress().c_str());
+
   WiFi.onEvent(WiFiEvent);
 
   #if defined(WIFI_MODE_ACCESSPOINT)
@@ -107,8 +122,41 @@ void InitWifi() {
       log_i("Failed to connect to WiFi Network");
       log_i("Starting up in AP mode instead!");
       InitWifiAP();
+    } else {
+#ifdef ESP_NOW_PEERS
+      if_type = ESP_IF_WIFI_STA;
+#endif
     }
   #endif
+
+#ifdef ESP_NOW_PEERS
+  Serial.print("Initialize ESP-NOW... ");
+  esp_now_init();
+  esp_now_register_recv_cb(esp_now_recv_cb);
+
+  esp_now_peer_info_t peer_info = {
+    .peer_addr = {0},
+    .lmk = {0},
+    .channel = 0,
+    .ifidx = if_type,
+    .encrypt = 0,
+    .priv = NULL
+  };
+  uint8_t peers[][ESP_NOW_ETH_ALEN] = ESP_NOW_PEERS;
+  uint8_t num_peers = sizeof(peers) / ESP_NOW_ETH_ALEN;
+  for (uint8_t iter = 0; iter < num_peers; iter++) {
+    memcpy(peer_info.peer_addr, peers[iter], ESP_NOW_ETH_ALEN);
+    esp_now_add_peer(&peer_info);
+  }
+
+  Serial.println("DONE");
+
+  // Notify clients
+  char hello[] = "CHORUS32\n";
+  esp_now_send(NULL, (uint8_t*)hello, strlen(hello)); // send to all registered peers
+#endif
+
+  InitWebServer();
 }
 
 void handleDNSRequests() {
@@ -125,8 +173,7 @@ void airplaneModeOn() {
 void airplaneModeOff() {
   // Disable Airplane Mode (WiFi On)
   log_i("Airplane Mode OFF");
-  InitWifiAP();
-  InitWebServer();
+  InitWifi();
   airplaneMode = false;
 }
 

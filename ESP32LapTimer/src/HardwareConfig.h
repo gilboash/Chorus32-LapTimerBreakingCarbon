@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -41,7 +41,8 @@
 //
 #define WIFI_MODE_ACCESSPOINT
 // For now the AP name needs to be defined regardless of mode.
-#define WIFI_AP_NAME "Chorus32 LapTimer"
+//#define WIFI_AP_NAME "Chorus32 LapTimer"
+#define WIFI_AP_NAME "PeHo Chorus32"
 
 // When in client mode you also need to specify the
 // ssid and password.
@@ -60,6 +61,9 @@
 
 // Enable TCP support. Currently this needs a special version of the app: https://github.com/Smeat/Chorus-RF-Laptimer/releases/tag/tcp_support
 #define USE_TCP
+
+// Enable ESP-NOW
+#define ESP_NOW_PEERS {{0, 1, 2, 3, 4, 5}}
 
 // Enables the ArduinoOTA service. It allows flashing over WiFi and enters an emergency mode if a crashloop is detected.
 //#define USE_ARDUINO_OTA

@@ -20,6 +20,7 @@ export const CONTROL_GET_TIME = 't';
 export const CONTROL_GET_VOLTAGE = 'v';
 export const CONTROL_GET_IS_CONFIGURED = 'y';
 export const CONTROL_PING = '%';
+export const CONTROL_GET_LAPTIMES = 'l';
 export const RESPONSE_WAIT_FIRST_LAP = '1';
 export const RESPONSE_BAND = 'B';
 export const RESPONSE_CHANNEL = 'C';

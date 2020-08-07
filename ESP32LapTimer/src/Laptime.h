@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,6 @@
 #include <stdint.h>
 
 void resetLaptimes();
-void addLap(uint8_t receiver);
 uint32_t getMinLapTime();
 void setMinLapTime(uint32_t time);
 uint32_t getLaptime(uint8_t receiver);

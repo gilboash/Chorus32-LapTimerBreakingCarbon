@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,45 +24,59 @@
 #include "settings_eeprom.h"
 #include "Comms.h"
 
-static uint32_t LapTimes[MAX_NUM_PILOTS][MAX_LAPS_NUM];
-static uint8_t lap_counter[MAX_NUM_PILOTS]; //Keep track of what lap we are up too
-static uint8_t best_lap_num[MAX_NUM_PILOTS];
-static int last_lap_sent[MAX_NUM_PILOTS];
+struct lap_data {
+  uint32_t lap_times[MAX_LAPS_NUM];
+  uint8_t last_lap_sent;
+  uint8_t lap_counter; // Keep track of what lap we are up too
+  uint8_t best_lap_num;
+};
+struct lap_data LapTimes[MAX_NUM_PILOTS];
 
 static uint32_t MinLapTime = 5000;  //this is in millis
 static uint32_t start_time = 0;
 static uint8_t count_first_lap = 0; // 0 means start table is before the laptimer, so first lap is not a full-fledged lap (i.e. don't respect min-lap-time for the very first lap)
 static uint16_t race_num = 0; // number of races
 
+int increaseCurrentLap(struct lap_data * data);
+
 void resetLaptimes() {
-  memset(LapTimes, 0, MAX_NUM_PILOTS * MAX_LAPS_NUM * sizeof(LapTimes[0][0]));
-  memset(lap_counter, 0, MAX_NUM_PILOTS * sizeof(lap_counter[0]));
-  memset(best_lap_num, 0, MAX_NUM_PILOTS * sizeof(best_lap_num[0]));
-  memset(last_lap_sent, 0, MAX_NUM_PILOTS * sizeof(last_lap_sent[0]));
+  memset(LapTimes, 0, sizeof(LapTimes));
 }
 
 void sendNewLaps() {
-  for (int i = 0; i < MAX_NUM_PILOTS; ++i) {
-    int laps_to_send = lap_counter[i] - last_lap_sent[i];
-    if(laps_to_send > 0) {
-      for(int j = 0; j < laps_to_send && j <= MAX_LAPS_NUM; ++j) {
-        sendLap(lap_counter[i] - j, i);
-      }
-      last_lap_sent[i] += laps_to_send;
+  struct lap_data * data;
+  uint8_t i, j;
+  for (i = 0; i < MAX_NUM_PILOTS; i++) {
+    data = &LapTimes[i];
+#if 1 // Send order fixed
+    j = data->last_lap_sent;
+    for (j = (j ? j : 1); j <= data->lap_counter && j <= MAX_LAPS_NUM; j++) {
+      sendLap(j, i, true);
     }
+    data->last_lap_sent = j;
+#else
+     // This sends laps in descendign order
+    int laps_to_send = data->lap_counter - data->last_lap_sent;
+    if(laps_to_send > 0) {
+      for(j = 0; j < laps_to_send && j <= MAX_LAPS_NUM; j++) {
+        sendLap(data->lap_counter - j, i, true);
+      }
+      data->last_lap_sent += laps_to_send;
+    }
+#endif
   }
 }
 
 uint32_t getLaptime(uint8_t receiver, uint8_t lap) {
-  if(receiver < MAX_NUM_PILOTS && lap < MAX_LAPS_NUM) {
-    return LapTimes[receiver][lap];
+  if (receiver < MAX_NUM_PILOTS && lap < MAX_LAPS_NUM) {
+    return LapTimes[receiver].lap_times[lap];
   }
   return 0;
 }
 
 
 uint32_t getLaptime(uint8_t receiver) {
-  return getLaptime(receiver, lap_counter[receiver]);
+  return getLaptime(receiver, getCurrentLap(receiver));
 }
 
 uint32_t getLaptimeRel(uint8_t receiver, uint8_t lap) {
@@ -84,26 +98,28 @@ uint32_t getLaptimeRelToStart(uint8_t receiver, uint8_t lap) {
 }
 
 uint32_t getLaptimeRel(uint8_t receiver) {
-  return getLaptimeRel(receiver, lap_counter[receiver]);
+  return getLaptimeRel(receiver, getCurrentLap(receiver));
 }
 
 uint8_t addLap(uint8_t receiver, uint32_t time) {
-  if(lap_counter[receiver] >= MAX_LAPS_NUM - 1) {
+  struct lap_data * data = &LapTimes[receiver];
+  int lap_num = increaseCurrentLap(data);
+  if (0 > lap_num) {
     return 0; // just don't add any more laps, so other pilots still get their time
   }
-  ++lap_counter[receiver];
-  LapTimes[receiver][lap_counter[receiver]] = time;
-  if((getLaptimeRel(receiver) < getLaptimeRel(receiver, best_lap_num[receiver]) || getLaptimeRel(receiver, best_lap_num[receiver]) == 0)) {
+  data->lap_times[lap_num] = time;
+  if ((getLaptimeRel(receiver) < getLaptimeRel(receiver, data->best_lap_num) ||
+      getLaptimeRel(receiver, data->best_lap_num) == 0)) {
     // skip best time if we skip the first lap
-    if(!(lap_counter[receiver] == 1 && !count_first_lap)) {
-      best_lap_num[receiver] = lap_counter[receiver];
+    if(!(lap_num == 1 && !count_first_lap)) {
+      data->best_lap_num = lap_num;
     }
   }
-  return lap_counter[receiver];
+  return lap_num;
 }
 
-uint8_t getBestLap(uint8_t pilot) {
-  return best_lap_num[pilot];
+uint8_t getBestLap(uint8_t receiver) {
+  return LapTimes[receiver].best_lap_num;
 }
 
 uint32_t getMinLapTime() {
@@ -115,7 +131,17 @@ void setMinLapTime(uint32_t time) {
 }
 
 uint8_t getCurrentLap(uint8_t receiver) {
-  return lap_counter[receiver];
+  if (receiver < MAX_NUM_PILOTS)
+    return LapTimes[receiver].lap_counter;
+  return MAX_LAPS_NUM;
+}
+int increaseCurrentLap(struct lap_data * data) {
+  uint8_t lap = data->lap_counter + 1;
+  if (lap >= MAX_LAPS_NUM) {
+    return -1; // just don't add any more laps, so other pilots still get their time
+  }
+  data->lap_counter = lap;
+  return lap;
 }
 
 void startRaceLap() {

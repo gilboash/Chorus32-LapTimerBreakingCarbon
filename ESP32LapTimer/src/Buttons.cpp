@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -43,7 +43,7 @@ static long buttonTimer2 = 0;
 static long touchedTime1 = 0;
 static long touchedTime2 = 0;
 
-// These are for the value of the capacitive touch. 
+// These are for the value of the capacitive touch.
 static uint8_t touch1;
 static uint8_t touch2;
 
@@ -77,7 +77,7 @@ void newButtonUpdate() {
 #endif
 
   // BUTTON 1 Debounce logic here. Basically, we only read a button touch if
-  // it stays below threshold for newButtonDebounce, it gets flagged as "pressed". 
+  // it stays below threshold for newButtonDebounce, it gets flagged as "pressed".
   if (buttonOneTouched == false && touch1 < 70) {
     touchedTime1 = millis();
     buttonOneTouched = true;
@@ -91,7 +91,7 @@ void newButtonUpdate() {
   }
 
   // BUTTON 2 Debounce logic here. Basically, we only read a button touch if
-  // it stays below threshol for newButtonDebounce, it gets flagged as "pressed". 
+  // it stays below threshol for newButtonDebounce, it gets flagged as "pressed".
   if (buttonTwoTouched == false && touch2 < 70) {
     touchedTime2 = millis();
     buttonTwoTouched = true;

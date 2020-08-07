@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -22,10 +22,6 @@
 
 void InitWebServer();
 
-bool isAirplaneModeOn();
-void toggleAirplaneMode();
-void airplaneModeOff();
-void airplaneModeOn();
 bool isUpdating();
 void send_websocket(void* output, uint8_t* data, size_t len);
 void read_websocket(void* output);

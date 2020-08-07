@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -14,9 +14,9 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  * The original version of  this file was licensed under the MIT License:
- * 
+ *
  * The MIT License (MIT)
  * Copyright (c) 2016 by Andrey Voroshkov (bshep)
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -34,7 +34,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- * 
+ *
  */
 
 #include "Comms.h"
@@ -48,6 +48,22 @@
 #include "ADC.h"
 #include "Calibration.h"
 #include "Logging.h"
+
+#include <esp_now.h>
+
+enum {
+    ESPNOW_TYPE_INVALID,
+    ESPNOW_TYPE_RECE_START,
+    ESPNOW_TYPE_LAP_TIME,
+};
+
+typedef struct {
+  uint32_t lap_time;
+  uint8_t lap;
+  uint8_t node;
+  uint8_t race_id;
+  uint8_t type;
+} esp_now_send_lap_s;
 
 ///////This is mostly from the original Chorus Laptimer, need to cleanup unused functions and variables
 
@@ -99,6 +115,7 @@
 #define CONTROL_GET_VOLTAGE         'v'
 #define CONTROL_GET_IS_CONFIGURED   'y'
 #define CONTROL_PING                '%'
+#define CONTROL_GET_LAPTIMES        'l'
 
 // output id byte constants
 #define RESPONSE_WAIT_FIRST_LAP      '1'
@@ -335,6 +352,16 @@ void setRaceMode(uint8_t mode) {
       }
     }
     //playStartRaceTones();
+
+    // Send esp_now
+#if defined(ESP_NOW_PEERS)
+    esp_now_send_lap_s lap_info = {
+      .lap_time = 0, .lap = 0, .node = 0,
+      .race_id = getRaceNum(),
+      .type = ESPNOW_TYPE_RECE_START,
+    };
+    esp_now_send(NULL, (uint8_t*)&lap_info, sizeof(lap_info));
+#endif
   }
 }
 
@@ -556,7 +583,7 @@ void setupThreshold(uint8_t phase, uint8_t node) {
   }
 }
 
-void IRAM_ATTR sendLap(uint8_t Lap, uint8_t NodeAddr) {
+void IRAM_ATTR sendLap(uint8_t Lap, uint8_t NodeAddr, uint8_t espnow) {
   uint32_t RequestedLap = 0;
 
   if (Lap == 0) {
@@ -573,19 +600,33 @@ void IRAM_ATTR sendLap(uint8_t Lap, uint8_t NodeAddr) {
     return;
   }
 
-  uint8_t buf1[2];
-  uint8_t buf2[8];
+  uint8_t buffer[8];
 
   addToSendQueue('S');
   addToSendQueue(TO_HEX(NodeAddr));
   addToSendQueue(RESPONSE_LAPTIME);
 
-  byteToHex(buf1, Lap - 1);
-  addToSendQueue(buf1, 2);
+  byteToHex(buffer, Lap - 1);
+  addToSendQueue(buffer, 2);
 
-  longToHex(buf2, RequestedLap);
-  addToSendQueue(buf2, 8);
+  longToHex(buffer, RequestedLap);
+  addToSendQueue(buffer, 8);
   addToSendQueue('\n');
+
+#if defined(ESP_NOW_PEERS)
+  if (espnow) {
+    esp_now_send_lap_s lap_info = {
+      .lap_time = RequestedLap,
+      .lap = Lap,
+      .node = NodeAddr,
+      .race_id = getRaceNum(),
+      .type = ESPNOW_TYPE_LAP_TIME,
+    };
+    esp_now_send(NULL, (uint8_t*)&lap_info, sizeof(lap_info));
+  }
+#else
+  (void)espnow;
+#endif
 }
 
 void SendNumberOfnodes() {
@@ -926,63 +967,67 @@ void handleExtendedCommands(uint8_t* data, uint8_t length) {
 }
 
 void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t NodeAddr, uint8_t length) {
-  String InString = "";
   uint8_t valueToSet;
   uint8_t NodeAddrByte = TO_BYTE(NodeAddr); // convert ASCII to real byte values
 
+  if (!controlData || !length)
+    return;
+
   //Serial.println(length);
 
-  if (ControlByte == CONTROL_NUM_RECIEVERS) {
-    SendNumberOfnodes();
-  }
+  switch (ControlByte) {
+    case CONTROL_NUM_RECIEVERS: {
+      SendNumberOfnodes();
+      break;
+    }
 
-  if(ControlByte == CONTROL_PING) {
+    case CONTROL_PING: {
       addToSendQueue((uint8_t*)controlData, length);
       update_outputs();
-  }
-
-  // our unofficial extension commands
-  if(ControlByte == EXTENDED_PREFIX) {
-    // We are removing the prefix here to make handling easier and if we ever decide to use another method
-    handleExtendedCommands((uint8_t*)controlData + 1, length - 1);
-    return;
-  }
-
-  if (controlData[2] == CONTROL_GET_TIME) {
-    //Serial.println("Sending Time.....");
-    SendMillis();
-  }
-
-
-  if (controlData[2] == CONTROL_GET_ALL_DATA) {
-    for (int i = 0; i < MAX_NUM_PILOTS; i++) {
-      SendAllSettings(i);
-      //delay(100);
+      break;
     }
+
+    case CONTROL_GET_LAPTIMES: {
+      // Send all available laps to client
+      if (NodeAddr == '*') {
+        for (int i = 0; i < MAX_NUM_PILOTS; i++)
+          SendAllLaps(i);
+      } else {
+        SendAllLaps(NodeAddrByte);
+      }
+      break;
+    }
+
+    // our unofficial extension commands
+    case EXTENDED_PREFIX: {
+      // We are removing the prefix here to make handling easier and if we ever decide to use another method
+      handleExtendedCommands((uint8_t*)controlData + 1, length - 1);
+      return;
+    }
+
+    default:
+      break;
   }
 
-  //  if (controlData[2] == RESPONSE_API_VERSION) {
-  //   // for (int i = 0; i < getNumReceivers(); i++) {
-  //      sendAPIversion();
-  //    //}
-  //  }
+  if (length <= 2)
+    return;
 
-
-  ControlByte = controlData[2]; //This is dirty but we rewrite this byte....
+  ControlByte = controlData[2];
 
   if (length > 4) { // set value commands  changed to n+1 ie, 3+1 = 4.
     switch (ControlByte) {
 
-    case CONTROL_PILOT_ACTIVE:
-      valueToSet = TO_BYTE(controlData[3]);
-      setPilotActive(NodeAddrByte, valueToSet);
-      sendPilotActive(NodeAddrByte);
-      break;
-    case CONTROL_EXPERIMENTAL_MODE:
-      valueToSet = TO_BYTE(controlData[3]);
-      use_experimental = valueToSet;
-      sendExperimentalMode(NodeAddrByte);
-      break;
+      case CONTROL_PILOT_ACTIVE:
+        valueToSet = TO_BYTE(controlData[3]);
+        setPilotActive(NodeAddrByte, valueToSet);
+        sendPilotActive(NodeAddrByte);
+        break;
+
+      case CONTROL_EXPERIMENTAL_MODE:
+        valueToSet = TO_BYTE(controlData[3]);
+        use_experimental = valueToSet;
+        sendExperimentalMode(NodeAddrByte);
+        break;
 
       case CONTROL_RACE_MODE:
         valueToSet = TO_BYTE(controlData[3]);
@@ -1064,7 +1109,7 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
         valueToSet = TO_BYTE(controlData[3]);
         uint8_t node = TO_BYTE(controlData[1]);
         // Skip this if we get an invalid node id
-        if(node >= MAX_NUM_PILOTS) {
+        if (node >= MAX_NUM_PILOTS) {
           break;
         }
         if (!raceMode) { // don't run threshold setup in race mode because we don't calculate slowRssi in race mode, but it's needed for setup threshold algorithm
@@ -1079,9 +1124,19 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
     }
   } else { // get value and other instructions
     switch (ControlByte) {
+      /*
+      case RESPONSE_API_VERSION:
+        //for (int i = 0; i < getNumReceivers(); i++)
+          sendAPIversion();
+        break;
+      //*/
+
       case CONTROL_GET_TIME:
         //millisUponRequest = millis();
         //addToSendQueue(SEND_TIME);
+
+        //Serial.println("Sending Time.....");
+        SendMillis();
         break;
       case CONTROL_WAIT_FIRST_LAP:
         WaitFirstLap(NodeAddrByte);
@@ -1124,6 +1179,10 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
         break;
       case CONTROL_GET_ALL_DATA: // request all data
         //addToSendQueue(SEND_ALL_DEVICE_STATE);
+        for (int i = 0; i < MAX_NUM_PILOTS; i++) {
+          SendAllSettings(i);
+          //delay(100);
+        }
         break;
       case CONTROL_GET_API_VERSION: //get API version
         //for (int i = 0; i < getNumReceivers(); i++) {

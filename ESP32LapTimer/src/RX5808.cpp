@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -71,10 +71,14 @@ static volatile uint8_t RXChannelModule[MAX_NUM_RECEIVERS];
 static volatile uint8_t RXBandPilot[MAX_NUM_PILOTS];
 static volatile uint8_t RXChannelPilot[MAX_NUM_PILOTS];
 
-static uint32_t lastUpdate[MAX_NUM_RECEIVERS] = {0,0,0,0,0,0};
+static uint32_t lastUpdate[MAX_NUM_RECEIVERS] = {0};
+
+static SPISettings rx_spi_conf(1000000, LSBFIRST, SPI_MODE0);
 
 void InitSPI() {
+  memset(lastUpdate, 0, sizeof(lastUpdate));
   SPI.begin(VRX_SCK, VRX_MISO, VRX_MOSI);
+  SPI.setHwCs(false);
   delay(200);
   // Reset all modules to ensure they come back online in case they were offline without a power cycle (pressing the reset button)
   RXResetAll();
@@ -90,7 +94,7 @@ bool IRAM_ATTR isRxReady(uint8_t module) {
 void rxWrite(uint8_t addressBits, uint32_t dataBits, uint8_t CSpin) {
 
   uint32_t data = addressBits | (1 << 4) | (dataBits << 5);
-  SPI.beginTransaction(SPISettings(1000000, LSBFIRST, SPI_MODE0));
+  SPI.beginTransaction(rx_spi_conf);
   digitalWrite(CSpin, LOW);
   SPI.transferBits(data, NULL, 25);
 
@@ -115,7 +119,7 @@ void rxLowPower(uint8_t node) {
 void rxWriteAll(uint8_t addressBits, uint32_t dataBits) {
 
   uint32_t data = addressBits | (1 << 4) | (dataBits << 5);
-  SPI.beginTransaction(SPISettings(1000000, LSBFIRST, SPI_MODE0));
+  SPI.beginTransaction(rx_spi_conf);
   for(int i = 0; i < MAX_NUM_RECEIVERS; i++) {
     digitalWrite(CS_PINS[i], LOW);
   }
@@ -221,7 +225,7 @@ uint16_t setModuleChannelBand(uint8_t NodeAddr) {
   return setModuleChannelBand(RXChannelModule[NodeAddr], RXBandModule[NodeAddr], NodeAddr);
 }
 
-uint16_t setModuleChannelBand(uint8_t channel, uint8_t band, uint8_t NodeAddr) {  
+uint16_t setModuleChannelBand(uint8_t channel, uint8_t band, uint8_t NodeAddr) {
   uint8_t index = channel + (8 * band);
   uint16_t frequency = channelFreqTable[index];
   RXBandModule[NodeAddr] = band;

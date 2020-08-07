@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,7 +26,7 @@
 void HandleSerialRead();
 void HandleServerUDP();
 void SendCurrRSSIloop();
-void IRAM_ATTR sendLap(uint8_t Lap, uint8_t NodeAddr);
+void IRAM_ATTR sendLap(uint8_t Lap, uint8_t NodeAddr, uint8_t espnow=0);
 void commsSetup();
 void thresholdModeStep();
 void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t NodeAddr, uint8_t length);

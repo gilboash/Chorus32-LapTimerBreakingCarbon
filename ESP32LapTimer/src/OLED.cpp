@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -30,6 +30,7 @@
 #include "Filter.h"
 #include "Utils.h"
 #include "Laptime.h"
+#include "Wireless.h"
 
 #define SUMMARY_PILOTS_PER_PAGE 6
 

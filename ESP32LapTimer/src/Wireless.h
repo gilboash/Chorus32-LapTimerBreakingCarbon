@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,6 +18,7 @@
 #ifndef __WIRELESS_H__
 #define __WIRELESS_H__
 
+void InitWifi();
 void InitWifiAP();
 void handleDNSRequests();
 void dnsHandleRequests();
@@ -25,7 +26,5 @@ void airplaneModeOn();
 void airplaneModeOff();
 void toggleAirplaneMode();
 bool isAirplaneModeOn();
-bool InitWifiClient();
-void InitWifi();
 
 #endif // __WIRELESS_H__

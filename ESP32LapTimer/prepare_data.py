@@ -52,8 +52,10 @@ def generate_gzip():
 
 
 if __name__ == "__main__" or __name__ == "SCons.Script":
+	home = os.path.expanduser("~")
+	# home = Path.home()
 	parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
-	parser.add_argument("--terser", dest="terser", help="Terser cmd [Default: %(default)s]", type=str, default= "{}/node_modules/terser/bin/terser".format(str(Path.home())))
+	parser.add_argument("--terser", dest="terser", help="Terser cmd [Default: %(default)s]", type=str, default= "{}/node_modules/terser/bin/terser".format(str(home)))
 	args, unknown = parser.parse_known_args()
 
 	generate_constants()

@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,6 +21,8 @@
 #include "HardwareConfig.h"
 
 #include <Arduino.h>
+
+#ifdef BEEPER
 
 #define BEEP_MAX_QUEUE 4
 
@@ -66,3 +68,5 @@ void beeper_init() {
   beep_queue.max_size = BEEP_MAX_QUEUE;
   beep_queue.data = (void**)beep_queue_data;
 }
+
+#endif // BEEPER
