@@ -130,30 +130,36 @@ void InitWifi() {
   #endif
 
 #ifdef ESP_NOW_PEERS
+  // my mac address: F0:08:D1:D4:ED:7C
+
   Serial.print("Initialize ESP-NOW... ");
-  esp_now_init();
-  esp_now_register_recv_cb(esp_now_recv_cb);
+  if (esp_now_init() == ESP_OK) {
+    esp_now_register_recv_cb(esp_now_recv_cb);
 
-  esp_now_peer_info_t peer_info = {
-    .peer_addr = {0},
-    .lmk = {0},
-    .channel = 0,
-    .ifidx = if_type,
-    .encrypt = 0,
-    .priv = NULL
-  };
-  uint8_t peers[][ESP_NOW_ETH_ALEN] = ESP_NOW_PEERS;
-  uint8_t num_peers = sizeof(peers) / ESP_NOW_ETH_ALEN;
-  for (uint8_t iter = 0; iter < num_peers; iter++) {
-    memcpy(peer_info.peer_addr, peers[iter], ESP_NOW_ETH_ALEN);
-    esp_now_add_peer(&peer_info);
+    esp_now_peer_info_t peer_info = {
+      .peer_addr = {0},
+      .lmk = {0},
+      .channel = 0,
+      .ifidx = if_type,
+      .encrypt = 0,
+      .priv = NULL
+    };
+    uint8_t peers[][ESP_NOW_ETH_ALEN] = ESP_NOW_PEERS;
+    uint8_t num_peers = sizeof(peers) / ESP_NOW_ETH_ALEN;
+    for (uint8_t iter = 0; iter < num_peers; iter++) {
+      memcpy(peer_info.peer_addr, peers[iter], ESP_NOW_ETH_ALEN);
+      if (ESP_OK != esp_now_add_peer(&peer_info))
+        Serial.println("ESPNOW add peer failed!");
+    }
+
+    Serial.println("DONE");
+
+    // Notify clients
+    char hello[] = "CHORUS32\n";
+    esp_now_send(NULL, (uint8_t*)hello, strlen(hello)); // send to all registered peers
+  } else {
+    Serial.println("ESPNOW init failed!");
   }
-
-  Serial.println("DONE");
-
-  // Notify clients
-  char hello[] = "CHORUS32\n";
-  esp_now_send(NULL, (uint8_t*)hello, strlen(hello)); // send to all registered peers
 #endif
 
   InitWebServer();
