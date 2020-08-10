@@ -63,7 +63,11 @@
 #define USE_TCP
 
 // Enable ESP-NOW
-#define ESP_NOW_PEERS {{0, 1, 2, 3, 4, 5}}
+/* MY MAC: F0:08:D1:D4:ED:7C
+ * PEERS (receivers):
+ *    FENIX VRX: D8:A0:1D:4C:72:18
+ */
+#define ESP_NOW_PEERS {{0xD8, 0xA0, 0x1D, 0x4C, 0x72, 0x18}}
 
 // Enables the ArduinoOTA service. It allows flashing over WiFi and enters an emergency mode if a crashloop is detected.
 //#define USE_ARDUINO_OTA
