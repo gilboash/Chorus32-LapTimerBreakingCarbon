@@ -100,18 +100,18 @@ bool InitWifiClient() {
 
 void esp_now_recv_cb(const uint8_t *mac_addr, const uint8_t *data, int data_len)
 {
-  Serial.printf("ESP NOW CB called!\n");
+  Serial.printf("ESP NOW CB!\n");
 
-
+#if 0
   char hello[] = "CHORUS_CB\n";
   esp_now_send(mac_addr, (uint8_t*)hello, strlen(hello)); // send to all registered peers
+#endif
 }
 
 void InitWifi() {
 #ifdef ESP_NOW_PEERS
   wifi_interface_t if_type = ESP_IF_WIFI_AP;
 #endif
-  Serial.printf("My MAC Address: %s\n", WiFi.macAddress().c_str());
 
   WiFi.onEvent(WiFiEvent);
 
@@ -129,8 +129,14 @@ void InitWifi() {
     }
   #endif
 
+  Serial.printf("STA MAC Address: %s\n", WiFi.macAddress().c_str());
+  Serial.printf("AP MAC Address: %s\n", WiFi.softAPmacAddress().c_str());
+
 #ifdef ESP_NOW_PEERS
-  // my mac address: F0:08:D1:D4:ED:7C
+  /*
+  STA MAC Address: F0:08:D1:D4:ED:7C
+  AP MAC Address: F0:08:D1:D4:ED:7D
+  */
 
   Serial.print("Initialize ESP-NOW... ");
   if (esp_now_init() == ESP_OK) {
@@ -139,7 +145,7 @@ void InitWifi() {
     esp_now_peer_info_t peer_info = {
       .peer_addr = {0},
       .lmk = {0},
-      .channel = 0,
+      .channel = 1,
       .ifidx = if_type,
       .encrypt = 0,
       .priv = NULL
@@ -154,9 +160,11 @@ void InitWifi() {
 
     Serial.println("DONE");
 
+#if 0
     // Notify clients
     char hello[] = "CHORUS32\n";
     esp_now_send(NULL, (uint8_t*)hello, strlen(hello)); // send to all registered peers
+#endif
   } else {
     Serial.println("ESPNOW init failed!");
   }

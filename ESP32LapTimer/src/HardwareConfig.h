@@ -65,7 +65,7 @@
 // Enable ESP-NOW
 /* MY MAC: F0:08:D1:D4:ED:7C
  * PEERS (receivers):
- *    FENIX VRX: D8:A0:1D:4C:72:18
+ *    FENIX VRX (STA): D8:A0:1D:4C:72:18
  */
 #define ESP_NOW_PEERS {{0xD8, 0xA0, 0x1D, 0x4C, 0x72, 0x18}}
 
