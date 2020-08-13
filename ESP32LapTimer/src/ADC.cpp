@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -161,7 +161,7 @@ void ConfigureADC(bool disable_all_modules) {
   memset(readings, 0, DEBUG_SIGNAL_LOG_SIZE * DEBUG_SIGNAL_LOG_NUM * sizeof(uint16_t));
   memset(readings_pos, 0, DEBUG_SIGNAL_LOG_NUM * sizeof(uint32_t));
   #endif
-  
+
   pilot_queue_lock = xSemaphoreCreateMutex();
   pilots_lock = xSemaphoreCreateMutex();
 
@@ -199,7 +199,7 @@ void ConfigureADC(bool disable_all_modules) {
       setPilotActive(i, true);
     }
   }
-  
+
 }
 
 adc1_channel_t IRAM_ATTR getADCChannel(uint8_t adc_num) {
@@ -210,7 +210,7 @@ adc1_channel_t IRAM_ATTR getADCChannel(uint8_t adc_num) {
 void IRAM_ATTR nbADCread( void * pvParameters ) {
   static uint8_t current_adc = 0;
   uint32_t now = micros();
-  if(xSemaphoreTake(pilots_lock, 1)) { // lock changes to pilots from other cores 
+  if(xSemaphoreTake(pilots_lock, 1)) { // lock changes to pilots from other cores
     if(now - receivers[current_adc].last_hop > MULTIPLEX_STAY_TIME_US + MIN_TUNE_TIME_US && isRxReady(current_adc)) {
       if(setNextPilot(current_adc)) {
         // TODO: add class between this and rx5808
@@ -236,7 +236,7 @@ void IRAM_ATTR nbADCread( void * pvParameters ) {
           uint16_t rawRSSI = constrain(current_pilot->ADCReadingRAW, EepromSettings.RxCalibrationMin[current_adc], EepromSettings.RxCalibrationMax[current_adc]);
           current_pilot->ADCReadingRAW = map(rawRSSI, EepromSettings.RxCalibrationMin[current_adc], EepromSettings.RxCalibrationMax[current_adc], RSSI_ADC_READING_MIN, RSSI_ADC_READING_MAX);
         }
-        
+
         current_pilot->ADCvalue = current_pilot->ADCReadingRAW;
         for(uint8_t j = 0; j < PILOT_FILTER_NUM; ++j) {
           current_pilot->ADCvalue = filter_add_value(&(current_pilot->filter[j]), current_pilot->ADCvalue);
@@ -245,7 +245,7 @@ void IRAM_ATTR nbADCread( void * pvParameters ) {
         if (LIKELY(isInRaceMode() > 0)) {
           CheckRSSIthresholdExceeded(receivers[current_adc].current_pilot->number);
         }
-        
+
         if(current_pilot->number == 0){
            ++adcLoopCounter;
          }
@@ -389,7 +389,7 @@ void setPilotActive(uint8_t pilot, bool active) {
   // First we power up all modules. If we have less pilots than modules they get activated at a later stage. As this function will never be called during a race this should be okay
   // There might be a way better solution, but this will have to suffice for now
   // XXX: We have to reset the module since it won't come online with a simple power up
-  
+
   // Power down all modules
   for(uint8_t i = 0; i < MAX_NUM_RECEIVERS; ++i) {
     RXPowerDown(i);
@@ -427,7 +427,7 @@ void setPilotActive(uint8_t pilot, bool active) {
 
   Serial.print("New pilot num: ");
   Serial.println(current_pilot_num);
-  
+
   // only reset active modules. a user might have 6 modules installed but only uses 4. using the all function all modules would power up
   for(int i = 0; i < MIN(current_pilot_num, getNumReceivers()); ++i) {
     RXreset(i);
@@ -498,3 +498,16 @@ void setPilotBand(uint8_t pilot, uint8_t band) {
   }
 }
 
+void setPilotBandChannel(uint8_t pilot, uint8_t band, uint8_t channel)
+{
+  setRXChannelPilot(pilot, channel);
+  setRXBandPilot(pilot, band);
+  EepromSettings.RXChannel[pilot] = channel;
+  EepromSettings.RXBand[pilot] = band;
+  setSaveRequired();
+  if(isPilotActive(pilot)) {
+    // Toggle pilot to force new band
+    setPilotActive(pilot, false);
+    setPilotActive(pilot, true);
+  }
+}

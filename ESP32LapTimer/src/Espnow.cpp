@@ -4,6 +4,8 @@
 #include "Output.h"
 #include "HardwareConfig.h"
 #include "ADC.h"
+#include "RX5808.h"
+#include "Comms.h"
 
 #include <Arduino.h>
 #include <esp_now.h>
@@ -36,15 +38,20 @@ static void esp_now_recv_cb(const uint8_t *mac_addr, const uint8_t *data, int da
 
       uint8_t * payload = (uint8_t*)msp_in.payload;
 
-      // channel format: 8 * BAND + CHANNEL
-      uint16_t channel = payload[1];
-      channel <<= 8;
-      channel += payload[0];
-      uint8_t band = channel / 8, NodeAddrByte = 0;
-      channel = channel % 8;
+      uint16_t freq = payload[1];
+      freq <<= 8;
+      freq += payload[0];
 
-      setPilotBand(NodeAddrByte, band);
-      setPilotChannel(NodeAddrByte, channel);
+      uint8_t index = getFreqIndexByFrequency(freq);
+      uint8_t band = index / 8, NodeAddrByte = 0;
+      uint8_t channel = index % 8;
+
+      // Set channel to RF module
+      setPilotBandChannel(NodeAddrByte, band, channel);
+      // Send info to all clients
+      SendVRxBand(NodeAddrByte);
+      SendVRxChannel(NodeAddrByte);
+      SendVRxFreq(NodeAddrByte);
 
       Serial.println(channel);
     } else {
@@ -62,6 +69,8 @@ static void esp_now_recv_cb(const uint8_t *mac_addr, const uint8_t *data, int da
   } else {
     Serial.println(" UNKNOWN command!");
   }
+
+  msp_parser.markPacketFree();
 
 #if 0
   char hello[] = "CHORUS_CB\n";

@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -56,4 +56,5 @@ void setPilotFilters(uint16_t cutoff);
 
 void setPilotBand(uint8_t pilot, uint8_t band);
 void setPilotChannel(uint8_t pilot, uint8_t channel);
+void setPilotBandChannel(uint8_t pilot, uint8_t band, uint8_t channel);
 

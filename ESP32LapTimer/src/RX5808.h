@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -86,6 +86,7 @@ void setRXChannelPilot(uint8_t pilot, uint8_t channel);
 uint8_t getRXChannelPilot(uint8_t pilot);
 
 uint16_t getFrequencyFromBandChannel(uint8_t band, uint8_t channel);
+uint8_t getFreqIndexByFrequency(uint16_t freq);
 
 bool isRxReady(uint8_t module);
 

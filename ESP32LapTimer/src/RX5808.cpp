@@ -304,3 +304,21 @@ void setRXChannelModule(uint8_t module, uint8_t channel) {
 uint8_t getRXChannelModule(uint8_t module) {
   return RXChannelModule[module];
 }
+
+uint16_t getFrequencyFromBandChannel(uint8_t band, uint8_t channel)
+{
+  uint8_t index = channel + (8 * band);
+  if ((sizeof(channelFreqTable)/sizeof(uint16_t)) <= index)
+    return 0;
+  return channelFreqTable[index];
+}
+
+uint8_t getFreqIndexByFrequency(uint16_t freq)
+{
+  uint8_t iter;
+  for (iter = 0; iter < (sizeof(channelFreqTable)/sizeof(uint16_t)); iter++) {
+    if (freq == channelFreqTable[iter])
+      break;
+  }
+  return iter;
+}

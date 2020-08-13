@@ -38,6 +38,10 @@ void sendCalibrationFinished();
 void sendExtendedRSSI(uint8_t node, uint32_t time, uint16_t rssi);
 void update_comms();
 
+void SendVRxBand(uint8_t NodeAddr);
+void SendVRxChannel(uint8_t NodeAddr);
+void SendVRxFreq(uint8_t NodeAddr);
+
 #define TRIGGER_NORMAL 0
 #define TRIGGER_PEAK 1
 uint8_t get_trigger_mode();

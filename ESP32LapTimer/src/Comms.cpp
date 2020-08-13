@@ -53,7 +53,8 @@
 
 enum {
     ESPNOW_TYPE_INVALID,
-    ESPNOW_TYPE_RECE_START,
+    ESPNOW_TYPE_RACE_START,
+    ESPNOW_TYPE_RACE_STOP,
     ESPNOW_TYPE_LAP_TIME,
 };
 
@@ -352,16 +353,17 @@ void setRaceMode(uint8_t mode) {
       }
     }
     //playStartRaceTones();
-
-    // Send esp_now
-#if defined(ESP_NOW_PEERS)
-    esp_now_send_lap_s lap_info = {
-      .lap_time = 0, .race_id = getRaceNum(),
-      .lap = 0, .node = 0, .type = ESPNOW_TYPE_RECE_START,
-    };
-    esp_now_send(NULL, (uint8_t*)&lap_info, sizeof(lap_info));
-#endif
   }
+
+#if defined(ESP_NOW_PEERS)
+  // Send esp_now
+  esp_now_send_lap_s lap_info = {
+    .lap_time = 0, .race_id = getRaceNum(),
+    .lap = 0, .node = 0,
+    .type = (mode == 0) ? ESPNOW_TYPE_RACE_STOP: ESPNOW_TYPE_RACE_START,
+  };
+  esp_now_send(NULL, (uint8_t*)&lap_info, sizeof(lap_info));
+#endif
 }
 
 void setMinLap(uint8_t mlt) {
