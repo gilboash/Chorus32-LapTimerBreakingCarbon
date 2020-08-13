@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -32,6 +32,9 @@
 #ifdef USE_WEBSOCKET_OUTPUT
 #include "TimerWebServer.h"
 #endif
+#ifdef ESP_NOW_PEERS
+#include "Espnow.h"
+#endif
 
 #include "HardwareConfig.h"
 #include <freertos/semphr.h>
@@ -61,6 +64,9 @@ static output_t outputs[] = {
 #ifdef USE_WEBSOCKET_OUTPUT
   {NULL, NULL, send_websocket, read_websocket, output_input_callback},
 #endif // USE_WEBSOCKET_OUTPUT
+#ifdef ESP_NOW_PEERS
+  {NULL, NULL, espnow_sendPacket, espnow_update, output_input_callback},
+#endif
 };
 
 #define OUTPUT_SIZE (sizeof(outputs)/sizeof(outputs[0]))

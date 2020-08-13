@@ -59,9 +59,9 @@ enum {
 
 typedef struct {
   uint32_t lap_time;
+  uint16_t race_id;
   uint8_t lap;
   uint8_t node;
-  uint8_t race_id;
   uint8_t type;
 } esp_now_send_lap_s;
 
@@ -356,9 +356,8 @@ void setRaceMode(uint8_t mode) {
     // Send esp_now
 #if defined(ESP_NOW_PEERS)
     esp_now_send_lap_s lap_info = {
-      .lap_time = 0, .lap = 0, .node = 0,
-      .race_id = getRaceNum(),
-      .type = ESPNOW_TYPE_RECE_START,
+      .lap_time = 0, .race_id = getRaceNum(),
+      .lap = 0, .node = 0, .type = ESPNOW_TYPE_RECE_START,
     };
     esp_now_send(NULL, (uint8_t*)&lap_info, sizeof(lap_info));
 #endif
@@ -617,9 +616,9 @@ void IRAM_ATTR sendLap(uint8_t Lap, uint8_t NodeAddr, uint8_t espnow) {
   if (espnow) {
     esp_now_send_lap_s lap_info = {
       .lap_time = RequestedLap,
+      .race_id = getRaceNum(),
       .lap = Lap,
       .node = NodeAddr,
-      .race_id = getRaceNum(),
       .type = ESPNOW_TYPE_LAP_TIME,
     };
     esp_now_send(NULL, (uint8_t*)&lap_info, sizeof(lap_info));

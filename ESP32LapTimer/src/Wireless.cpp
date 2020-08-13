@@ -20,11 +20,14 @@
 #include <ESPmDNS.h>
 #include <esp_wifi.h>
 #include <DNSServer.h>
-#include <esp_now.h>
 
+#include "HardwareConfig.h"
 #include "TimerWebServer.h"
 #include "settings_eeprom.h"
 #include "targets/target.h"
+#ifdef ESP_NOW_PEERS
+#include "Espnow.h"
+#endif
 
 static const uint16_t DNS_PORT = 53;
 static IPAddress apIP(192, 168, 4, 1);
@@ -98,16 +101,6 @@ bool InitWifiClient() {
   return true;
 }
 
-void esp_now_recv_cb(const uint8_t *mac_addr, const uint8_t *data, int data_len)
-{
-  Serial.printf("ESP NOW CB!\n");
-
-#if 0
-  char hello[] = "CHORUS_CB\n";
-  esp_now_send(mac_addr, (uint8_t*)hello, strlen(hello)); // send to all registered peers
-#endif
-}
-
 void InitWifi() {
 #ifdef ESP_NOW_PEERS
   wifi_interface_t if_type = ESP_IF_WIFI_AP;
@@ -122,52 +115,18 @@ void InitWifi() {
       log_i("Failed to connect to WiFi Network");
       log_i("Starting up in AP mode instead!");
       InitWifiAP();
-    } else {
 #ifdef ESP_NOW_PEERS
+    } else {
       if_type = ESP_IF_WIFI_STA;
 #endif
     }
   #endif
 
+#ifdef ESP_NOW_PEERS
   Serial.printf("STA MAC Address: %s\n", WiFi.macAddress().c_str());
   Serial.printf("AP MAC Address: %s\n", WiFi.softAPmacAddress().c_str());
 
-#ifdef ESP_NOW_PEERS
-  /*
-  STA MAC Address: F0:08:D1:D4:ED:7C
-  AP MAC Address: F0:08:D1:D4:ED:7D
-  */
-
-  Serial.print("Initialize ESP-NOW... ");
-  if (esp_now_init() == ESP_OK) {
-    esp_now_register_recv_cb(esp_now_recv_cb);
-
-    esp_now_peer_info_t peer_info = {
-      .peer_addr = {0},
-      .lmk = {0},
-      .channel = 1,
-      .ifidx = if_type,
-      .encrypt = 0,
-      .priv = NULL
-    };
-    uint8_t peers[][ESP_NOW_ETH_ALEN] = ESP_NOW_PEERS;
-    uint8_t num_peers = sizeof(peers) / ESP_NOW_ETH_ALEN;
-    for (uint8_t iter = 0; iter < num_peers; iter++) {
-      memcpy(peer_info.peer_addr, peers[iter], ESP_NOW_ETH_ALEN);
-      if (ESP_OK != esp_now_add_peer(&peer_info))
-        Serial.println("ESPNOW add peer failed!");
-    }
-
-    Serial.println("DONE");
-
-#if 0
-    // Notify clients
-    char hello[] = "CHORUS32\n";
-    esp_now_send(NULL, (uint8_t*)hello, strlen(hello)); // send to all registered peers
-#endif
-  } else {
-    Serial.println("ESPNOW init failed!");
-  }
+  espnow_init((uint8_t)if_type);
 #endif
 
   InitWebServer();
