@@ -313,18 +313,17 @@ void adc_page_update(void* data) {
 }
 
 void calib_page_update(void* data) {
+  uint8_t iter;
   display.setTextAlignment(TEXT_ALIGN_LEFT);
   if(isCalibrating()) {
     display.drawString(0, 0, "Calibrating - " + String(getcalibrationFreqIndex()) + "/" + String(8*(MAX_BAND+1)));
   } else {
     display.drawString(0, 0, "Frequency - " + String(channelFreqTable[getcalibrationFreqIndex()]) + "Hz");
   }
-  display.drawString(0,  9, "Min = " + String(EepromSettings.RxCalibrationMin[0]) + ", Max = " + String(EepromSettings.RxCalibrationMax[0]));
-  display.drawString(0, 18, "Min = " + String(EepromSettings.RxCalibrationMin[1]) + ", Max = " + String(EepromSettings.RxCalibrationMax[1]));
-  display.drawString(0, 27, "Min = " + String(EepromSettings.RxCalibrationMin[2]) + ", Max = " + String(EepromSettings.RxCalibrationMax[2]));
-  display.drawString(0, 36, "Min = " + String(EepromSettings.RxCalibrationMin[3]) + ", Max = " + String(EepromSettings.RxCalibrationMax[3]));
-  display.drawString(0, 45, "Min = " + String(EepromSettings.RxCalibrationMin[4]) + ", Max = " + String(EepromSettings.RxCalibrationMax[4]));
-  display.drawString(0, 54, "Min = " + String(EepromSettings.RxCalibrationMin[5]) + ", Max = " + String(EepromSettings.RxCalibrationMax[5]));
+  for (iter = 0; iter < MAX_NUM_RECEIVERS; iter++) {
+    display.drawString(0, 9*(iter + 1),
+      "Min = " + String(EepromSettings.RxCalibrationMin[iter]) + ", Max = " + String(EepromSettings.RxCalibrationMax[iter]));
+  }
 }
 
 void calib_page_input(void* data, uint8_t index, uint8_t type) {

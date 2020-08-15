@@ -20,13 +20,30 @@
 
 #include <Arduino.h>
 
-uint8_t CS_PINS[MAX_NUM_RECEIVERS] = {CS1, CS2, CS3, CS4, CS5, CS6};
+uint8_t CS_PINS[MAX_NUM_RECEIVERS] = {
+  CS1,
+#if 1 < MAX_NUM_RECEIVERS
+  CS2,
+#if 2 < MAX_NUM_RECEIVERS
+  CS3,
+#if 3 < MAX_NUM_RECEIVERS
+  CS4,
+#if 4 < MAX_NUM_RECEIVERS
+  CS5,
+#if 5 < MAX_NUM_RECEIVERS
+  CS6
+#endif
+#endif
+#endif
+#endif
+#endif
+};
 
 void InitHardwarePins() {
 
   pinMode(SCK, OUTPUT);
   pinMode(MOSI, OUTPUT);
-  for(int i = 0; i < MAX_NUM_RECEIVERS; i++) {
+  for(int i = 0; i < sizeof(CS_PINS); i++) {
     pinMode(CS_PINS[i], OUTPUT);
     digitalWrite(CS_PINS[i], HIGH);
   }

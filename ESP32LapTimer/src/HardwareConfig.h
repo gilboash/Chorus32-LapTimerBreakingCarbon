@@ -34,7 +34,7 @@
 #endif
 
 /// If your setup doesn't use an OLED remove or comment the following line
-#define OLED
+//#define OLED
 
 // Selects the wifi mode to operate in.
 // One of these must be uncommented.
@@ -76,7 +76,6 @@
 
 #define EEPROM_VERSION_NUMBER 9 // Increment when eeprom struct modified
 #define EEPROM_COMMIT_DELAY_MS 10000 // the time between checks to save the eeprom in ms
-#define MAX_NUM_RECEIVERS 6
 #define VOLTAGE_UPDATE_INTERVAL_MS 1000 // interval of the battery voltage reading
 #define ADC_VOLTAGE_CUTOFF 1
 #define MIN_TUNE_TIME_US 30000 // value in micro seconds
@@ -88,10 +87,12 @@
 #define RSSI_ADC_READING_MIN 800
 // defines the time after which the crash loop detection assumes the operation is stable
 #define CRASH_COUNT_RESET_TIME_MS 300000
+#define MULTIPLEX_STAY_TIME_US (5 * 1000)
 
 #define MAX_NUM_RECEIVERS 6
 #define MAX_NUM_PILOTS 8
-#define MULTIPLEX_STAY_TIME_US (5 * 1000)
+//#define MAX_NUM_RECEIVERS 3
+//#define MAX_NUM_PILOTS MAX_NUM_RECEIVERS
 
 #ifdef USE_DEBUG_OUTPUT
   #define OUTPUT_DEBUG

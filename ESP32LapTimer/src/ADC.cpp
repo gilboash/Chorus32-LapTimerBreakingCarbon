@@ -102,7 +102,24 @@ static pilot_data_t* pilot_queue_data[MAX_NUM_PILOTS];
 SemaphoreHandle_t pilot_queue_lock;
 SemaphoreHandle_t pilots_lock;
 
-static adc1_channel_t ADC_PINS[MAX_NUM_RECEIVERS] = {ADC1, ADC2, ADC3, ADC4, ADC5, ADC6};
+static adc1_channel_t ADC_PINS[MAX_NUM_RECEIVERS] = {
+  ADC1,
+#if 1 < MAX_NUM_RECEIVERS
+  ADC2,
+#if 2 < MAX_NUM_RECEIVERS
+  ADC3,
+#if 3 < MAX_NUM_RECEIVERS
+  ADC4,
+#if 4 < MAX_NUM_RECEIVERS
+  ADC5,
+#if 5 < MAX_NUM_RECEIVERS
+  ADC6
+#endif
+#endif
+#endif
+#endif
+#endif
+  };
 
 uint16_t multisample_adc1(adc1_channel_t channel, uint8_t samples) {
   uint32_t val = 0;

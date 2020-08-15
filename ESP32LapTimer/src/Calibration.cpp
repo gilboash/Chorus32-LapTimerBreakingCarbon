@@ -1,5 +1,5 @@
 /*
- * This file is part of Chorus32-ESP32LapTimer 
+ * This file is part of Chorus32-ESP32LapTimer
  * (see https://github.com/AlessandroAU/Chorus32-ESP32LapTimer).
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,9 @@
 #include "HardwareConfig.h"
 #include "RX5808.h"
 #include "settings_eeprom.h"
+#ifdef OLED
 #include "OLED.h"
+#endif
 #include "Timer.h"
 #include "Utils.h"
 #include "Comms.h"
@@ -44,7 +46,9 @@ void rssiCalibration() {
   calibrationFreqIndex = 0;
   setModuleFrequencyAll(channelFreqTable[calibrationFreqIndex]);
   calibrationTimer.reset();
+#ifdef OLED
   setDisplayScreenNumber(3);
+#endif
 }
 
 void rssiCalibrationUpdate() {
@@ -72,7 +76,9 @@ void rssiCalibrationUpdate() {
       }
       isCurrentlyCalibrating = false;
       setSaveRequired();
+#ifdef OLED
       setDisplayScreenNumber(0);
+#endif
       sendCalibrationFinished();
     }
   }
