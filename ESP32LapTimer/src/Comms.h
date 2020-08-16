@@ -26,7 +26,7 @@
 void HandleSerialRead();
 void HandleServerUDP();
 void SendCurrRSSIloop();
-void IRAM_ATTR sendLap(uint8_t Lap, uint8_t NodeAddr, uint8_t espnow=0);
+void IRAM_ATTR sendLap(uint8_t Lap, uint8_t NodeAddr, uint8_t espnow=0, uint8_t send_laps=0);
 void commsSetup();
 void thresholdModeStep();
 void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t NodeAddr, uint8_t length);

@@ -584,7 +584,7 @@ void setupThreshold(uint8_t phase, uint8_t node) {
   }
 }
 
-void IRAM_ATTR sendLap(uint8_t Lap, uint8_t NodeAddr, uint8_t espnow) {
+void IRAM_ATTR sendLap(uint8_t Lap, uint8_t NodeAddr, uint8_t espnow, uint8_t send_laps) {
   uint32_t RequestedLap = 0;
 
   if (Lap == 0) {
@@ -592,7 +592,7 @@ void IRAM_ATTR sendLap(uint8_t Lap, uint8_t NodeAddr, uint8_t espnow) {
     return;
   }
 
-  if (raceMode == 1) {
+  if (raceMode == 1 || send_laps) {
     RequestedLap = getLaptimeRel(NodeAddr, Lap); // realtive mode
   } else if (raceMode == 2) {
     RequestedLap = getLaptimeRelToStart(NodeAddr, Lap);  //absolute mode
@@ -624,6 +624,7 @@ void IRAM_ATTR sendLap(uint8_t Lap, uint8_t NodeAddr, uint8_t espnow) {
       .type = ESPNOW_TYPE_LAP_TIME,
     };
     esp_now_send(NULL, (uint8_t*)&lap_info, sizeof(lap_info));
+    //Serial.printf("    lap %u, race %u, node %u, time: %u\n", lap_info.lap, lap_info.race_id, lap_info.node, lap_info.lap_time);
   }
 #else
   (void)espnow;
@@ -636,10 +637,10 @@ void SendNumberOfnodes() {
     addToSendQueue('\n');
 }
 
-void IRAM_ATTR SendAllLaps(uint8_t NodeAddr) {
+void IRAM_ATTR SendAllLaps(uint8_t NodeAddr, uint8_t send_laps=0) {
   uint8_t lap_count = getCurrentLap(NodeAddr);
   for (uint8_t i = 0; i < lap_count; i++) {
-    sendLap(i + 1, NodeAddr);
+    sendLap(i + 1, NodeAddr, true, send_laps);
     update_outputs(); // Flush outputs as the buffer could overflow with a large number of laps
   }
 }
@@ -994,7 +995,7 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
         for (int i = 0; i < MAX_NUM_PILOTS; i++)
           SendAllLaps(i);
       } else {
-        SendAllLaps(NodeAddrByte);
+        SendAllLaps(NodeAddrByte, true);
       }
       break;
     }

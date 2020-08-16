@@ -41,6 +41,16 @@ int increaseCurrentLap(struct lap_data * data);
 
 void resetLaptimes() {
   memset(LapTimes, 0, sizeof(LapTimes));
+
+#if 0
+  // Debug!
+  for (uint32_t iter = 1; iter <= 16; iter++) {
+    uint32_t tmp = iter*4;
+    LapTimes[1].lap_times[iter] = (60u*tmp + tmp) * 1000 + tmp;
+    LapTimes[1].lap_counter = iter;
+  }
+  LapTimes[1].last_lap_sent = LapTimes[1].lap_counter;
+#endif
 }
 
 void sendNewLaps() {
