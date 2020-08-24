@@ -74,7 +74,7 @@ static output_t outputs[] = {
 bool IRAM_ATTR addToSendQueue(uint8_t * buf, uint32_t length) {
   if(xSemaphoreTake(queue_semaphore, portMAX_DELAY)) {
     if(output_buffer_pos + length > MAX_OUTPUT_BUFFER_SIZE) {
-		Serial.printf("%d + %d > %d\n", output_buffer_pos, length, MAX_OUTPUT_BUFFER_SIZE);
+      Serial.printf("%d + %d > %d\n", output_buffer_pos, length, MAX_OUTPUT_BUFFER_SIZE);
       xSemaphoreGive(queue_semaphore);
       return false;
     }
@@ -100,9 +100,9 @@ void update_outputs() {
   if(xSemaphoreTake(queue_semaphore, portMAX_DELAY)) {
     if(output_buffer_pos > 0) {
 #ifdef OUTPUT_DEBUG
-  Serial.println("Output packet: ");
-  Serial.write(output_buffer, output_buffer_pos);
-  Serial.println("######");
+      Serial.println("Output packet: ");
+      Serial.write(output_buffer, output_buffer_pos);
+      Serial.println("######");
 #endif
       // Send current buffer to all configured outputs
       for(int i = 0; i < OUTPUT_SIZE; ++i) {

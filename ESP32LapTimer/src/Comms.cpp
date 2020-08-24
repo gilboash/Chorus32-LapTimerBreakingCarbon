@@ -373,11 +373,12 @@ void setMinLap(uint8_t mlt) {
 }
 
 void SendMinLap(uint8_t NodeAddr) {
+  uint8_t mlt = getMinLapTime() / 1000;
   addToSendQueue('S');
   addToSendQueue(TO_HEX(NodeAddr));
   addToSendQueue(RESPONSE_MIN_LAP_TIME);
-  addToSendQueue('0');
-  addToSendQueue(TO_HEX((getMinLapTime() / 1000)));
+  addToSendQueue(TO_HEX((mlt >> 4)));
+  addToSendQueue(TO_HEX((mlt & 0xF)));
   addToSendQueue('\n');
   isConfigured = 1;
 }

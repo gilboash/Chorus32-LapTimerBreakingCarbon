@@ -17,11 +17,12 @@ static void esp_now_recv_cb(const uint8_t *mac_addr, const uint8_t *data, int da
   int iter;
   bool msp_rcvd = 0;
 
+  /* No data or peer is unknown => ignore */
+  if (!data_len || !esp_now_is_peer_exist(mac_addr))
+    return;
+
   Serial.printf("ESP NOW: ");
 
-  /* No data, return */
-  if (!data_len)
-    return;
   msp_rcvd = msp_parser.processReceivedByte(data[0]);
 
   // Check if message is MSP
@@ -71,11 +72,6 @@ static void esp_now_recv_cb(const uint8_t *mac_addr, const uint8_t *data, int da
   }
 
   msp_parser.markPacketFree();
-
-#if 0
-  char hello[] = "CHORUS_CB\n";
-  esp_now_send(mac_addr, (uint8_t*)hello, strlen(hello)); // send to all registered peers
-#endif
 }
 
 
@@ -92,12 +88,12 @@ void espnow_init(uint8_t if_type)
         esp_now_register_recv_cb(esp_now_recv_cb);
 
         esp_now_peer_info_t peer_info = {
-        .peer_addr = {0},
-        .lmk = {0},
-        .channel = 1,
-        .ifidx = (wifi_interface_t)if_type,
-        .encrypt = 0,
-        .priv = NULL
+            .peer_addr = {0},
+            .lmk = {0},
+            .channel = 1,
+            .ifidx = (wifi_interface_t)if_type,
+            .encrypt = 0,
+            .priv = NULL
         };
         uint8_t peers[][ESP_NOW_ETH_ALEN] = ESP_NOW_PEERS;
         uint8_t num_peers = sizeof(peers) / ESP_NOW_ETH_ALEN;
@@ -109,11 +105,6 @@ void espnow_init(uint8_t if_type)
 
         Serial.println("DONE");
 
-#if 0
-        // Notify clients
-        char hello[] = "CHORUS32\n";
-        esp_now_send(NULL, (uint8_t*)hello, strlen(hello)); // send to all registered peers
-#endif
     } else {
         Serial.println("ESPNOW init failed!");
     }
@@ -124,6 +115,7 @@ void espnow_init(uint8_t if_type)
 void espnow_sendPacket(void* output, uint8_t* data, size_t len)
 {
     // not used at the moment
+    esp_now_send(NULL, data, len);
 }
 
 
