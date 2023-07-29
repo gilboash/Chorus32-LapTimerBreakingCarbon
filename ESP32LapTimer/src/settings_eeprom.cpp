@@ -112,8 +112,27 @@ void EepromSettingsStruct::defaults() {
   // by setting everything to 0 we guarantee that every variable is initialized
   memset(&settings, 0, sizeof(EepromSettingsStruct));
   for(uint8_t i = 0; i < MAX_NUM_RECEIVERS; ++i){
-    settings.RxCalibrationMax[i] = RSSI_ADC_READING_MAX;
-    settings.RxCalibrationMin[i] = RSSI_ADC_READING_MIN;
+    switch(i) {
+				case 0:
+          settings.RxCalibrationMax[i] = RSSI_ADC_READING_MAX_1;
+          settings.RxCalibrationMin[i] = RSSI_ADC_READING_MIN_1;			
+					break; 
+        case 1:
+          settings.RxCalibrationMax[i] = RSSI_ADC_READING_MAX_2;
+          settings.RxCalibrationMin[i] = RSSI_ADC_READING_MIN_2;			
+					break;
+        case 2:
+          settings.RxCalibrationMax[i] = RSSI_ADC_READING_MAX_3;
+          settings.RxCalibrationMin[i] = RSSI_ADC_READING_MIN_3;			
+					break;
+        case 3:
+          settings.RxCalibrationMax[i] = RSSI_ADC_READING_MAX_4;
+          settings.RxCalibrationMin[i] = RSSI_ADC_READING_MIN_4;			
+					break;
+        default:
+          settings.RxCalibrationMax[i] = RSSI_ADC_READING_MAX;
+          settings.RxCalibrationMin[i] = RSSI_ADC_READING_MIN;
+    }
   }
   for(uint8_t i = 0; i < MAX_NUM_PILOTS; ++i){
     settings.RSSIthresholds[i] = 2048;
@@ -122,10 +141,10 @@ void EepromSettingsStruct::defaults() {
   }
 
   settings.eepromVersionNumber = EEPROM_VERSION_NUMBER;
-  settings.ADCVBATmode = INA219;
+  settings.ADCVBATmode = ADC_CH6;
   settings.RXADCfilterCutoff = 20;
-  settings.VBATcalibration = 1;
-  settings.NumReceivers = 6;
+  settings.VBATcalibration = 38;
+  settings.NumReceivers = 4;
   settings.WiFiProtocol = 1;
   settings.WiFiChannel = 1;
   settings.min_voltage_module = EEPROM_DEFAULT_MIN_VOLTAGE_MODULE;

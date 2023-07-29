@@ -48,8 +48,18 @@ void InitHardwarePins() {
     digitalWrite(CS_PINS[i], HIGH);
   }
   //pinMode(MISO, INPUT);
-#ifdef BEEPER
-  pinMode(BEEPER, OUTPUT);
-  digitalWrite(BEEPER, LOW);
-#endif // BEEPER
+  #ifdef BEEPER
+    pinMode(BEEPER, OUTPUT);
+    digitalWrite(BEEPER, LOW);
+  #endif // BEEPER
+  #if BOARD==BOARD_MICRO32
+    pinMode(ADC_SELECT, OUTPUT);
+    //pinMode(LED_BLUE, OUTPUT);
+    //pinMode(LED_RED, OUTPUT);
+    //pinMode(LED_GREEN, OUTPUT);
+    pinMode(STATUS_LED, OUTPUT);
+
+    digitalWrite(ADC_SELECT, LOW);
+    digitalWrite(STATUS_LED, HIGH);
+  #endif
 }

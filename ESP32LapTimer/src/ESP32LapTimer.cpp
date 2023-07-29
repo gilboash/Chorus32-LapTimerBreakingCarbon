@@ -161,6 +161,7 @@ void setup() {
   timerAlarmEnable(adc_task_timer);
 
   xTaskCreatePinnedToCore(eeprom_task, "eepromSave", 4096, NULL, tskIDLE_PRIORITY, NULL, 1);
+  
 }
 
 void loop() {

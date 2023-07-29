@@ -1,0 +1,47 @@
+td, th {
+  text-align: center;
+  vertical-align: middle;
+}
+
+#calib_table * {
+	border: 1px solid black;
+	width: 5em;
+}
+
+#pilot_table {
+	width: 100%;
+}
+
+.band_select, .channel_select {
+	width: auto;
+}
+
+.rssi_select {
+	width:3.5em;
+}
+
+[val_state="pending"] {
+	outline: 1px solid orange;
+}
+
+[val_state="received"] {
+	outline: 1px solid green;
+}
+
+[val_state="error"] {
+	outline: 1px solid red;
+}
+
+#update_progress {
+  width: 100%;
+  background-color: grey;
+}
+
+#update_bar {
+  width: 1%;
+  height: 30px;
+  background-color: green;
+  text-align: center;
+  line-height: 30px;
+  color: white;
+}

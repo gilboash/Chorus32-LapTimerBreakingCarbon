@@ -150,7 +150,7 @@ function handle_message(message) {
 				case constants.RESPONSE_VOLTAGE:
 					var field = document.getElementById("Var_VBAT");
 					field.innerText = (parseInt(message.substr(3), 16) * (5/1024.0) * 11).toFixed(2);
-					break;
+					break;				
 				case constants.RESPONSE_THRESHOLD:
 					var field = document.getElementById("RSSIthreshold" + pilot_num);
 					field.value = parseInt(message.substr(3), 16);
@@ -171,6 +171,17 @@ function handle_message(message) {
 					field.value = message[3];
 					set_value_received(field);
 					break;
+				case constants.RESPONSE_MINRSSIVAL:
+					var field = document.getElementById("pilot_rssi_min_val_" + pilot_num);
+					field.value = parseInt(message.substr(3), 16);
+					set_value_received(field);
+					break;
+				case constants.RESPONSE_MAXRSSIVAL:
+					var field = document.getElementById("pilot_rssi_max_val_" + pilot_num);
+					field.value = parseInt(message.substr(3), 16);
+					set_value_received(field);
+					break;
+					
 			}
 		}
 	}
@@ -227,6 +238,25 @@ function create_pilots() {
 			set_value_pending(this);
 			send_extended_data_to(parseInt(this.id.slice(-1)), constants.EXTENDED_MULTIPLEX_OFF, this.checked ? 1 : 0, 4);
 		}
+
+		// min rssi val
+		cell = row.insertCell(-1);
+		input_html = `<input type="number" id="pilot_rssi_min_val_${i}" min="0" max="4000" step="50" class="rssi_select">`;
+		cell.innerHTML = input_html;
+		cell.lastChild.onclick = function () {
+			set_value_pending(this);
+			send_data_to(parseInt(this.id.slice(-1)),  constants.RESPONSE_MINRSSIVAL, parseInt(this.value*1), 16);
+		}
+
+		// max rssi val
+		cell = row.insertCell(-1);
+		input_html = `<input type="number" id="pilot_rssi_max_val_${i}" min="0" max="4000" step="50" class="rssi_select">`;
+		cell.innerHTML = input_html;
+		cell.lastChild.onclick = function () {
+			set_value_pending(this);
+			send_data_to(parseInt(this.id.slice(-1)), constants.RESPONSE_MAXRSSIVAL, parseInt(this.value*1), 16);
+		}
+
 	}
 }
 

@@ -190,7 +190,10 @@ void SelectivePowerUp() { //powerup only the RXs that have been requested
     //RXstandBy(i);
     delay(50);
     RXpowerOn(i);
-    //PowerUp(i);
+    delay(50);//
+    RXpowerOn(i);// test: cosYnut: do this twice to make sure the RX is power properlly  
+    delay(50);// added another dely cus the following function is the same as power on 
+    
     rxWrite(SPI_ADDRESS_POWER, DefaultPowerState, i);
 //
 //    Serial.print("Power up: ");

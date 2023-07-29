@@ -122,6 +122,8 @@ typedef struct {
 #define RESPONSE_WAIT_FIRST_LAP      '1'
 #define RESPONSE_BAND                'B'
 #define RESPONSE_CHANNEL             'C'
+#define RESPONSE_MINRSSIVAL          'Z'
+#define RESPONSE_MAXRSSIVAL          'X'
 #define RESPONSE_FREQUENCY           'F'
 #define RESPONSE_THRESHOLD_SETUP     'H'
 #define RESPONSE_RSSI_MON_INTERVAL   'I'
