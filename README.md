@@ -1,5 +1,12 @@
 # Chorus32-ESP32Laptimer
 
+Some notes on using gilboahs fork:
+This is a mix of using aaronsss minimal pcb v2 with micro esp32, with cruwaller latest code, which is adapted to Smeath Chorus-RF-Laptimer android app with TCP support
+additional minor improvements
+-
+
+
+
 Some notes on using this fork:
  * Bluetooth is enabled by default, so you'll need to change the partition scheme to "HUGE APP" or something similar, so the sketch fits
  * Currently the initial power state of the modules is off, if the voltage reading is below 6V (this is to protect my already weak USB-Port during developement with multiple modules)
@@ -19,12 +26,6 @@ This fork adds (mostly backend):
  * Much faster webinterface. Changing the settings is now much easier just enter a new value and be done. Green outline means the value is confirmed by the timer, orange means we are still waiting for a confirmation
     * You'll need to download  https://github.com/me-no-dev/ESPAsyncWebServer and https://github.com/me-no-dev/AsyncTCP as a .zip and add them in the Arduino IDE with "Sketch -> Include Library -> Add .ZIP Library..."
 
-TODO:
- * Add race times to OSD (not sure how useful this will be, but I'll at least implement it)
- * Maybe support for checkpoints
- * Make useable without app
-   * Continous mode
-   * Statistics
 
 This is an ESP32 port of the popular Chorus RF laptimer (https://github.com/voroshkov/Chorus-RF-Laptimer). Using an ESP32 provides much more processing power than AVR based Arduino boards and also has built in Wifi and Bluetooth networking simplifying connectivity options.
 
