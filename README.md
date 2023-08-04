@@ -1,11 +1,8 @@
 # Chorus32-ESP32Laptimer
 
-Some notes on using gilboahs fork:
+Some notes on using gilboash fork:
 This is a mix of using aaronsss minimal pcb v2 with micro esp32, with cruwaller latest code, which is adapted to Smeath Chorus-RF-Laptimer android app with TCP support
 additional minor improvements
--
-
-
 
 Some notes on using this fork:
  * Bluetooth is enabled by default, so you'll need to change the partition scheme to "HUGE APP" or something similar, so the sketch fits

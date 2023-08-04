@@ -103,14 +103,14 @@
 #define RSSI_ADC_READING_MIN_3 600
 
 #define RSSI_ADC_READING_MAX_4 2800
-#define RSSI_ADC_READING_MIN_4 600
+#define RSSI_ADC_READING_MIN_4 550
 
 
 // defines the time after which the crash loop detection assumes the operation is stable
 #define CRASH_COUNT_RESET_TIME_MS 300000
 #define MULTIPLEX_STAY_TIME_US (5 * 1000)
 
-#define MAX_NUM_RECEIVERS 4
+#define MAX_NUM_RECEIVERS 6
 #define MAX_NUM_PILOTS 8
 //#define MAX_NUM_RECEIVERS 3
 //#define MAX_NUM_PILOTS MAX_NUM_RECEIVERS
