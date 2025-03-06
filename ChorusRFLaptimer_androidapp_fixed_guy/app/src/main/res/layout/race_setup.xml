@@ -1,0 +1,673 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:animateLayoutChanges="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@color/colorBatteryMonitor">
+
+            <CheckBox
+                android:id="@+id/chkLiPoMonitor"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:text="@string/setup_lipo_monitor"
+                android:checked="true" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:longClickable="true"
+                android:id="@+id/layoutVoltage"
+                android:paddingTop="5dp">
+
+                <TextView
+                    android:id="@+id/txtVoltage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:longClickable="true"
+                    tools:text="0.00V"
+                    android:textColor="?android:attr/textColorPrimaryNoDisable" />
+
+                <ProgressBar
+                    android:id="@+id/batteryCharge"
+                    style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:max="100"
+                    android:progress="0"
+                    android:paddingLeft="5dp"
+                    android:paddingRight="5dp"
+                    android:visibility="visible" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:id="@+id/adjustmentLayout"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorBatteryMonitor"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+                <Space
+                    android:layout_width="32dp"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/chkAdjustVoltage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="@string/setup_adjust_voltage"
+                    android:gravity="center_vertical" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnDecAdjustmentConst"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:text="@string/minus_sign"
+                    android:textStyle="normal|bold" />
+
+                <TextView
+                    android:id="@+id/txtAdjustmentConst"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:text="1" />
+
+                <Button
+                    android:id="@+id/btnIncAdjustmentConst"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:text="@string/plus_sign"
+                    android:textStyle="normal|bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView5"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:elevation="1dp"
+                android:text="@string/setup_nr_laps" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnDecLaps"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:text="@string/minus_sign"
+                    android:textStyle="normal|bold" />
+
+                <TextView
+                    android:id="@+id/txtLaps"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:text="1"
+                    android:textColor="?android:attr/textColorPrimaryNoDisable" />
+
+                <Button
+                    android:id="@+id/btnIncLaps"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:text="@string/plus_sign"
+                    android:textStyle="normal|bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:elevation="1dp"
+                android:text="@string/setup_min_lap_time" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnDecMinLapTime"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:text="@string/minus_sign"
+                    android:textStyle="normal|bold" />
+
+                <TextView
+                    android:id="@+id/txtMinLapTime"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    tools:text="5 sec."
+                    android:textColor="?android:attr/textColorPrimaryNoDisable" />
+
+                <Button
+                    android:id="@+id/btnIncMinLapTime"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:text="@string/plus_sign"
+                    android:textStyle="normal|bold" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView7"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:elevation="1dp"
+                android:text="@string/setup_skip_first_lap" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/chkSkipFirstLap"
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dp"
+                    android:checked="true"
+                    android:gravity="center_vertical|center_horizontal" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView11"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:elevation="1dp"
+                android:text="@string/setup_time_to_prepare" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnDecPreparationTime"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:text="@string/minus_sign"
+                    android:textStyle="normal|bold" />
+
+                <TextView
+                    android:id="@+id/txtPreparationTime"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:text="5 sec."
+                    android:textColor="?android:attr/textColorPrimaryNoDisable" />
+
+                <Button
+                    android:id="@+id/btnIncPreparationTime"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:text="@string/plus_sign"
+                    android:textStyle="normal|bold" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView51"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:elevation="1dp"
+                android:text="@string/setup_random_start_time" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnDecRandomStartTime"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:text="@string/minus_sign"
+                    android:textStyle="normal|bold" />
+
+                <TextView
+                    android:id="@+id/txtRandomStartTime"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:text="5 sec."
+                    android:textColor="?android:attr/textColorPrimaryNoDisable" />
+
+                <Button
+                    android:id="@+id/btnIncRandomStartTime"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:text="@string/plus_sign"
+                    android:textStyle="normal|bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView6"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:elevation="1dp"
+                android:text="@string/setup_enable_device_sounds" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/chkDeviceSoundEnabled"
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dp"
+                    android:gravity="center_vertical|center_horizontal" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView9"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:elevation="1dp"
+                android:text="@string/setup_speak_lap_times" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/chkSpeakLapTimes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dp"
+                    android:checked="true"
+                    android:gravity="center_vertical|center_horizontal" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView10"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:elevation="1dp"
+                android:text="@string/setup_speak_messages" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/chkSpeakMessages"
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dp"
+                    android:checked="true"
+                    android:gravity="center_vertical|center_horizontal" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView12"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:elevation="1dp"
+                android:text="@string/setup_speak_english_only" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/chkSpeakEnglishOnly"
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dp"
+                    android:checked="false"
+                    android:gravity="center_vertical|center_horizontal" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+
+        <LinearLayout
+            android:id="@+id/layoutAdvancedActivator"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:orientation="horizontal">
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layoutAdvanced"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/textView52"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:elevation="1dp"
+                    android:text="@string/setup_use_experimental_features" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal">
+
+                    <CheckBox
+                        android:id="@+id/chkUseExperimentalFeatures"
+                        android:layout_width="wrap_content"
+                        android:layout_height="50dp"
+                        android:checked="false"
+                        android:gravity="center_vertical|center_horizontal" />
+                </LinearLayout>
+
+            </LinearLayout>
+            
+            <android.widget.Space
+                android:layout_width="match_parent"
+                android:layout_height="30dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="visible"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="2"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+
+                        android:text="Connectivity check"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnTestConnection"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:elevation="1dp"
+                        android:text="Start" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="5dp"
+                    android:layout_weight="3"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_horizontal"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="20dp"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical|left"
+                                android:text="lost:" />
+
+                            <TextView
+                                android:id="@+id/txtRangeTestPercentage"
+                                android:layout_width="0dp"
+                                android:layout_height="20dp"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical|center_horizontal"
+                                android:text="-" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_horizontal"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="20dp"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical|left"
+                                android:text="last rcv delay:" />
+
+                            <TextView
+                                android:id="@+id/txtReceiveDelay"
+                                android:layout_width="0dp"
+                                android:layout_height="20dp"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical|center_horizontal"
+                                android:text="-" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_horizontal"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="20dp"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical|left"
+                                android:text="min roundtrip:" />
+
+                            <TextView
+                                android:id="@+id/txtRangeMinTime"
+                                android:layout_width="0dp"
+                                android:layout_height="20dp"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical|center_horizontal"
+                                android:text="-" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_horizontal"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="20dp"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical|left"
+                                android:text="avg roundtrip:" />
+
+                            <TextView
+                                android:id="@+id/txtRangeAvgTime"
+                                android:layout_width="0dp"
+                                android:layout_height="20dp"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical|center_horizontal"
+                                android:text="-" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_horizontal"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="20dp"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical|left"
+                                android:text="max roundtrip:" />
+
+                            <TextView
+                                android:id="@+id/txtRangeMaxTime"
+                                android:layout_width="0dp"
+                                android:layout_height="20dp"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical|center_horizontal"
+                                android:text="-" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/txtVersionName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:text="version:" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+</ScrollView>

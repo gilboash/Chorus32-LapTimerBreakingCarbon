@@ -43,7 +43,7 @@
 
 #define WIFI_MODE_ACCESSPOINT
 // For now the AP name needs to be defined regardless of mode.
-#define WIFI_AP_NAME "NacoChorus32 LapTimer"
+#define WIFI_AP_NAME "Chorus32_naco_46_LapTimer"
 
 // When in client mode you also need to specify the
 // ssid and password.
@@ -110,7 +110,7 @@
 #define CRASH_COUNT_RESET_TIME_MS 300000
 #define MULTIPLEX_STAY_TIME_US (5 * 1000)
 
-#define MAX_NUM_RECEIVERS 6
+#define MAX_NUM_RECEIVERS 5
 #define MAX_NUM_PILOTS 8
 //#define MAX_NUM_RECEIVERS 3
 //#define MAX_NUM_PILOTS MAX_NUM_RECEIVERS
