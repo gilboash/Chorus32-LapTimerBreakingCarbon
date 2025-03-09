@@ -19,7 +19,7 @@ import app.andrey_voroshkov.chorus_laptimer.R;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class ChannelsSetupFragment extends Fragment {
+public class  ChannelsSetupFragment extends Fragment {
     /**
      * The fragment argument representing the section number for this
      * fragment.

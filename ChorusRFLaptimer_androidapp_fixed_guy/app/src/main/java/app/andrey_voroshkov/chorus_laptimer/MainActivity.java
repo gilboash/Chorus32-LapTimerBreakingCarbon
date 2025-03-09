@@ -281,6 +281,7 @@ public class MainActivity extends AppCompatActivity implements ConnectionListene
         if (!wifiMgr.isWifiEnabled()) return false;  // Wi-Fi adapter is OFF
 
         WifiInfo wifiInfo = wifiMgr.getConnectionInfo();
+        //Log.e("INFO", "wifi manager" );
         return wifiInfo.getNetworkId() != -1; // if true, then connected to an access point
     }
 
