@@ -393,6 +393,12 @@ public class MainActivity extends AppCompatActivity implements ConnectionListene
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     REQUEST_WRITE_STORAGE_CODE);
         }
+
+        ActivityCompat.requestPermissions(this, new String[]{
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+
+
     }
 
     private  void initBroadcastReceiverForBluetooth() {
