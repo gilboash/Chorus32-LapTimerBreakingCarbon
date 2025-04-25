@@ -7,9 +7,10 @@ esptool
 lap timer:
 plug in a battery. press button RST (hold it) -> PROG (hold it) -> release RST (while PROG hold) -> release PROG
 now plug FTDI to the PROG pins
+note: remove the voltage jumper from the FTDI prior to connecting it, like the image demonstrates
 
 command line to run:
-python naco_chorus32_flasher_final.py
+python naco_chorus32_flasher.py
 
 binaries can be found in ../release_bins/
 currenty i'm supporting flashing firmware.bin and spiff.bin, you will need to point to them both
