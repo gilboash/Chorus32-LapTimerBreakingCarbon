@@ -161,6 +161,7 @@ typedef struct {
 #define EXTENDED_EEPROM_RESET 'E'
 #define EXTENDED_DISPLAY_TIMEOUT 'D'
 #define EXTENDED_WIFI_CHANNEL 'W' // half byte
+#define EXTENDED_WIFI_SSID 'z' 
 #define EXTENDED_WIFI_PROTOCOL 'w' // half byte
 #define EXTENDED_FILTER_CUTOFF 'F'
 #define EXTENDED_MULTIPLEX_OFF 'm'
@@ -842,6 +843,8 @@ void SendAllSettings(uint8_t NodeAddr) {
 void sendAllExtendedSettings() {
   sendExtendedCommandByte('S', '*', EXTENDED_RACE_NUM, getRaceNum());
   sendExtendedCommandHalfByte('S', '*', EXTENDED_WIFI_CHANNEL, EepromSettings.WiFiChannel);
+  sendExtendedCommandHalfByte('S', '*', EXTENDED_WIFI_SSID, EepromSettings.WiFiSSID);
+
   sendExtendedCommandHalfByte('S', '*', EXTENDED_WIFI_PROTOCOL, EepromSettings.WiFiProtocol);
   sendExtendedCommandHalfByte('S', '*', EXTENDED_VOLTAGE_TYPE, (uint8_t)EepromSettings.ADCVBATmode);
   sendExtendedCommandInt('S', '*', EXTENDED_VOLTAGE_CALIB, EepromSettings.VBATcalibration * 1000);
@@ -881,6 +884,11 @@ void handleExtendedCommands(uint8_t* data, uint8_t length) {
       case EXTENDED_WIFI_CHANNEL:
         EepromSettings.WiFiChannel = TO_BYTE(data[3]);
         sendExtendedCommandHalfByte('S', '*', control_byte, EepromSettings.WiFiChannel);
+        setSaveRequired();
+        break;
+      case EXTENDED_WIFI_SSID:
+        EepromSettings.WiFiSSID = TO_BYTE(data[3]);
+        sendExtendedCommandHalfByte('S', '*', control_byte, EepromSettings.WiFiSSID);
         setSaveRequired();
         break;
       case EXTENDED_WIFI_PROTOCOL:
@@ -960,6 +968,9 @@ void handleExtendedCommands(uint8_t* data, uint8_t length) {
         break;
       case EXTENDED_WIFI_CHANNEL:
         sendExtendedCommandHalfByte('S', '*', control_byte, EepromSettings.WiFiChannel);
+        break;
+      case EXTENDED_WIFI_SSID:
+        sendExtendedCommandHalfByte('S', '*', control_byte, EepromSettings.WiFiSSID);
         break;
       case EXTENDED_WIFI_PROTOCOL:
         sendExtendedCommandHalfByte('S', '*', control_byte, EepromSettings.WiFiProtocol);

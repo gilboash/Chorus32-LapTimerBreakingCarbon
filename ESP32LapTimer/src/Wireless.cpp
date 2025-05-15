@@ -55,6 +55,8 @@ static void WiFiEvent(WiFiEvent_t event) {
 }
 
 void InitWifiAP() {
+  char concat_ssid[MAX_CHARS_SSID];
+
   WiFi.begin();
   delay( 500 ); // If not used, somethimes following command fails
   WiFi.mode( WIFI_AP );
@@ -65,8 +67,17 @@ void InitWifiAP() {
   if(channel < 1 || channel > 13) {
     channel = 1;
   }
+  int wifiSSID = getWifiSSID();
+  if(wifiSSID < 0 || wifiSSID > 9999) {
+    wifiSSID = 9;
+  }
+  snprintf(concat_ssid, 32, "%s%d", WIFI_AP_NAME, wifiSSID);
+
+  
   log_i("Starting wifi %s on channel %i in mode %s", WIFI_AP_NAME, channel, protocol ? "bgn" : "b");
-  WiFi.softAP(WIFI_AP_NAME, NULL, channel);
+  
+  
+  WiFi.softAP(concat_ssid, NULL, channel);
   // if DNSServer is started with "*" for domain name, it will reply with
   // provided IP to all DNS request
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);

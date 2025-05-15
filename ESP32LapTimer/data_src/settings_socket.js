@@ -97,6 +97,11 @@ function handle_message(message) {
 					field.value = parseInt(message[3], 16);
 					set_value_received(field);
 					break;
+				case constants.EXTENDED_WIFI_SSID:
+					var field = document.getElementById("WiFiSSID");
+					field.value = parseInt(message.substr(3), 16);
+					set_value_received(field);
+					break;
 				case constants.EXTENDED_WIFI_PROTOCOL:
 					var field = document.getElementById("WiFiProtocol");
 					field.value = parseInt(message[3], 16);
@@ -302,6 +307,12 @@ document.getElementById("WiFiProtocol").oninput = function () {
 document.getElementById("WiFiChannel").oninput = function () {
 	set_value_pending(this);
 	send_extended_data(constants.EXTENDED_WIFI_CHANNEL, parseInt(this.value), 4);
+};
+
+document.getElementById("WiFiSSID").oninput = function () {
+	set_value_pending(this);
+	send_extended_data(constants.EXTENDED_WIFI_SSID, parseInt(this.value), 16);
+
 };
 
 document.getElementById("RXFilterCutoff").oninput = function () {

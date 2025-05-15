@@ -148,6 +148,7 @@ void EepromSettingsStruct::defaults() {
   settings.WiFiProtocol = 1;
   settings.WiFiChannel = 1;
   settings.min_voltage_module = EEPROM_DEFAULT_MIN_VOLTAGE_MODULE;
+  settings.WiFiSSID = 9;
 
   settings.updateCRC();
 
@@ -192,7 +193,9 @@ void setADCVBATmode(ADCVBATmode_ mode) {
 void setSaveRequired() {
   eepromSaveRequired = true;
 }
-
+int getWifiSSID() {
+  return EepromSettings.WiFiSSID;
+}
 int getWiFiChannel(){
   return EepromSettings.WiFiChannel;
 }
