@@ -87,6 +87,13 @@ function handle_message(message) {
 					set_value_received(field);
 					update_all_values();
 					break;
+
+				case constants.EXTENDED_CHORUS_RESET:
+						var field = document.getElementById("chorusReset");
+						set_value_received(field);
+						update_all_values();
+						break;
+					
 				case constants.EXTENDED_DISPLAY_TIMEOUT:
 					var field = document.getElementById("displayTimeout");
 					field.value = parseInt(message.substr(3), 16);
@@ -293,6 +300,13 @@ document.getElementById("eepromReset").onclick = function () {
 	set_value_pending(this);
 	ws.send(`ER*${constants.EXTENDED_EEPROM_RESET}\n`);
 };
+
+document.getElementById("chorusReset").onclick = function () {
+	set_value_pending(this);
+	ws.send(`ER*${constants.EXTENDED_CHORUS_RESET}\n`);
+};
+
+
 
 document.getElementById("displayTimeout").oninput = function () {
 	set_value_pending(this);

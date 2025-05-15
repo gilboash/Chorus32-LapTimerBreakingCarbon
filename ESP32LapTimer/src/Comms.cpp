@@ -159,6 +159,7 @@ typedef struct {
 #define EXTENDED_NUM_MODULES 'M' // half byte
 #define EXTENDED_CALIBRATE_START 'r'
 #define EXTENDED_EEPROM_RESET 'E'
+#define EXTENDED_CHORUS_RESET 'G'
 #define EXTENDED_DISPLAY_TIMEOUT 'D'
 #define EXTENDED_WIFI_CHANNEL 'W' // half byte
 #define EXTENDED_WIFI_SSID 'z' 
@@ -952,6 +953,12 @@ void handleExtendedCommands(uint8_t* data, uint8_t length) {
         break;
       case EXTENDED_EEPROM_RESET:
         EepromSettings.defaults();
+        sendExtendedCommandHalfByte('S', '*', control_byte, 1);
+        break;
+      case EXTENDED_CHORUS_RESET:
+        log_e("reset chorus!!");
+
+        esp_restart();
         sendExtendedCommandHalfByte('S', '*', control_byte, 1);
         break;
       case EXTENDED_DEBUG_FREE_HEAP:

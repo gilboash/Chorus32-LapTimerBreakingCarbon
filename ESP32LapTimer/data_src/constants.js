@@ -56,6 +56,7 @@ export const EXTENDED_VOLTAGE_CALIB = 'V';
 export const EXTENDED_NUM_MODULES = 'M';
 export const EXTENDED_CALIBRATE_START = 'r';
 export const EXTENDED_EEPROM_RESET = 'E';
+export const EXTENDED_CHORUS_RESET = 'G';
 export const EXTENDED_DISPLAY_TIMEOUT = 'D';
 export const EXTENDED_WIFI_CHANNEL = 'W';
 export const EXTENDED_WIFI_SSID = 'z';
