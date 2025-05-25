@@ -34,7 +34,11 @@ class ESP32QtMultiFlasher(QWidget):
     def init_ui(self):
         layout = QVBoxLayout()
         logo_label = QLabel()
-        pixmap = QPixmap("breaking_carbon.png")
+        if getattr(sys, 'frozen', False):
+            logo_path = os.path.join(sys._MEIPASS, 'breaking_carbon.png')
+        else:
+            logo_path = 'breaking_carbon.png'
+        pixmap = QPixmap(logo_path)
         pixmap = pixmap.scaledToWidth(200)
         logo_label.setPixmap(pixmap)
         logo_label.setAlignment(Qt.AlignCenter)

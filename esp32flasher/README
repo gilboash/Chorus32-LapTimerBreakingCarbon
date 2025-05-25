@@ -2,7 +2,10 @@ this is a dummy flasher for the binaries and spiff data needed for chorus32 time
 
 prequisites:
 python3
+(install with "pip install " through cli):
 esptool
+PyQt5
+pyserial
 
 lap timer:
 plug in a battery. press button RST (hold it) -> PROG (hold it) -> release RST (while PROG hold) -> release PROG
