@@ -1,3 +1,0 @@
-([('naco_chorus32_flasher',
-   '/Users/gilboash/Documents/chorus32-cruwler/Chorus32-LapTimerBreakingCarbon/esp32flasher/dist/naco_chorus32_flasher',
-   'EXECUTABLE')],)
