@@ -8,5 +8,12 @@ additional minor improvements
 
 *created a flasher so you wont have to build the project , but just flash neccesary binary and data theough ftdi
 
-* re built the android app so it can properly work with tcp on latest android distribution - 
+*re built the android app so it can properly work with tcp on latest android distribution - 
 
+flasher in esp32flasher folder
+binaries to load via flasher in release_binaries
+android apk in android_assets
+
+
+
+full toturial video in https://youtu.be/qDBn3r2yoy8?si=TVeFURWah5ot8Ud1
