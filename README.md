@@ -11,8 +11,8 @@ additional minor improvements
 *re built the android app so it can properly work with tcp on latest android distribution - 
 
 flasher in esp32flasher folder
-binaries to load via flasher in release_binaries
-android apk in android_assets
+binaries to load via flasher in release_bins
+android apk in android sandbox
 
 
 
