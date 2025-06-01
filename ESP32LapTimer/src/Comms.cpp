@@ -1084,8 +1084,36 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
         break;
 
       case CONTROL_FREQUENCY:
-        //  TODO: convert to band/freq?
-        isConfigured = 1;
+        uint16_t frequency = HEX_TO_UINT16((uint8_t*)&controlData[3]);  
+        // Find the closest band/channel combination for this frequency  
+        uint8_t bestBand = 0;  
+        uint8_t bestChannel = 0;  
+        uint16_t minDiff = 65535;  
+      
+        for (uint8_t band = 0; band <= MAX_BAND; band++) {  
+            for (uint8_t channel = 0; channel <= 7; channel++) {  
+                uint8_t index = channel + (8 * band);  
+                uint16_t tableFreq = channelFreqTable[index];  
+                uint16_t diff = abs((int16_t)frequency - (int16_t)tableFreq);  
+                if (diff < minDiff) {  
+                    minDiff = diff;  
+                    bestBand = band;  
+                    bestChannel = channel;  
+                }  
+            }  
+        }  
+      
+        // Set the pilot to use the closest band/channel combination  
+        setPilotBand(NodeAddrByte, bestBand);  
+        setPilotChannel(NodeAddrByte, bestChannel);  
+      
+        // Send confirmation responses  
+        SendVRxBand(NodeAddrByte);  
+        SendVRxChannel(NodeAddrByte);  
+        SendVRxFreq(NodeAddrByte);  
+      
+        isConfigured = 1;  
+    
         break;
 
       case CONTROL_RSSI_MON_INTERVAL:
