@@ -27,6 +27,7 @@
 #include "Wireless.h"
 #include "Output.h"
 #include "CrashDetection.h"
+#include "Logging.h"
 
 #include <esp_wifi.h>
 #include <FS.h>
@@ -127,6 +128,9 @@ void onWebsocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, Aw
   Serial.print("Got websocket message: ");
   Serial.write(data, len);
   Serial.println("");
+
+  logToFile("onWebsocketEvent !");
+
   if(xSemaphoreTake(websocket_lock, portMAX_DELAY)){
     //Handle WebSocket event
     if(type == WS_EVT_DATA){
@@ -160,6 +164,7 @@ void send_websocket(void* output, uint8_t* data, size_t len) {
   ws.textAll(data, len);
 }
 
+
 void InitWebServer() {
   HasSPIFFsBegun = SPIFFS.begin();
   // attach AsyncWebSocket
@@ -182,6 +187,8 @@ void InitWebServer() {
   }
 
 
+  initLogFile();
+
   webServer.onNotFound([](AsyncWebServerRequest* req) {
 
     if (
@@ -200,6 +207,15 @@ void InitWebServer() {
         req->send(404, "text/plain", "404: Not Found"); // otherwise, respond with a 404 (Not Found) error
     }
   });
+
+   // serve the log file
+    webServer.on("/logs", HTTP_GET, [](AsyncWebServerRequest *request){
+        if (SPIFFS.exists("/logstore.txt")) {
+            request->send(SPIFFS, "/logstore.txt", "text/plain");
+        } else {
+            request->send(404, "text/plain", "Log file not found");
+        }
+    });
 
 
   webServer.on("/start_race", startRace_button);

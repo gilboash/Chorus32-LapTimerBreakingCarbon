@@ -17,10 +17,12 @@
  */
 #pragma once
 
+#include <string>
 #include <stdint.h>
 #include <stddef.h>
 
 void InitWebServer();
+
 
 bool isUpdating();
 void send_websocket(void* output, uint8_t* data, size_t len);
