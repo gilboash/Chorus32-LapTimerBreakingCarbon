@@ -18,7 +18,7 @@
 #pragma once
 
 #include <stdint.h>
-
+#include "Logging.h"
 /// These are all the available targets
 #define BOARD_DEFAULT 1
 #define BOARD_OLD 2

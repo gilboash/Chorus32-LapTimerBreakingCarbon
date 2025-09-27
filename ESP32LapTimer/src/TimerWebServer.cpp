@@ -106,19 +106,19 @@ void calibrateRSSI(AsyncWebServerRequest* req) {
 }
 
 void startRace_button(AsyncWebServerRequest* req) {
-  Serial.println("Starting race...");
+  logToFile("Starting race...");
   startRace();
   req->send(200, "text/plain", "");
 }
 
 void stopRace_button(AsyncWebServerRequest* req) {
-  Serial.println("Stopping race...");
+  logToFile("Stopping race...");
   stopRace();
   req->send(200, "text/plain", "");
 }
 
 void fetch_laptimes_button(AsyncWebServerRequest* req) {
-  Serial.println("Fetching laptimes...");
+  logToFile("Fetching laptimes...");
   //stopRace();
   req->send(200, "text/plain", "");
 }

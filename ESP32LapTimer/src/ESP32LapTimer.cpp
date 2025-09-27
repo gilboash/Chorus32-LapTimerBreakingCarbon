@@ -88,10 +88,12 @@ void eeprom_task(void* args) {
 void setup() {
   init_crash_detection();
   Serial.begin(SERIAL_BAUD_RATE);
-  Serial.println("Booting....");
+  logToFile("Booting....");
 #ifdef USE_ARDUINO_OTA
   if(is_crash_mode()) {
     log_e("Detected crashing. Starting ArduinoOTA only!");
+    logToFile("Detected crashing. Starting ArduinoOTA only!");
+    
     InitWifiAP();
     ArduinoOTA.begin();
     return;
@@ -109,7 +111,7 @@ void setup() {
   bool all_modules_off = false;
   if (rtc_get_reset_reason(0) == 15 || rtc_get_reset_reason(1) == 15) {
     all_modules_off = true;
-    Serial.println("Rebooted from brownout...disabling all modules...");
+    logToFile("Rebooted from brownout...disabling all modules...");
   }
 #ifdef USE_BUTTONS
   newButtonSetup();
@@ -136,7 +138,7 @@ void setup() {
 
   if (!EepromSettings.SanityCheck()) {
     EepromSettings.defaults();
-    Serial.println("Detected That EEPROM corruption has occured.... \n Resetting EEPROM to Defaults....");
+    logToFile("Detected That EEPROM corruption has occured.... \n Resetting EEPROM to Defaults....");
   }
 
   commsSetup();
@@ -152,7 +154,7 @@ void setup() {
   }
 
   init_outputs();
-  Serial.println("Starting ADC reading task on core 0");
+  logToFile("Starting ADC reading task on core 0");
 
   xTaskCreatePinnedToCore(adc_task, "ADCreader", 4096, NULL, 1, &adc_task_handle, 0);
   hw_timer_t* adc_task_timer = timerBegin(0, 8, true);

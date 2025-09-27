@@ -98,7 +98,7 @@ uint32_t getLaptimeRel(uint8_t receiver, uint8_t lap) {
   uint32_t lap_time = getLaptime(receiver, lap);
   uint32_t prev_lap_time = getLaptime(receiver, lap - 1);
   if(lap_time < prev_lap_time) {
-    Serial.printf("Prev lap > current lap!!!! prev: %d curr: %d curr#: %d curr call: %d\n", prev_lap_time, lap_time, lap, getLaptime(receiver, lap));
+    logToFile("Prev lap > current lap!!!! prev: %d curr: %d curr#: %d curr call: %d\n", prev_lap_time, lap_time, lap, getLaptime(receiver, lap));
   }
   return getLaptime(receiver, lap) - getLaptime(receiver, lap - 1);
 }

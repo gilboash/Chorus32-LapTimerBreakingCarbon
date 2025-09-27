@@ -406,11 +406,10 @@ void SendXdone(uint8_t NodeAddr) {
 }
 
 void SetThresholdValue(uint16_t threshold, uint8_t NodeAddr) {
-  Serial.print("Setting Threshold Value: ");
-  Serial.println(threshold);
+  logToFile("Setting Threshold Value: %d ",threshold);
   if (threshold > 340) {
     threshold = 340;
-    Serial.println("Threshold was attempted to be set out of range");
+    logToFile("Threshold was attempted to be set out of range");
   }
   // stop the "setting threshold algorithm" to avoid overwriting the explicitly set value
   if (thresholdSetupMode[NodeAddr]) {
@@ -593,7 +592,7 @@ void IRAM_ATTR sendLap(uint8_t Lap, uint8_t NodeAddr, uint8_t espnow, uint8_t se
   uint32_t RequestedLap = 0;
 
   if (Lap == 0) {
-    Serial.println("Lap == 0 and sendlap was called");
+    logToFile("Lap == 0 and sendlap was called");
     return;
   }
 
@@ -602,7 +601,7 @@ void IRAM_ATTR sendLap(uint8_t Lap, uint8_t NodeAddr, uint8_t espnow, uint8_t se
   } else if (raceMode == 2) {
     RequestedLap = getLaptimeRelToStart(NodeAddr, Lap);  //absolute mode
   } else {
-    Serial.println("Error: Invalid RaceMode Set");
+    logToFile("Error: Invalid RaceMode Set");
     return;
   }
 
