@@ -125,11 +125,22 @@ void fetch_laptimes_button(AsyncWebServerRequest* req) {
 
 void onWebsocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
   if(isHTTPUpdating) return; // ignore all incoming messages during update
-  Serial.print("Got websocket message: ");
-  Serial.write(data, len);
-  Serial.println("");
 
-  logToFile("onWebsocketEvent !");
+
+
+//  Serial.print("Got websocket message: ");
+//  Serial.write(data, len);
+//  Serial.println("");
+
+  logToFile("Got websocket message: !");
+
+  // Copy payload into a null-terminated buffer
+    char buf[256];  // adjust size depending on max expected len
+    size_t copyLen = (len < sizeof(buf) - 1) ? len : sizeof(buf) - 1;
+    memcpy(buf, data, copyLen);
+    buf[copyLen] = '\0';
+
+    logToFile("%s", buf);
 
   if(xSemaphoreTake(websocket_lock, portMAX_DELAY)){
     //Handle WebSocket event

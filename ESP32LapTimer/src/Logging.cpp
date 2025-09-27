@@ -18,6 +18,7 @@ const size_t MAX_LOG_SIZE = 100 * 1024;  // 100 KB
 const size_t KEEP_SIZE    = 80 * 1024;
 
 
+static uint32_t lineCounter = 0;
 
 static File logFile;
 
@@ -47,41 +48,48 @@ void set_chorus_log(bool enable) {
   }
 }
 
+
+static void printMemoryStats() {
+    logToFile("Free heap: %u bytes\n", ESP.getFreeHeap());
+    logToFile("Min free heap (lowest ever): %u bytes\n", ESP.getMinFreeHeap());
+    logToFile("Largest free block: %u bytes\n", ESP.getMaxAllocHeap());
+}
 void shouldLogFileTruncate() {
-
-
     size_t size = logFile.size();
 
     if (size > MAX_LOG_SIZE) {
-          Serial.println("log file size limit reached, truncating");
-
-    logFile.close();
-
-    logFile = SPIFFS.open("/logstore.txt", "r");
+      Serial.println("log file size limit reached, truncating");
+      logFile.close();
+      logFile = SPIFFS.open("/logstore.txt", "r");
 
 
-// Move to the point we want to keep
-    logFile.seek(size - KEEP_SIZE);
-    String recent = logFile.readString();
-    logFile.close();
+      // Move to the point we want to keep
+      logFile.seek(size - KEEP_SIZE);
+      String recent = logFile.readString();
+      logFile.close();
 
-    // Rewrite file with only recent logs
-    logFile = SPIFFS.open("/logstore.txt", "w");
-    if (logFile) {
-        logFile.print("---- log trimmed ----\n");
-        logFile.print(recent);
-        logFile.close();
-        logFile = SPIFFS.open("/logstore.txt", FILE_APPEND);
-        if (!logFile) {
-                  Serial.println("Failed to open log file after truncated");
-        }
+      // Rewrite file with only recent logs
+      logFile = SPIFFS.open("/logstore.txt", "w");
+      if (logFile) {
+          logFile.print("---- log trimmed ----\n");
+          logFile.print(recent);
+          logFile.close();
+          logFile = SPIFFS.open("/logstore.txt", FILE_APPEND);
+          if (!logFile) {
+                    Serial.println("Failed to open log file after truncated");
+          }
+          
 
-    } else {
+
+      } else {
             Serial.println("Failed to open log file for write");
 
-        }
+      }
 
     }
+    //good opportunity
+    printMemoryStats();
+
 }
 void initLogFile() {
 
@@ -103,9 +111,8 @@ void initLogFile() {
 
 void logToFile(const char *fmt, ...) {
 
-//void logToFile(const String &msg) {
+    //void logToFile(const String &msg) {
     if (!logFile) return;
-
     char buf[256];  // adjust size depending on max log line length
 
     va_list args;
@@ -115,14 +122,14 @@ void logToFile(const char *fmt, ...) {
 
     // write to file
     logFile.println(buf);
+    lineCounter++;
+    logFile.flush();
 
-    //logFile.println(msg);
-    // flush every few lines or on demand
-    if (millis() % 10000 < 50) {  
-      shouldLogFileTruncate();
-       
+    // check for truncation every 200 log lines
+    if (lineCounter % 200 == 0) {
+        shouldLogFileTruncate();
     }
-     logFile.flush();
+    
     Serial.println(buf);
 }
 

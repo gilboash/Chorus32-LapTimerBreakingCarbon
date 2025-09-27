@@ -52,7 +52,22 @@
 #include <ArduinoOTA.h>
 #endif
 
+#include "esp_freertos_hooks.h"
+
 static TaskHandle_t adc_task_handle = NULL;
+
+volatile uint64_t idleCount0 = 0;
+volatile uint64_t idleCount1 = 0;
+
+// Idle hook functions (must return true to stay registered)
+bool idleHook0() { idleCount0++; return true; }
+bool idleHook1() { idleCount1++; return true; }
+
+// Calibration: how many idle calls per second = 100% idle
+uint64_t baseline0 = 0;
+uint64_t baseline1 = 0;
+
+#define CHORUS32_CPU_MONITOR 0
 
 void IRAM_ATTR adc_read() {
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -83,6 +98,40 @@ void eeprom_task(void* args) {
     vTaskDelay(xDelay);
   }
 }
+
+
+void monitorTask(void *param) {
+    uint64_t last0 = 0, last1 = 0;
+
+    // First second: measure baseline
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    baseline0 = idleCount0;
+    baseline1 = idleCount1;
+
+    // Give some time for counters to accumulate
+    vTaskDelay(pdMS_TO_TICKS(1000));
+
+    for (;;) {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+
+        uint64_t now0 = idleCount0;
+        uint64_t now1 = idleCount1;
+
+        uint64_t d0 = now0 - last0;
+        uint64_t d1 = now1 - last1;
+
+        last0 = now0;
+        last1 = now1;
+
+        float cpu0 = 100.0f * (1.0f - (float)d0 / (float)baseline0);
+        float cpu1 = 100.0f * (1.0f - (float)d1 / (float)baseline1);
+
+        logToFile("CPU0: %.1f%%, CPU1: %.1f%%, FreeHeap: %u",
+                  cpu0, cpu1, ESP.getFreeHeap());
+    }
+}
+
+
 
 
 void setup() {
@@ -163,6 +212,17 @@ void setup() {
   timerAlarmEnable(adc_task_timer);
 
   xTaskCreatePinnedToCore(eeprom_task, "eepromSave", 4096, NULL, tskIDLE_PRIORITY, NULL, 1);
+
+
+#ifdef CHORUS32_CPU_MONITOR
+    // Register idle hooks
+    esp_register_freertos_idle_hook_for_cpu(idleHook0, 0);
+    esp_register_freertos_idle_hook_for_cpu(idleHook1, 1);
+
+    // Start monitor task on core 1
+    xTaskCreatePinnedToCore(monitorTask, "PerfMon", 4096, NULL, 1, NULL, 1);
+#endif
+
   
 }
 
