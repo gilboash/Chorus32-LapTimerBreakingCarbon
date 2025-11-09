@@ -14,8 +14,8 @@
 #include "Logging.h"
 
 
-const size_t MAX_LOG_SIZE = 100 * 1024;  // 100 KB
-const size_t KEEP_SIZE    = 80 * 1024;
+const size_t MAX_LOG_SIZE = 10 * 1024;  // 100 KB
+const size_t KEEP_SIZE    = 5 * 1024;
 
 
 static uint32_t lineCounter = 0;
@@ -107,6 +107,8 @@ void initLogFile() {
   logToFile("SPIFFS size: %u bytes\n", totalBytes);
   logToFile("Used: %u bytes\n", usedBytes);
   logToFile("Free: %u bytes\n", totalBytes - usedBytes);
+
+  logToFile("Log init from boot succesfuly ");
 }
 
 void logToFile(const char *fmt, ...) {

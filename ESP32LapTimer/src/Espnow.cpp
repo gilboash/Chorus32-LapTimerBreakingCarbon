@@ -60,9 +60,13 @@ static void esp_now_recv_cb(const uint8_t *mac_addr, const uint8_t *data, int da
     }
   } else if (strnlen((char*)data, 100) < 100) {
     /* Race control command */
-    Serial.print("command: '");
-    Serial.print((char*)data);
-    Serial.println("'");
+   
+     char buf[256];  // adjust size depending on max expected len
+    size_t copyLen = (sizeof(data) < sizeof(buf) - 1) ? sizeof(data) : sizeof(buf) - 1;
+    memcpy(buf, data, copyLen);
+    buf[copyLen] = '\0';
+
+    logToFile("esp_now_recv_cb command: %s", buf);
 
     // TODO: handle incomming command!
     output_input_callback((uint8_t*)data, data_len);

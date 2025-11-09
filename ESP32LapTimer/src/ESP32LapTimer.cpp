@@ -214,7 +214,7 @@ void setup() {
   xTaskCreatePinnedToCore(eeprom_task, "eepromSave", 4096, NULL, tskIDLE_PRIORITY, NULL, 1);
 
 
-#ifdef CHORUS32_CPU_MONITOR
+#if CHORUS32_CPU_MONITOR
     // Register idle hooks
     esp_register_freertos_idle_hook_for_cpu(idleHook0, 0);
     esp_register_freertos_idle_hook_for_cpu(idleHook1, 1);

@@ -132,6 +132,7 @@ void output_input_callback(uint8_t* buf, uint32_t size) {
   Serial.write(buf, size);
   Serial.println("######");
 #endif
+  logToFile("output_input_callback called !");
   for(uint32_t i = 0; i < size; ++i) {
     if(buf[i] == '\n') {
       i += 1; // include \n

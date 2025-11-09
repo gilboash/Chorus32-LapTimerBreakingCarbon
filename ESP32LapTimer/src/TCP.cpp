@@ -61,6 +61,7 @@ void tcp_init(void* output) {
 }
 
 void IRAM_ATTR tcp_send_packet(void* output, uint8_t* buf, uint32_t size) {
+
   if(tcp_server < 0) return;
   if (buf != NULL && size != 0) {
     for(int i = 0; i < MAX_TCP_CLIENTS; ++i) {

@@ -4,7 +4,7 @@ var current_race = 0;
 var ws = null;
 var num_pilots = 8;
 var count_first = 0;
-var max_laps = 4;
+var max_laps = 10;
 
 var pilot_active = [];
 var pilot_log = [[]];

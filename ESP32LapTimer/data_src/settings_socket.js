@@ -162,7 +162,13 @@ function handle_message(message) {
 				case constants.RESPONSE_VOLTAGE:
 					var field = document.getElementById("Var_VBAT");
 					field.innerText = (parseInt(message.substr(3), 16) * (5/1024.0) * 11).toFixed(2);
-					break;				
+					break;
+				case constants.RESPONSE_RSSI:
+					var field = document.getElementById("pilot_rssi_curr_val_" + pilot_num);
+					field.value = parseInt(message.substr(3), 16);
+					set_value_received(field);
+					break;
+				
 				case constants.RESPONSE_THRESHOLD:
 					var field = document.getElementById("RSSIthreshold" + pilot_num);
 					field.value = parseInt(message.substr(3), 16);
@@ -269,6 +275,15 @@ function create_pilots() {
 			send_data_to(parseInt(this.id.slice(-1)), constants.RESPONSE_MAXRSSIVAL, parseInt(this.value*1), 16);
 		}
 
+		//  rssi curr val
+		cell = row.insertCell(-1);
+		input_html = `<input type="number" id="pilot_rssi_curr_val_${i}" min="0" max="342" step="1" class="rssi_select">`;
+		cell.innerHTML = input_html;
+		cell.lastChild.onclick = function () {
+			set_value_pending(this);
+			send_data_to(parseInt(this.id.slice(-1)), constants.CONTROL_GET_RSSI, parseInt(this.value*1), 16);
+		}
+
 	}
 }
 
@@ -278,6 +293,9 @@ function on_websocket_event(event) {
 	for(var i = 0; i < messages.length; ++i) {
 		handle_message(messages[i]);
 	}
+
+	//send_extended_data(constants.RESPONSE_RSSI_MON_INTERVAL, 100/*set 10ms interval*/ , 16);
+
 }
 
 create_pilots();
@@ -329,6 +347,7 @@ document.getElementById("WiFiSSID").oninput = function () {
 
 };
 
+
 document.getElementById("RXFilterCutoff").oninput = function () {
 	set_value_pending(this);
 	send_extended_data(constants.EXTENDED_FILTER_CUTOFF, parseInt(this.value*1), 16);
@@ -346,6 +365,9 @@ document.getElementById("calibrate_button").onclick = function () {
 
 function get_variable_settings() {
 	ws.send("R*v\n");
+	ws.send("R*r\n");
+
+	
 	ws.send("ER*h\n");
 	ws.send("ER*H\n");
 	ws.send("ER*B\n");
