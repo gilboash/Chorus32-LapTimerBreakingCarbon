@@ -962,7 +962,6 @@ void handleExtendedCommands(uint8_t* data, uint8_t length) {
         sendExtendedCommandHalfByte('S', '*', control_byte, 1);
         break;
       case EXTENDED_DEBUG_FREE_HEAP:
-      logToFile("send heap");
         sendExtendedCommandInt32('S', '*', control_byte, ESP.getFreeHeap());
         break;
       case EXTENDED_DEBUG_MAX_BLOCK_HEAP:
@@ -1199,14 +1198,12 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
         break;
       case CONTROL_GET_RSSI: // get current RSSI value
         //Serial.println("sending current RSSI");
-        logToFile("sending current RSSI");
         for (int i = 0; i < MAX_NUM_PILOTS; i++) {
           SendCurrRSSI(i);
         }
         break;
       case CONTROL_GET_VOLTAGE: //get battery voltage
         //addToSendQueue(SEND_VOLTAGE);
-        logToFile("sending lop voltage");
         SendLipoVoltage();
         break;
       case CONTROL_GET_ALL_DATA: // request all data
