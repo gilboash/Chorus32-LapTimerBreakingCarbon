@@ -13,6 +13,7 @@
 #include "Output.h"
 #include "Logging.h"
 
+#define LOG_TO_FILE_ENABLED 0
 
 const size_t MAX_LOG_SIZE = 10 * 1024;  // 100 KB
 const size_t KEEP_SIZE    = 5 * 1024;
@@ -92,7 +93,7 @@ void shouldLogFileTruncate() {
 
 }
 void initLogFile() {
-
+#if LOG_TO_FILE_ENABLED
   logFile = SPIFFS.open("/logstore.txt", FILE_APPEND);
   if (!logFile) {
         Serial.println("Failed to open log file");
@@ -109,9 +110,11 @@ void initLogFile() {
   logToFile("Free: %u bytes\n", totalBytes - usedBytes);
 
   logToFile("Log init from boot succesfuly ");
+#endif
 }
 
 void logToFile(const char *fmt, ...) {
+#if LOG_TO_FILE_ENABLED
 
     //void logToFile(const String &msg) {
     if (!logFile) return;
@@ -133,8 +136,12 @@ void logToFile(const char *fmt, ...) {
     }
     
     Serial.println(buf);
+#endif
+
 }
 
 void closeLog() {
+#if LOG_TO_FILE_ENABLED
     if (logFile) logFile.close();
+#endif
 }
