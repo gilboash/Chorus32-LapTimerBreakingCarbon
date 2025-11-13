@@ -406,11 +406,10 @@ void SendXdone(uint8_t NodeAddr) {
 }
 
 void SetThresholdValue(uint16_t threshold, uint8_t NodeAddr) {
-  Serial.print("Setting Threshold Value: ");
-  Serial.println(threshold);
+  logToFile("Setting Threshold Value: %d ",threshold);
   if (threshold > 340) {
     threshold = 340;
-    Serial.println("Threshold was attempted to be set out of range");
+    logToFile("Threshold was attempted to be set out of range");
   }
   // stop the "setting threshold algorithm" to avoid overwriting the explicitly set value
   if (thresholdSetupMode[NodeAddr]) {
@@ -488,6 +487,7 @@ void SendCurrRSSIloop() {
   if (rssiMonitorInterval == 0) {
     return;
   }
+
   if (millis() > rssiMonitorInterval + lastRSSIsent) {
     for (int i = 0; i < MAX_NUM_PILOTS; i ++) {
       SendCurrRSSI(i);
@@ -591,9 +591,9 @@ void setupThreshold(uint8_t phase, uint8_t node) {
 
 void IRAM_ATTR sendLap(uint8_t Lap, uint8_t NodeAddr, uint8_t espnow, uint8_t send_laps) {
   uint32_t RequestedLap = 0;
-
+  logToFile("Send Lap");
   if (Lap == 0) {
-    Serial.println("Lap == 0 and sendlap was called");
+    logToFile("Lap == 0 and sendlap was called");
     return;
   }
 
@@ -602,7 +602,7 @@ void IRAM_ATTR sendLap(uint8_t Lap, uint8_t NodeAddr, uint8_t espnow, uint8_t se
   } else if (raceMode == 2) {
     RequestedLap = getLaptimeRelToStart(NodeAddr, Lap);  //absolute mode
   } else {
-    Serial.println("Error: Invalid RaceMode Set");
+    logToFile("Error: Invalid RaceMode Set");
     return;
   }
 
@@ -1038,6 +1038,8 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
   ControlByte = controlData[2];
 
   if (length > 4) { // set value commands  changed to n+1 ie, 3+1 = 4.
+    logToFile("Control byte %c", ControlByte);
+
     switch (ControlByte) {
 
       case CONTROL_PILOT_ACTIVE:
@@ -1089,12 +1091,14 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
         break;
 
       case CONTROL_RSSI_MON_INTERVAL:
+        logToFile("RssiMonitorInterval set %d",rssiMonitorInterval);
         rssiMonitorInterval = (HEX_TO_UINT16((uint8_t*)&controlData[3]));
         isConfigured = 1;
         SendRSSImonitorInterval(NodeAddrByte);
         break;
 
       case CONTROL_MIN_LAP_TIME:
+        logToFile("Min Lap time set to %d",valueToSet);
         valueToSet = HEX_TO_BYTE(controlData[3], controlData[4]);
         setMinLap(valueToSet);
         SendMinLap(NodeAddrByte);
@@ -1146,6 +1150,8 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
         break;
     }
   } else { // get value and other instructions
+          logToFile("Control byte (smaller than 4) %c", ControlByte);
+
     switch (ControlByte) {
       /*
       case RESPONSE_API_VERSION:

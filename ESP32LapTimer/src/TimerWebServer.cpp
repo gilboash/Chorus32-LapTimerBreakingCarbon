@@ -27,6 +27,7 @@
 #include "Wireless.h"
 #include "Output.h"
 #include "CrashDetection.h"
+#include "Logging.h"
 
 #include <esp_wifi.h>
 #include <FS.h>
@@ -105,28 +106,42 @@ void calibrateRSSI(AsyncWebServerRequest* req) {
 }
 
 void startRace_button(AsyncWebServerRequest* req) {
-  Serial.println("Starting race...");
+  logToFile("Starting race...");
   startRace();
   req->send(200, "text/plain", "");
 }
 
 void stopRace_button(AsyncWebServerRequest* req) {
-  Serial.println("Stopping race...");
+  logToFile("Stopping race...");
   stopRace();
   req->send(200, "text/plain", "");
 }
 
 void fetch_laptimes_button(AsyncWebServerRequest* req) {
-  Serial.println("Fetching laptimes...");
+  logToFile("Fetching laptimes...");
   //stopRace();
   req->send(200, "text/plain", "");
 }
 
 void onWebsocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
   if(isHTTPUpdating) return; // ignore all incoming messages during update
-  Serial.print("Got websocket message: ");
-  Serial.write(data, len);
-  Serial.println("");
+
+
+
+//  Serial.print("Got websocket message: ");
+//  Serial.write(data, len);
+//  Serial.println("");
+
+  logToFile("Got websocket message: !");
+
+  // Copy payload into a null-terminated buffer
+    char buf[256];  // adjust size depending on max expected len
+    size_t copyLen = (len < sizeof(buf) - 1) ? len : sizeof(buf) - 1;
+    memcpy(buf, data, copyLen);
+    buf[copyLen] = '\0';
+
+    logToFile("%s", buf);
+
   if(xSemaphoreTake(websocket_lock, portMAX_DELAY)){
     //Handle WebSocket event
     if(type == WS_EVT_DATA){
@@ -160,6 +175,7 @@ void send_websocket(void* output, uint8_t* data, size_t len) {
   ws.textAll(data, len);
 }
 
+
 void InitWebServer() {
   HasSPIFFsBegun = SPIFFS.begin();
   // attach AsyncWebSocket
@@ -182,6 +198,8 @@ void InitWebServer() {
   }
 
 
+  initLogFile();
+
   webServer.onNotFound([](AsyncWebServerRequest* req) {
 
     if (
@@ -200,6 +218,15 @@ void InitWebServer() {
         req->send(404, "text/plain", "404: Not Found"); // otherwise, respond with a 404 (Not Found) error
     }
   });
+
+   // serve the log file
+    webServer.on("/logs", HTTP_GET, [](AsyncWebServerRequest *request){
+        if (SPIFFS.exists("/logstore.txt")) {
+            request->send(SPIFFS, "/logstore.txt", "text/plain");
+        } else {
+            request->send(404, "text/plain", "Log file not found");
+        }
+    });
 
 
   webServer.on("/start_race", startRace_button);

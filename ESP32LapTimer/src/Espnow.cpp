@@ -21,7 +21,7 @@ static void esp_now_recv_cb(const uint8_t *mac_addr, const uint8_t *data, int da
   if (!data_len || !esp_now_is_peer_exist(mac_addr))
     return;
 
-  Serial.printf("ESP NOW: ");
+  logToFile("ESP NOW: ");
 
   msp_rcvd = msp_parser.processReceivedByte(data[0]);
 
@@ -35,7 +35,6 @@ static void esp_now_recv_cb(const uint8_t *mac_addr, const uint8_t *data, int da
     /* Process the received MSP packet */
     mspPacket_t &msp_in = msp_parser.getPacket();
     if (msp_in.type == MSP_PACKET_V2_COMMAND && msp_in.function == MSP_SET_VTX_CONFIG) {
-      Serial.print("MSP_SET_VTX_CONFIG, channel: ");
 
       uint8_t * payload = (uint8_t*)msp_in.payload;
 
@@ -54,21 +53,26 @@ static void esp_now_recv_cb(const uint8_t *mac_addr, const uint8_t *data, int da
       SendVRxChannel(NodeAddrByte);
       SendVRxFreq(NodeAddrByte);
 
-      Serial.println(channel);
+      logToFile("MSP_SET_VTX_CONFIG, channel: %d", channel);
+
     } else {
-      Serial.println(" UNKNOWN MSP!");
+      logToFile(" UNKNOWN MSP!");
     }
   } else if (strnlen((char*)data, 100) < 100) {
     /* Race control command */
-    Serial.print("command: '");
-    Serial.print((char*)data);
-    Serial.println("'");
+   
+     char buf[256];  // adjust size depending on max expected len
+    size_t copyLen = (sizeof(data) < sizeof(buf) - 1) ? sizeof(data) : sizeof(buf) - 1;
+    memcpy(buf, data, copyLen);
+    buf[copyLen] = '\0';
+
+    logToFile("esp_now_recv_cb command: %s", buf);
 
     // TODO: handle incomming command!
     output_input_callback((uint8_t*)data, data_len);
 
   } else {
-    Serial.println(" UNKNOWN command!");
+    logToFile(" UNKNOWN command!");
   }
 
   msp_parser.markPacketFree();

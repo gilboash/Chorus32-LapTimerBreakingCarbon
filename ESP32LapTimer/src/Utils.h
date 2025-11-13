@@ -17,7 +17,7 @@
  */
 #include <esp_attr.h>
 #include <stdint.h>
-
+#include "Logging.h"
 #define TO_BYTE(i) (i <= '9' ? i - 0x30 : i - 0x41 + 10)
 #define TO_HEX(i) (i <= 9 ? 0x30 + i : 0x41 + i - 10)
 

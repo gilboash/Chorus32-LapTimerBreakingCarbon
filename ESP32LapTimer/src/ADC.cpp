@@ -209,7 +209,7 @@ void ConfigureADC(bool disable_all_modules) {
 
   filter_init(&adc_voltage_filter, ADC_VOLTAGE_CUTOFF, VOLTAGE_UPDATE_INTERVAL_MS/1000.0);
   uint16_t voltage = getVbatFloat(true) * 1000;
-  Serial.printf("Voltage is %d minimum is %d\n", voltage, getMinVoltageModule());
+  logToFile("Voltage is %d minimum is %d\n", voltage, getMinVoltageModule());
   if(voltage >= getMinVoltageModule() && !disable_all_modules) {
     // By default enable getNumReceivers() pilots
     for(uint8_t i = 0; i < getNumReceivers() && i < MAX_NUM_PILOTS; ++i)  {
@@ -442,8 +442,8 @@ void setPilotActive(uint8_t pilot, bool active) {
     }
   }
 
-  Serial.print("New pilot num: ");
-  Serial.println(current_pilot_num);
+  logToFile("New pilot num: ");
+  logToFile("%d",current_pilot_num);
 
   // only reset active modules. a user might have 6 modules installed but only uses 4. using the all function all modules would power up
   for(int i = 0; i < MIN(current_pilot_num, getNumReceivers()); ++i) {

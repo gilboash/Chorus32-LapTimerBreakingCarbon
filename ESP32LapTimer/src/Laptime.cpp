@@ -32,7 +32,7 @@ struct lap_data {
 };
 struct lap_data LapTimes[MAX_NUM_PILOTS];
 
-static uint32_t MinLapTime = 5000;  //this is in millis
+static uint32_t MinLapTime = 10000;  //this is in millis
 static uint32_t start_time = 0;
 static uint8_t count_first_lap = 0; // 0 means start table is before the laptimer, so first lap is not a full-fledged lap (i.e. don't respect min-lap-time for the very first lap)
 static uint16_t race_num = 0; // number of races
@@ -98,7 +98,7 @@ uint32_t getLaptimeRel(uint8_t receiver, uint8_t lap) {
   uint32_t lap_time = getLaptime(receiver, lap);
   uint32_t prev_lap_time = getLaptime(receiver, lap - 1);
   if(lap_time < prev_lap_time) {
-    Serial.printf("Prev lap > current lap!!!! prev: %d curr: %d curr#: %d curr call: %d\n", prev_lap_time, lap_time, lap, getLaptime(receiver, lap));
+    logToFile("Prev lap > current lap!!!! prev: %d curr: %d curr#: %d curr call: %d\n", prev_lap_time, lap_time, lap, getLaptime(receiver, lap));
   }
   return getLaptime(receiver, lap) - getLaptime(receiver, lap - 1);
 }

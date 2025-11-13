@@ -4,7 +4,7 @@ var current_race = 0;
 var ws = null;
 var num_pilots = 8;
 var count_first = 0;
-var max_laps = 4;
+var max_laps = 100;
 
 var pilot_active = [];
 var pilot_log = [[]];
@@ -16,7 +16,13 @@ var chart_current_end = 0;
 
 var rssi_interval = 0;
 
+var last_lap = 9999;
+
 const cells_before_lap = 2;
+
+const number_of_lap_cells = 8;
+
+
 function speak_lap(pilot, lap_number, time) {
 	var su = new SpeechSynthesisUtterance();
 	const voiceSelect = document.getElementById('voices');
@@ -68,8 +74,13 @@ function build_table(race_num, num_laps) {
 		var i;
 		for(i = num_laps; i != 0 ; i--) {
 			var cell = table.rows[0].insertCell(cells_before_lap);
-			cell.outerHTML = "<th align=\"center\">Lap " + (i - (count_first == 0)) + "</th>";
+			var num_lap_cells=  num_laps > number_of_lap_cells ? number_of_lap_cells : num_laps;
+			if (i<(num_lap_cells+1)) {			
+				cell.outerHTML = "<th align=\"center\">Last " + (i - (count_first == 0)) + "</th>";
+			}
 		}
+
+
 		for (i = 0; i < num_pilots; i++) {
 			var row = table.insertRow(-1);
 			// Active button
@@ -98,7 +109,8 @@ function build_table(race_num, num_laps) {
 			}
 			row.insertCell(-1); // Total
 			row.insertCell(-1); // Position
-			row.insertCell(-1); // avg
+			var consec = row.insertCell(-1); // avg
+			consec.innerText = "99999";
 			var best = row.insertCell(-1); // best
 			best.innerText = "99999";
 		}
@@ -137,7 +149,13 @@ function get_lap(race_num, pilot_num, lap_num) {
 
 function set_lap(race_num, pilot_num, lap_num, time) {
 	var row = get_pilot_row(race_num, pilot_num);
+	var sum = lap_num+cells_before_lap;
+
 	row.cells[lap_num+cells_before_lap].innerText = time;
+
+
+	row.cells[lap_num+cells_before_lap].classList.add("last_lap");
+
 }
 
 function get_total_time_cell(race_num, pilot_num) {
@@ -217,37 +235,45 @@ function update_pilots_positions(race_num) {
 
 function add_lap(race_num, pilot_num, lap_num, lap_time) {
 	if(lap_num >= max_laps) return;
+	console.log("add lap lap num "+ lap_num + " max laps " + max_laps + " laptime " + lap_time);
+	
 	// actually get val from table
 	var best_lap = get_best_time(race_num, pilot_num);
+
+	var	consec_lap_best = get_avg_time(race_num,pilot_num);
+
+
 	var avg_lap = 0;
 	lap_time /= 1000.0; // convert to seconds
 	if(!(count_first == 0 && lap_num == 0)) { // skip lap 0 for avg and best if we don't count it
 		best_lap = Math.min(best_lap, lap_time);
 		if(get_lap(race_num, pilot_num, lap_num) == 0) {
 			var pilot_name = get_pilot_name(race_num, pilot_num);
+
+			console.log("speak lap ");
+
 			speak_lap(pilot_name, lap_num + (count_first), (lap_time).toFixed(2));
 			set_total_time(race_num, pilot_num, (get_total_time(race_num, pilot_num) + lap_time).toFixed(3));
 			update_pilots_positions(race_num);
 		}
-		if(best_lap.toFixed(3) == lap_time.toFixed(3)) {
-			var cell = get_lap_cell(race_num, pilot_num, lap_num);
-			// TODO: find a better way to clear the bg color
-			for(var i = 0; i < max_laps; ++i) {
-				get_lap_cell(race_num, pilot_num, i).classList.remove("best_lap");
+		/*remove last marker*/
+		{
+			var num_lap_cells=  max_laps > number_of_lap_cells ? number_of_lap_cells : max_laps;
+
+			for(var i = 0; i < num_lap_cells; ++i) {
+				get_lap_cell(race_num, pilot_num, i).classList.remove("last_lap");
 			}
-			cell.classList.add("best_lap");
 		}
+
+		var consec_lap_now = last_lap+lap_time;
+		consec_lap_best = Math.min(consec_lap_now, consec_lap_best);
+		last_lap = lap_time;
+
 	}
-	set_lap(race_num, pilot_num, lap_num, lap_time);
-	var avg_lap = 0;
-	var i;
-	for(i = (count_first == 0); i < max_laps; ++i) {
-		var lap = get_lap(race_num, pilot_num, i);
-		if(lap == 0 || isNaN(lap)) break;
-		avg_lap += lap;
-	}
-	avg_lap /= i - (count_first == 0);
-	set_avg_time(race_num, pilot_num, avg_lap.toFixed(3));
+	set_lap(race_num, pilot_num, (lap_num % number_of_lap_cells), lap_time);
+	
+	//avg_lap /= i - (count_first == 0);*/
+	set_avg_time(race_num, pilot_num, consec_lap_best.toFixed(3));
 	set_best_time(race_num, pilot_num, best_lap.toFixed(3));
 }
 

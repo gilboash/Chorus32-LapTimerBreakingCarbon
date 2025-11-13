@@ -19,6 +19,7 @@ function speak_lap(pilot, lap_number, time) {
 function requestData() {
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', 'get_laptimes');
+	console.log("requestData get_laptimes");
 
 	xhr.onload = function() {
 		if (xhr.status === 200) {
@@ -64,7 +65,7 @@ function requestData() {
 						var best_lap = 99999;
 						var avg_lap = 0;
 						var j;
-						// Iterate over all laps of pilot i
+						// Iterate over all laps of pilot i 
 						for(j = 0; j < data.lap_data[i].laps.length && j < total_laps; ++j) {
 							var lap = data.lap_data[i].laps[j];
 							if(!(count_first == 0 && j == 0)) { // skip lap 0 for avg and best if we don't count it
@@ -76,11 +77,30 @@ function requestData() {
 								}
 							}
 							row.cells[j+1].innerText = lap/1000.0;
+
 						}
 						avg_lap /= j - (count_first == 0);
 						row.cells[total_laps + 1].innerText = avg_lap/1000.0;
 						row.cells[total_laps + 2].innerText = best_lap/1000.0;
+						// Iterate over all laps of pilot i - last 8 fill table
+						/*var starting_index_last_eight = data.lap_data[i].laps.length < 9 ? 0 : data.lap_data[i].laps.length - 8;
+						for(j = starting_index_last_eight; j < data.lap_data[i].laps.length && j < total_laps; ++j) {
+							var lap = data.lap_data[i].laps[j];
+							if(!(count_first == 0 && j == 0)) { // skip lap 0 for avg and best if we don't count it
+							
+								if(row.cells[j+1].innerText == "") {
+									var pilot_name = row.cells[0].children[0].value;
+									speak_lap(pilot_name, j, (lap/1000.0).toFixed(2));
+								}
+							}
+							row.cells[j-starting_index_last_eight+1].innerText = lap/1000.0;
+						}*/
+						//row.cells[total_laps + 1].innerText = avg_lap/1000.0;
+						//row.cells[total_laps + 2].innerText = best_lap/1000.0;
 					}
+
+					console.log("requestData j is " + j + " total laps " + total_laps);
+
 				}
 			} else {
 				console.log('Request failed.	Returned status of ' + xhr.status);

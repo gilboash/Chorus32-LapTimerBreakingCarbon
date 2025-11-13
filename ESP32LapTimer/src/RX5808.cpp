@@ -76,6 +76,7 @@ static uint32_t lastUpdate[MAX_NUM_RECEIVERS] = {0};
 static SPISettings rx_spi_conf(1000000, LSBFIRST, SPI_MODE0);
 
 void InitSPI() {
+  logToFile("InitSPI");
   memset(lastUpdate, 0, sizeof(lastUpdate));
   SPI.begin(VRX_SCK, VRX_MISO, VRX_MOSI);
   SPI.setHwCs(false);
@@ -92,6 +93,7 @@ bool IRAM_ATTR isRxReady(uint8_t module) {
 }
 
 void rxWrite(uint8_t addressBits, uint32_t dataBits, uint8_t CSpin) {
+            //  logToFile("rxWrite addressBits 0x%x databitx 0x%x csping 0x%x",addressBits,dataBits, CSpin);
 
   uint32_t data = addressBits | (1 << 4) | (dataBits << 5);
   SPI.beginTransaction(rx_spi_conf);
@@ -103,6 +105,8 @@ void rxWrite(uint8_t addressBits, uint32_t dataBits, uint8_t CSpin) {
 }
 
 void rxWriteNode(uint8_t node, uint8_t addressBits, uint32_t dataBits) {
+              //logToFile("rxWriteNode %d addressBits 0x%x databitx 0x%x",node,addressBits,dataBits);
+
   if (node < MAX_NUM_RECEIVERS) {
     lastUpdate[node] = micros();
     rxWrite(addressBits, dataBits, CS_PINS[node]);
@@ -110,6 +114,8 @@ void rxWriteNode(uint8_t node, uint8_t addressBits, uint32_t dataBits) {
 }
 
 void rxLowPower(uint8_t node) {
+            logToFile("rxLowPower %d",node);
+
 #ifdef USE_LOW_POWER
   rxWriteNode(node, SPI_ADDRESS_POWER, LOW_POWER_STATE);
 #endif
@@ -117,6 +123,8 @@ void rxLowPower(uint8_t node) {
 
 
 void rxWriteAll(uint8_t addressBits, uint32_t dataBits) {
+
+        //  logToFile("rxWriteAll addressbitx 0x%x databits 0x%x",addressBits, dataBits);
 
   uint32_t data = addressBits | (1 << 4) | (dataBits << 5);
   SPI.beginTransaction(rx_spi_conf);
@@ -137,24 +145,33 @@ void rxWriteAll(uint8_t addressBits, uint32_t dataBits) {
 }
 
 void RXstandBy(uint8_t NodeAddr) {
+    //    logToFile("RXstandBy 0x%x", NodeAddr);
+
   rxWriteNode(NodeAddr, SPI_ADDRESS_STATE, StandbyReg);
 }
 
 void RXpowerOn(uint8_t NodeAddr) {
+      //logToFile("RXpowerOn 0x%x", NodeAddr);
+
   rxWriteNode(NodeAddr, SPI_ADDRESS_STATE, PowerOnReg);
 }
 
 void RXreset(uint8_t NodeAddr) {
+    //logToFile("RXreset 0x%x", NodeAddr);
+
   rxWriteNode(NodeAddr, SPI_ADDRESS_STATE, ResetReg);
 }
 
 void RXResetAll() {
+ // logToFile("RXResetAll");
   for (int i = 0; i < getNumReceivers(); i++) {
     RXreset(i);
   }
 }
 
 void rxLowPowerAll() {
+    //logToFile("rxLowPowerAll");
+
   for (int i = 0; i < getNumReceivers(); i++) {
     rxLowPower(i);
   }
@@ -167,20 +184,28 @@ void RXPowerDownAll() {
   //RXstandBy(i);
   //delay(100);
   //}
+  //logToFile("RXPowerDownAll");
+
   rxWriteAll(SPI_ADDRESS_POWER, PowerDownState);
 }
 
 void RXPowerDown(uint8_t NodeAddr) {
+  //logToFile("RXPowerDown 0x%x",NodeAddr);
+
   rxWriteNode(NodeAddr, SPI_ADDRESS_POWER, PowerDownState);
 }
 
 void RXPowerUpAll() {
+    //logToFile("RXPowerUpAll");
+
   for (int i = 0; i < getNumReceivers(); i++) {
     rxWrite(SPI_ADDRESS_POWER, DefaultPowerState, i);
   }
 }
 
 void RXPowerUp(uint8_t NodeAddr) {
+  //logToFile("RXPowerUp 0x%x",NodeAddr);
+
   rxWriteNode(NodeAddr, SPI_ADDRESS_POWER, DefaultPowerState);
 }
 
@@ -196,7 +221,7 @@ void SelectivePowerUp() { //powerup only the RXs that have been requested
     
     rxWrite(SPI_ADDRESS_POWER, DefaultPowerState, i);
 //
-//    Serial.print("Power up: ");
+    logToFile("Power up: num recievers %d",i);
 //    Serial.println(i);
   }
 }

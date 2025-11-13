@@ -74,7 +74,7 @@ static output_t outputs[] = {
 bool IRAM_ATTR addToSendQueue(uint8_t * buf, uint32_t length) {
   if(xSemaphoreTake(queue_semaphore, portMAX_DELAY)) {
     if(output_buffer_pos + length > MAX_OUTPUT_BUFFER_SIZE) {
-      Serial.printf("%d + %d > %d\n", output_buffer_pos, length, MAX_OUTPUT_BUFFER_SIZE);
+      logToFile("%d + %d > %d\n", output_buffer_pos, length, MAX_OUTPUT_BUFFER_SIZE);
       xSemaphoreGive(queue_semaphore);
       return false;
     }
@@ -132,6 +132,7 @@ void output_input_callback(uint8_t* buf, uint32_t size) {
   Serial.write(buf, size);
   Serial.println("######");
 #endif
+  logToFile("output_input_callback called !");
   for(uint32_t i = 0; i < size; ++i) {
     if(buf[i] == '\n') {
       i += 1; // include \n

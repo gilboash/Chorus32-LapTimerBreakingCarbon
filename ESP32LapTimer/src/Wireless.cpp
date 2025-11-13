@@ -25,6 +25,7 @@
 #include "TimerWebServer.h"
 #include "settings_eeprom.h"
 #include "targets/target.h"
+#include "Logging.h"
 #ifdef ESP_NOW_PEERS
 #include "Espnow.h"
 #endif
@@ -141,6 +142,9 @@ void InitWifi() {
 #endif
 
   InitWebServer();
+
+ logToFile("init web socket completed");
+
 }
 
 void handleDNSRequests() {

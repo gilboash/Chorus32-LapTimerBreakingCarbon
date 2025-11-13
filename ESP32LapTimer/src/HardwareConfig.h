@@ -18,7 +18,7 @@
 #pragma once
 
 #include <stdint.h>
-
+#include "Logging.h"
 /// These are all the available targets
 #define BOARD_DEFAULT 1
 #define BOARD_OLD 2
@@ -110,7 +110,7 @@
 #define CRASH_COUNT_RESET_TIME_MS 300000
 #define MULTIPLEX_STAY_TIME_US (5 * 1000)
 
-#define MAX_NUM_RECEIVERS 5
+#define MAX_NUM_RECEIVERS 6
 #define MAX_CHARS_SSID 80
 #define MAX_NUM_PILOTS 8
 //#define MAX_NUM_RECEIVERS 3
