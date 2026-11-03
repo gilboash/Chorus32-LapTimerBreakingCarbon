@@ -52,6 +52,10 @@ bool isPilotActive(uint8_t pilot);
 void setPilotActive(uint8_t pilot, bool active);
 bool isPilotMultiplexOff(uint8_t pilot);
 void setPilotMultiplexOff(uint8_t pilot, bool off);
+
+/// Forces multiplexing off for every pilot the user has not explicitly set.
+/// Safe to call repeatedly; it never overrides a deliberate choice.
+void apply_multiplex_defaults();
 void setPilotFilters(uint16_t cutoff);
 
 void setPilotBand(uint8_t pilot, uint8_t band);

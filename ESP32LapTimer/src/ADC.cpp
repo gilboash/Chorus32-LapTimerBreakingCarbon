@@ -95,6 +95,13 @@ typedef struct receiver_data_s {
 static pilot_data_t pilots[MAX_NUM_PILOTS];
 static receiver_data_t receivers[MAX_NUM_RECEIVERS];
 
+// Which pilots the user has explicitly chosen a multiplexing setting for.
+// Everything else gets the default (multiplexing off) re-applied after any
+// path that rebuilds the pilot table, so the default cannot be quietly lost.
+// Not stored in EEPROM: adding a field to EepromSettingsStruct moves the CRC
+// and invalidates every existing timer's saved settings.
+static bool multiplex_user_set[MAX_NUM_PILOTS];
+
 // multiplexing queue
 static queue_t pilot_queue;
 static pilot_data_t* pilot_queue_data[MAX_NUM_PILOTS];
@@ -127,6 +134,27 @@ uint16_t multisample_adc1(adc1_channel_t channel, uint8_t samples) {
     val += adc1_get_raw(channel);
   }
   return val/samples;
+}
+
+/**
+ * Pin every pilot to one receiver rather than time-sharing, unless the user
+ * has deliberately asked otherwise for that pilot.
+ *
+ * Multiplexing retunes a module between pilots every few milliseconds, and
+ * samples taken while the RX5808 is still settling get credited to whichever
+ * pilot the module now belongs to, which reads as one pilot scoring another's
+ * laps. Correct timing for as many pilots as there are modules beats
+ * approximate timing for more of them.
+ *
+ * This is re-applied rather than set once: the pilot table is rebuilt on
+ * several paths and the default has to survive all of them.
+ */
+void apply_multiplex_defaults() {
+  for(uint8_t i = 0; i < MAX_NUM_PILOTS; ++i) {
+    if(!multiplex_user_set[i]) {
+      pilots[i].disable_multiplexing = true;
+    }
+  }
 }
 
 /**
@@ -185,18 +213,8 @@ void ConfigureADC(bool disable_all_modules) {
   memset(pilots, 0, MAX_NUM_PILOTS * sizeof(pilot_data_t));
   for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
     pilots[i].number = i;
-    // Pin every pilot to one receiver by default rather than time-sharing.
-    // Multiplexing retunes a module between pilots every few milliseconds, and
-    // samples taken while the RX5808 is still settling get credited to
-    // whichever pilot the module now belongs to -- which reads as one pilot
-    // scoring another's laps. Correct timing for as many pilots as there are
-    // modules beats approximate timing for more of them.
-    //
-    // setNextPilot() only refuses to switch a receiver that already has a
-    // pilot, so each module still claims one on its first pass and then keeps
-    // it. Pilots past the module count stay unassigned.
-    pilots[i].disable_multiplexing = true;
   }
+  apply_multiplex_defaults();
   memset(receivers, 0, MAX_NUM_RECEIVERS * sizeof(receiver_data_t));
   pilot_queue.curr_size = 0;
   pilot_queue.max_size = MAX_NUM_PILOTS;
@@ -440,6 +458,10 @@ void setPilotActive(uint8_t pilot, bool active) {
     }
   }
   current_pilot_num = 0;
+  // Re-apply the no-multiplexing default here too: this function rebuilds the
+  // whole assignment, and it runs on every channel, band and pilot change, so
+  // it is the point where a lost default would start costing laps.
+  apply_multiplex_defaults();
   // rebuild queue and delete all asignments. again this ist non-critical and the safest way to avoid bugs
   for(int i = 0; i < getNumReceivers(); ++i) {
     receivers[i].current_pilot = NULL;
@@ -492,6 +514,8 @@ bool isPilotMultiplexOff(uint8_t pilot) {
 }
 
 void setPilotMultiplexOff(uint8_t pilot, bool off) {
+  // A deliberate choice, so stop forcing the default on this pilot.
+  multiplex_user_set[pilot] = true;
   pilots[pilot].disable_multiplexing = off;
 }
 
