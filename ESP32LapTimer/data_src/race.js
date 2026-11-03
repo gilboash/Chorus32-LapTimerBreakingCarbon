@@ -810,19 +810,46 @@ function refresh_awake() {
 	try { localStorage.setItem("keep_awake", opt_awake.checked ? "1" : "0"); } catch (e) { /* ignore */ }
 	if (opt_awake.checked) {
 		NoSleep.enable();
-		awake_state.innerText = NoSleep.is_enabled()
-			? "Screen will stay on." : "Tap anywhere to arm the screen lock.";
 	} else {
 		NoSleep.disable();
+	}
+	report_awake();
+}
+
+// Report what is actually holding the screen on. The previous version claimed
+// "Screen will stay on" whenever the option was ticked, which is exactly the
+// case where you want to know it silently failed.
+function report_awake() {
+	if (!opt_awake.checked) {
 		awake_state.innerText = "";
+		awake_state.style.color = "";
+		return;
+	}
+
+	var state = NoSleep.status();
+	if (state.ok) {
+		awake_state.style.color = "";
+		awake_state.innerText = state.method == "wakelock"
+			? "Screen is held on by the system wake lock."
+			: "Screen is held on by background video playback.";
+	} else {
+		awake_state.style.color = "var(--warn)";
+		awake_state.innerText = "Screen lock is not active yet — tap anywhere " +
+			"on the page." + (state.detail ? " (" + state.detail + ")" : "");
 	}
 }
+
+// Playback can be refused or stopped later, so keep the line truthful.
+setInterval(report_awake, 3000);
 
 opt_awake.addEventListener("change", refresh_awake);
 
 // Both the wake lock and speech need a user gesture before they'll start.
 function arm_on_gesture() {
-	if (opt_awake.checked && !NoSleep.is_enabled()) refresh_awake();
+	if (opt_awake.checked && !NoSleep.is_enabled()) {
+		NoSleep.enable();
+		setTimeout(report_awake, 300);
+	}
 }
 document.addEventListener("click", arm_on_gesture);
 document.addEventListener("touchend", arm_on_gesture);

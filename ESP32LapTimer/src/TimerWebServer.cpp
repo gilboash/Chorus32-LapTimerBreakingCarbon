@@ -80,6 +80,8 @@ String getContentType(String filename) { // convert the file extension to the MI
   else if (filename.endsWith(".xml")) return "text/xml";
   else if (filename.endsWith(".pdf")) return "application/x-pdf";
   else if (filename.endsWith(".zip")) return "application/x-zip";
+  else if (filename.endsWith(".json")) return "application/json";
+  else if (filename.endsWith(".mp4")) return "video/mp4";
   else if (filename.endsWith(".gz")) return "application/x-gzip";
   return "text/plain";
 }

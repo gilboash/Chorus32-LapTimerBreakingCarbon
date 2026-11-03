@@ -32,10 +32,13 @@ def copy_files():
 	shutil.rmtree("{}/data".format(SCRIPT_DIR), ignore_errors=True)
 	shutil.copytree("{}/data_src".format(SCRIPT_DIR), "{}/data".format(SCRIPT_DIR))
 
-# The firmware reads these out of SPIFFS itself, so they have to stay readable.
+# Files that must not be gzipped.
+#   version.json - the firmware reads it out of SPIFFS itself
+#   nosleep.mp4  - already compressed, and some older Android builds choke on
+#                  a gzip-encoded media response
 # handleFileRead() sniffs the gzip magic, so leaving them uncompressed serves
 # them correctly too.
-NO_GZIP = ("version.json",)
+NO_GZIP = ("version.json", "nosleep.mp4")
 
 def generate_gzip():
 	# gzip all files

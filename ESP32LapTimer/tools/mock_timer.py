@@ -31,7 +31,7 @@ THRESHOLDS = [180] * NUM_PILOTS  # as sent, i.e. raw/12
 MIME = {
     ".html": "text/html", ".js": "application/javascript", ".css": "text/css",
     ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png",
-    ".jpg": "image/jpeg", ".ico": "image/x-icon",
+    ".jpg": "image/jpeg", ".ico": "image/x-icon", ".mp4": "video/mp4",
 }
 
 
