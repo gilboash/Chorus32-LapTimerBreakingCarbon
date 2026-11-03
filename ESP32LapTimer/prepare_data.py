@@ -39,10 +39,17 @@ def copy_files():
 	shutil.rmtree("{}/data".format(SCRIPT_DIR), ignore_errors=True)
 	shutil.copytree("{}/data_src".format(SCRIPT_DIR), "{}/data".format(SCRIPT_DIR))
 
+# The firmware reads these out of SPIFFS itself, so they have to stay readable.
+# handleFileRead() sniffs the gzip magic, so leaving them uncompressed serves
+# them correctly too.
+NO_GZIP = ("version.json",)
+
 def generate_gzip():
 	# gzip all files
 	for root, dirs, files in os.walk("{}/data".format(SCRIPT_DIR)):
 		for curr_file in files:
+			if curr_file in NO_GZIP:
+				continue
 			curr_file = "{}/{}".format(root, curr_file)
 			to_compress = None
 			with open(curr_file, "rb") as f:

@@ -28,6 +28,7 @@
 #include "Output.h"
 #include "CrashDetection.h"
 #include "Logging.h"
+#include "Version.h"
 
 #include <esp_wifi.h>
 #include <FS.h>
@@ -83,16 +84,84 @@ String getContentType(String filename) { // convert the file extension to the MI
   return "text/plain";
 }
 
+// prepare_data.py gzips most files in place, but not all of them, and a
+// filesystem image flashed over OTA may not have come from our build at all.
+// Sniff the gzip magic instead of assuming, so we never label a plain file as
+// compressed (which makes the browser discard it).
+static bool isGzipped(String path) {
+  File f = SPIFFS.open(path, "r");
+  if (!f) return false;
+  uint8_t magic[2] = {0, 0};
+  size_t read = f.read(magic, sizeof(magic));
+  f.close();
+  return read == sizeof(magic) && magic[0] == 0x1F && magic[1] == 0x8B;
+}
+
 bool handleFileRead(AsyncWebServerRequest* req, String path) { // send the right file to the client (if it exists)
   // If a folder is requested, send the index file
   String contentType = getContentType(path);            // Get the MIME type
   if (SPIFFS.exists(path)) {
     AsyncWebServerResponse *response = req->beginResponse(SPIFFS, path, contentType);
-    response->addHeader("Content-Encoding", "gzip");
+    if (isGzipped(path)) {
+      response->addHeader("Content-Encoding", "gzip");
+    }
     req->send(response);
     return true;
   }
   return false;                                         // If the file doesn't exist, return false
+}
+
+// Reads the version string out of the generated /version.json that ships in the
+// filesystem image. Deliberately a hand-rolled scan rather than a JSON parser:
+// the file is ours, it is three fields long, and this avoids a dependency.
+static String getFilesystemVersion() {
+  if (!SPIFFS.exists("/version.json")) return String("unknown");
+  File f = SPIFFS.open("/version.json", "r");
+  if (!f) return String("unknown");
+  String content = f.readString();
+  f.close();
+
+  int key = content.indexOf("\"version\"");
+  if (key < 0) return String("unknown");
+  int colon = content.indexOf(':', key);
+  if (colon < 0) return String("unknown");
+  int start = content.indexOf('"', colon);
+  if (start < 0) return String("unknown");
+  int end = content.indexOf('"', ++start);
+  if (end < 0) return String("unknown");
+  return content.substring(start, end);
+}
+
+// Firmware and filesystem are two separate OTA uploads, so report both and let
+// the UI shout if they drifted apart.
+void sendVersion(AsyncWebServerRequest* req) {
+  String fs_version = getFilesystemVersion();
+  String body = String("{\"firmware\":\"") + FIRMWARE_VERSION +
+                "\",\"filesystem\":\"" + fs_version +
+                "\",\"match\":" + (fs_version == FIRMWARE_VERSION ? "true" : "false") +
+                ",\"git\":\"" + GIT_HASH +
+                "\",\"built\":\"" + BUILD_DATE +
+                "\",\"api\":\"0004\"}";
+  req->send(200, "application/json", body);
+}
+
+// The connectivity-check URLs the major platforms hit after associating. Any of
+// them answered with a redirect makes the OS pop the captive portal page, which
+// is how we get the timer's UI to open by itself on connect.
+static bool isCaptivePortalProbe(AsyncWebServerRequest* req) {
+  String url = req->url();
+  return url == "/generate_204" ||              // Android
+         url == "/gen_204" ||                   // Android (older)
+         url == "/hotspot-detect.html" ||       // iOS / macOS
+         url == "/library/test/success.html" || // iOS / macOS (older)
+         url == "/success.txt" ||               // Firefox / iOS
+         url == "/canonical.html" ||            // Firefox
+         url == "/connectivity-check.html" ||   // Ubuntu
+         url == "/check_network_status.txt" ||  // Ubuntu
+         url == "/connecttest.txt" ||           // Windows
+         url == "/redirect" ||                  // Windows
+         url == "/ncsi.txt" ||                  // Windows
+         url == "/fwlink";                      // Windows
 }
 
 void updateRx (int band, int channel, int rx) {
@@ -188,8 +257,13 @@ void InitWebServer() {
 
   if (!SPIFFS.exists("/index.html")) {
     Serial.println("SPIFFS filesystem was not found");
+    // Serve the built-in page directly. Going through handleFileRead would look
+    // for /recovery.html *in SPIFFS*, which is exactly what we don't have here:
+    // it would find nothing, return false and never send a response, leaving the
+    // request to hang. This is the path a half-finished filesystem update lands
+    // on, so it has to work without a serial cable.
     webServer.on("/", HTTP_GET, [](AsyncWebServerRequest* req) {
-      handleFileRead(req, "/recovery.html");
+      req->send(200, "text/html", NOSPIFFS);
     });
   } else {
     webServer.on("/", HTTP_GET, [](AsyncWebServerRequest* req) {
@@ -202,16 +276,11 @@ void InitWebServer() {
 
   webServer.onNotFound([](AsyncWebServerRequest* req) {
 
-    if (
-      (req->url() == "/generate_204") ||
-      (req->url() == "/gen_204") ||
-      (req->url() == "/library/test/success.html") ||
-      (req->url() == "/hotspot-detect.html") ||
-      (req->url() == "/connectivity-check.html")  ||
-      (req->url() == "/check_network_status.txt")  ||
-      (req->url() == "/ncsi.txt")
-    ) {
-      req->redirect("/");
+    if (isCaptivePortalProbe(req)) {
+      // Every OS probes a URL it expects a specific answer from, and shows the
+      // "sign in to network" sheet when it gets a redirect instead. Send an
+      // absolute URL: some clients ignore a relative Location on a probe.
+      req->redirect(String("http://") + WiFi.softAPIP().toString() + "/");
     } else {
       // If the client requests any URI
       if (!handleFileRead(req, req->url()))                  // send it if it exists
@@ -228,6 +297,8 @@ void InitWebServer() {
         }
     });
 
+
+  webServer.on("/version", HTTP_GET, sendVersion);
 
   webServer.on("/start_race", startRace_button);
   webServer.on("/stop_race", stopRace_button);
