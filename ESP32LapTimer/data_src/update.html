@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+	<title>Chorus32 &middot; Update</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+	<meta name="theme-color" content="#0b0b0c" />
+	<link rel="icon" href="logo.jpg" />
+	<link rel="stylesheet" href="assets/css/bc.css" />
+	<link rel="stylesheet" href="assets/css/update.css" />
+</head>
+
+<body>
+	<header class="bc-header"></header>
+	<nav class="bc-nav"></nav>
+
+	<section class="bc-card">
+		<h2>Installed</h2>
+		<div class="bc-stats">
+			<div class="bc-stat">
+				<div class="bc-stat-label">Firmware</div>
+				<div class="bc-stat-value" id="ver_firmware">&mdash;</div>
+			</div>
+			<div class="bc-stat">
+				<div class="bc-stat-label">Web interface</div>
+				<div class="bc-stat-value" id="ver_filesystem">&mdash;</div>
+			</div>
+		</div>
+		<p class="bc-small bc-dim" id="ver_build" style="margin-bottom:0"></p>
+		<p class="bc-small" id="ver_warning" style="display:none;color:var(--warn)"></p>
+	</section>
+
+	<section class="bc-card">
+		<h2>Install an update</h2>
+		<p class="bc-small bc-dim">
+			A release has two files and they are uploaded separately:
+			<b>firmware.bin</b> is the program, <b>spiffs.bin</b> is this web interface.
+			Install both from the same release, firmware first. The timer restarts
+			after each one.
+		</p>
+
+		<div class="bc-field">
+			<label for="update_file">Update file</label>
+			<input type="file" id="update_file" accept=".bin" />
+		</div>
+
+		<div class="bc-upload-kind" id="file_kind"></div>
+
+		<div class="bc-progress" id="progress_wrap" style="display:none">
+			<div class="bc-progress-bar" id="progress_bar"></div>
+			<span class="bc-progress-text" id="progress_text">0%</span>
+		</div>
+
+		<button id="upload_button" class="bc-primary" disabled>Upload</button>
+
+		<p class="bc-small" id="upload_status" style="margin-bottom:0"></p>
+	</section>
+
+	<section class="bc-card">
+		<h2>If an update fails</h2>
+		<p class="bc-small bc-dim" style="margin-bottom:0">
+			If a web interface upload is interrupted the pages are gone, but the timer
+			still serves a built-in upload form. Reconnect to its WiFi and open
+			<b id="recovery_host">its address</b> to try again. Only a failed
+			<b>firmware</b> upload needs a cable, and the timer keeps running the old
+			firmware until a new one is written completely.
+		</p>
+	</section>
+
+	<footer class="bc-footer">
+		<span id="foot_version">&mdash;</span>
+		<span class="bc-dim">Do not power off during an upload</span>
+	</footer>
+
+	<script src="bc.js"></script>
+	<script src="update.js"></script>
+</body>
+
+</html>

@@ -13,17 +13,10 @@ import sys
 
 SCRIPT_DIR = os.getcwd()
 
-def generate_constants():
-	# generate constants.js file
-	with open("{}/src/Comms.cpp".format(SCRIPT_DIR)) as comms_file, open("{}/data_src/constants.js".format(SCRIPT_DIR), "w") as constants_file:
-		regex = re.compile("#define (RESPONSE_|CONTROL_|EXTENDED_|BINARY_)")
-		for line in comms_file:
-			if re.match(regex, line):
-				values = line.split(" ")
-				values = list(filter(" ".__ne__, values))
-				values = list(filter("".__ne__, values))
-				values[2] = values[2].rstrip()
-				constants_file.write("export const {} = {};\n".format(values[1], values[2]))
+# constants.js used to be generated here from the #defines in Comms.cpp, for
+# settings_socket.js to import as an ES module. Both are gone: the current
+# pages are plain scripts that use the protocol letters directly, so the
+# generated file was being shipped to SPIFFS with nothing importing it.
 
 def generate_terser(terser_binary: str):
 	# use terser if present
@@ -65,7 +58,6 @@ if __name__ == "__main__" or __name__ == "SCons.Script":
 	parser.add_argument("--terser", dest="terser", help="Terser cmd [Default: %(default)s]", type=str, default= "{}/node_modules/terser/bin/terser".format(str(home)))
 	args, unknown = parser.parse_known_args()
 
-	generate_constants()
 	copy_files()
 	generate_terser(args.terser)
 	generate_gzip()
