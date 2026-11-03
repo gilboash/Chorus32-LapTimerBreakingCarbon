@@ -23,6 +23,14 @@
 
 .bc-race-bar.racing .bc-race-status { color: var(--ok); }
 
+.bc-alert {
+	border-color: var(--err);
+	border-left: 4px solid var(--err);
+}
+
+.bc-alert strong { color: var(--err); font-size: 14px; }
+.bc-alert p { margin: 6px 0 0; color: var(--text-dim); }
+
 /* ---- roster ---- */
 
 .bc-roster summary {
@@ -71,6 +79,9 @@
 }
 
 .bc-rx-row.off { opacity: 0.5; }
+
+/* Enabled but past the receiver count, so nothing will be timed for them. */
+.bc-rx-row.untimed { border-left: 3px solid var(--err); padding-left: 8px; }
 
 .bc-rx-row .bc-rx-check { grid-row: span 2; }
 
@@ -245,6 +256,115 @@
 }
 
 .bc-pilot .bc-last.personal-best { color: var(--ok); }
+
+/* ---- lap table ---- */
+
+.bc-laps-head {
+	display: flex;
+	align-items: center;
+	gap: var(--gap);
+}
+
+.bc-laps-head h2 { flex: 1; margin-bottom: 0; }
+
+.bc-small-btn {
+	min-height: 32px;
+	padding: 0 12px;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.bc-round {
+	margin-top: 16px;
+	padding-top: 10px;
+	border-top: 1px solid var(--line);
+}
+
+.bc-round:first-child { border-top: none; }
+
+.bc-round-title {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	font-size: 12px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-dim);
+}
+
+.bc-round-title .bc-round-live {
+	color: var(--ok);
+	letter-spacing: 0;
+	text-transform: none;
+	font-size: 11px;
+}
+
+
+/* A lap per column and a pilot per row. Too wide for a phone by nature, so it
+ * scrolls sideways with the pilot column pinned -- otherwise you lose track of
+ * whose row you are reading. */
+.bc-laptable-wrap {
+	margin-top: var(--gap);
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+table.bc-laptable {
+	border-collapse: collapse;
+	font-size: 13px;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	min-width: 100%;
+}
+
+table.bc-laptable th,
+table.bc-laptable td {
+	padding: 6px 10px;
+	text-align: right;
+	border-top: 1px solid var(--line);
+}
+
+table.bc-laptable thead th {
+	border-top: none;
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-dim);
+}
+
+table.bc-laptable .bc-col-pilot {
+	position: sticky;
+	left: 0;
+	text-align: left;
+	background: var(--surface);
+	font-weight: 700;
+	max-width: 110px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	border-left: 3px solid var(--rx-colour, transparent);
+}
+
+table.bc-laptable thead .bc-col-pilot { background: var(--surface); }
+
+/* Separates the per-lap columns from the summary ones. */
+table.bc-laptable .bc-col-sep { border-left: 1px solid var(--line); }
+
+table.bc-laptable .bc-cell-empty { color: var(--text-dim); }
+
+/* The hole shot is recorded but not scored, so it must not read as a lap. */
+table.bc-laptable .bc-cell-holeshot { color: var(--text-dim); font-style: italic; }
+
+table.bc-laptable .bc-cell-best { color: var(--ok); font-weight: 700; }
+
+/* Fastest lap of the whole race. */
+table.bc-laptable .bc-cell-fastest {
+	color: var(--ok);
+	font-weight: 800;
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
 
 .bc-check {
 	display: flex;

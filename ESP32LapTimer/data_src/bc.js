@@ -156,8 +156,9 @@ var BC = (function () {
 		var header = document.querySelector(".bc-header");
 		if (header != null) {
 			header.innerHTML =
-				'<img src="logo.jpg" alt="Breaking Carbon">' +
-				'<span class="bc-title">Chorus32' +
+				'<img class="bc-mark" src="flag.svg" alt="Chorus32">' +
+				'<img class="bc-wordmark" src="logo.jpg" alt="Breaking Carbon">' +
+				'<span class="bc-title">Chorus32 Lap Timer' +
 				'<span class="bc-sub" id="bc_subtitle">Breaking Carbon</span></span>' +
 				'<span class="bc-pill" id="bc_link"><span class="bc-dot"></span>' +
 				'<span id="bc_link_text">connecting</span></span>' +

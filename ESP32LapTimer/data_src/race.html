@@ -24,6 +24,11 @@
 		<button id="race_button" class="bc-primary">Start</button>
 	</section>
 
+	<div class="bc-card bc-alert" id="capacity_alert" style="display:none">
+		<strong>More pilots than receivers</strong>
+		<p class="bc-small" id="capacity_text"></p>
+	</div>
+
 	<details class="bc-card bc-roster" id="roster_card" open>
 		<summary>
 			<span>Pilots in this race</span>
@@ -46,6 +51,16 @@
 	</section>
 
 	<section class="bc-card">
+		<div class="bc-laps-head">
+			<h2>Lap times</h2>
+			<button id="clear_history" class="bc-small-btn">Clear history</button>
+		</div>
+		<div class="bc-stats" id="lap_stats"></div>
+		<div id="lap_rounds"></div>
+		<div class="bc-empty" id="lap_table_empty">No laps yet.</div>
+	</section>
+
+	<section class="bc-card">
 		<h2>Race options</h2>
 		<div class="bc-row">
 			<div class="bc-field" style="margin:0">
@@ -53,9 +68,17 @@
 				<input id="target_laps" type="number" min="1" max="99" value="5" />
 			</div>
 			<div class="bc-field" style="margin:0">
-				<label for="voice_select">Voice</label>
-				<select id="voice_select"></select>
+				<label for="lang_select">Callout language</label>
+				<select id="lang_select">
+					<option value="en">English</option>
+					<option value="ar">&#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577; (Arabic)</option>
+				</select>
 			</div>
+		</div>
+		<div class="bc-field" style="margin-top:12px">
+			<label for="voice_select">Voice</label>
+			<select id="voice_select"></select>
+			<p class="bc-small bc-dim" id="voice_hint" style="margin:6px 0 0"></p>
 		</div>
 		<div class="bc-row" style="margin-top:12px">
 			<label class="bc-check"><input type="checkbox" id="opt_voice" checked /> Callouts</label>

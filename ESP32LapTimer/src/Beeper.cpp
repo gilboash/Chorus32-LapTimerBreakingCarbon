@@ -33,7 +33,9 @@ static pattern_t* current_pattern = NULL;
 static uint32_t start_time = 0;
 static uint8_t repeat_count = 0;
 
-static bool sound_enabled = true;
+// Off until something asks for it. A timer that starts beeping the moment it
+// powers up is a nuisance on the bench and at a start line.
+static bool sound_enabled = false;
 
 void beeper_set_enabled(bool enabled) {
   sound_enabled = enabled;

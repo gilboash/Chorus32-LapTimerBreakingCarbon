@@ -84,8 +84,8 @@ body {
 .bc-header {
 	display: flex;
 	align-items: center;
-	gap: var(--gap);
-	padding: 12px 0;
+	gap: 8px;
+	padding: 10px 0;
 	border-bottom: 1px solid var(--line);
 	position: sticky;
 	top: 0;
@@ -93,12 +93,19 @@ body {
 	z-index: 10;
 }
 
+/* Two marks: the Chorus32 flag and the Breaking Carbon wordmark. Both are
+ * drawn light-on-dark, so both get inverted in daylight mode -- otherwise the
+ * flag is near-white on white and the wordmark is a black box. */
 .bc-header img {
-	height: 34px;
 	width: auto;
-	/* The logo is white line art on a black background. On the light theme,
-	 * invert it so it reads as black on white rather than a black box. */
-	border-radius: 4px;
+	flex: 0 0 auto;
+}
+
+.bc-header .bc-mark { height: 26px; }
+
+.bc-header .bc-wordmark {
+	height: 28px;
+	border-radius: 3px;
 }
 
 :root[data-theme="light"] .bc-header img {
@@ -107,8 +114,9 @@ body {
 
 .bc-header .bc-title {
 	font-weight: 700;
-	font-size: 15px;
-	letter-spacing: 0.02em;
+	font-size: 13px;
+	line-height: 1.15;
+	letter-spacing: 0.01em;
 	flex: 1;
 	min-width: 0;
 }

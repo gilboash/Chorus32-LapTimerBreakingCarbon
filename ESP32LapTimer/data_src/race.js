@@ -225,10 +225,16 @@ function render_roster() {
 		var row = document.getElementById("roster_row_" + node);
 		if (row == null) continue;
 
-		row.style.display = node < num_receivers ? "" : "none";
-		if (node >= num_receivers) continue;
+		// Show a row for every receiver the timer has, and for any pilot that
+		// is enabled beyond that count. Hiding the latter was how a pilot could
+		// be enabled, untimed and completely invisible on the page you would
+		// go to in order to fix it.
+		var relevant = node < num_receivers || pilot.active;
+		row.style.display = relevant ? "" : "none";
+		if (!relevant) continue;
 
-		row.className = "bc-rx-row" + (pilot.active ? "" : " off");
+		row.className = "bc-rx-row" + (pilot.active ? "" : " off") +
+			(pilot.active && node >= num_receivers ? " untimed" : "");
 		if (pilot.active) included++;
 
 		document.getElementById("roster_chan_" + node).innerText = channel_label(pilot);
@@ -238,7 +244,11 @@ function render_roster() {
 		// minimum lap time. Worth shouting about, because the symptom looks
 		// like a receiver picking up someone else's quad.
 		var warn = document.getElementById("roster_warn_" + node);
-		if (pilot.active && pilot.threshold === 0) {
+		if (pilot.active && node >= num_receivers) {
+			warn.style.display = "";
+			warn.innerText = "No receiver for this pilot, so no laps will be " +
+				"recorded. The timer has " + num_receivers + " receivers.";
+		} else if (pilot.active && pilot.threshold === 0) {
 			warn.style.display = "";
 			warn.innerText = "Threshold is 0, so this pilot will score laps " +
 				"continuously. Set it above the noise floor.";
@@ -261,6 +271,21 @@ function render_roster() {
 
 	document.getElementById("roster_count").innerText =
 		included + (included == 1 ? " pilot" : " pilots");
+
+	// Each receiver is pinned to one pilot, so anyone enabled past the module
+	// count never gets a receiver and is simply not timed. Nothing else on the
+	// timer says so, and it looks identical to a pilot who never crossed.
+	var capacity = document.getElementById("capacity_alert");
+	if (included > num_receivers) {
+		capacity.style.display = "";
+		document.getElementById("capacity_text").innerText =
+			included + " pilots are enabled but the timer has " + num_receivers +
+			" receiver" + (num_receivers == 1 ? "" : "s") + ". Only " +
+			num_receivers + " will be timed; the rest record no laps at all. " +
+			"Either untick the extras or raise the receiver count in Settings.";
+	} else {
+		capacity.style.display = "none";
+	}
 }
 
 /* ---------------- rendering ---------------- */
@@ -332,6 +357,188 @@ function render() {
 	});
 }
 
+/* ---------------- lap tables ---------------- */
+
+// Finished rounds are kept so a night's racing stays on screen, newest first,
+// and survive a reload because a phone at a track will lock, sleep and
+// reconnect. Capped so the list can't grow without bound.
+var MAX_HISTORY_ROUNDS = 8;
+// Named race_history, not history: a top-level `var history` in a classic
+// script cannot shadow window.history, so the assignment silently does nothing
+// and every use below would hit the browser's History API instead.
+var race_history = load_history();
+
+function load_history() {
+	try {
+		var raw = localStorage.getItem("bc_history");
+		var parsed = raw ? JSON.parse(raw) : [];
+		return Array.isArray(parsed) ? parsed : [];
+	} catch (e) {
+		return [];
+	}
+}
+
+function save_history() {
+	try {
+		localStorage.setItem("bc_history", JSON.stringify(race_history));
+	} catch (e) {
+		// Out of quota or private mode. The on-screen history still works for
+		// this session, so there is nothing useful to tell the user here.
+	}
+}
+
+// Snapshot whatever is on screen before a new race wipes it.
+function archive_current_race() {
+	var rows = pilots.filter(function (p) {
+		return p.active && p.laps.length > 0;
+	}).map(function (p) {
+		return { node: p.node, name: p.name, laps: p.laps.slice() };
+	});
+	if (rows.length == 0) return;
+
+	race_history.unshift({
+		race_num: race_num,
+		target_laps: target_laps,
+		count_first: count_first,
+		rows: rows,
+	});
+	race_history = race_history.slice(0, MAX_HISTORY_ROUNDS);
+	save_history();
+}
+
+function counted_from(laps, counts_first) {
+	var list = counts_first ? laps : laps.slice(1);
+	return list.filter(function (lap) { return lap !== undefined; });
+}
+
+// One round as a table: a pilot per row, a lap per column, then the summary.
+function round_html(round, is_live) {
+	var max_laps = 0;
+	round.rows.forEach(function (row) {
+		max_laps = Math.max(max_laps, row.laps.length);
+	});
+	if (max_laps == 0) return "";
+
+	// Fastest counted lap anywhere in this round, so it can be called out.
+	var fastest = Infinity;
+	round.rows.forEach(function (row) {
+		counted_from(row.laps, round.count_first).forEach(function (lap) {
+			if (lap < fastest) fastest = lap;
+		});
+	});
+
+	var header = '<th class="bc-col-pilot">Pilot</th>';
+	for (var i = 0; i < max_laps; ++i) {
+		// Index 0 is the hole shot unless the timer counts it as a lap.
+		var label = (!round.count_first && i == 0) ? "HS" : (round.count_first ? i + 1 : i);
+		header += "<th>" + label + "</th>";
+	}
+	header += '<th class="bc-col-sep">Best</th><th>2&nbsp;cons</th><th>Total</th>';
+
+	var body = round.rows.map(function (row) {
+		var counted = counted_from(row.laps, round.count_first);
+		var best = counted.length ? Math.min.apply(null, counted) : null;
+
+		var consec = null;
+		for (var i = 0; i + 1 < counted.length; ++i) {
+			var pair = counted[i] + counted[i + 1];
+			if (consec == null || pair < consec) consec = pair;
+		}
+
+		var total = counted.reduce(function (sum, lap) { return sum + lap; }, 0);
+
+		var cells = '<td class="bc-col-pilot" style="--rx-colour:var(--rx' +
+			(row.node + 1) + ')">' + escape_html(row.name) + "</td>";
+
+		for (i = 0; i < max_laps; ++i) {
+			var lap = row.laps[i];
+			if (lap === undefined) {
+				cells += '<td class="bc-cell-empty">&mdash;</td>';
+				continue;
+			}
+			var is_holeshot = !round.count_first && i == 0;
+			var cls = is_holeshot ? "bc-cell-holeshot"
+				: (lap === fastest ? "bc-cell-fastest"
+				: (lap === best ? "bc-cell-best" : ""));
+			cells += '<td class="' + cls + '">' + (lap / 1000).toFixed(2) + "</td>";
+		}
+
+		cells += '<td class="bc-col-sep">' + format_time(best) + "</td>" +
+			"<td>" + format_time(consec) + "</td>" +
+			"<td>" + (total ? (total / 1000).toFixed(2) : "—") + "</td>";
+
+		return "<tr>" + cells + "</tr>";
+	}).join("");
+
+	return '<div class="bc-round">' +
+		'<div class="bc-round-title"><span>Round ' + round.race_num + "</span>" +
+		(is_live ? '<span class="bc-round-live">live</span>' : "") +
+		"</div>" +
+		'<div class="bc-laptable-wrap"><table class="bc-laptable">' +
+		"<thead><tr>" + header + "</tr></thead><tbody>" + body + "</tbody>" +
+		"</table></div></div>";
+}
+
+function escape_html(text) {
+	return String(text).replace(/[&<>"']/g, function (ch) {
+		return { "&": "&amp;", "<": "&lt;", ">": "&gt;",
+			'"': "&quot;", "'": "&#39;" }[ch];
+	});
+}
+
+function current_round() {
+	return {
+		race_num: race_num,
+		target_laps: target_laps,
+		count_first: count_first,
+		rows: pilots.filter(function (p) {
+			return p.active && p.laps.length > 0;
+		}).map(function (p) {
+			return { node: p.node, name: p.name, laps: p.laps.slice() };
+		}),
+	};
+}
+
+function render_lap_tables() {
+	var live = current_round();
+	var html = "";
+	if (live.rows.length > 0) html += round_html(live, true);
+	race_history.forEach(function (round) { html += round_html(round, false); });
+
+	document.getElementById("lap_rounds").innerHTML = html;
+	document.getElementById("lap_table_empty").style.display = html ? "none" : "";
+
+	render_lap_stats(live);
+}
+
+function render_lap_stats(live) {
+	var all = [];
+	live.rows.forEach(function (row) {
+		all = all.concat(counted_from(row.laps, live.count_first));
+	});
+
+	var fastest = all.length ? Math.min.apply(null, all) : null;
+	var average = all.length
+		? all.reduce(function (a, b) { return a + b; }, 0) / all.length : null;
+
+	document.getElementById("lap_stats").innerHTML =
+		stat("Laps this round", all.length ? String(all.length) : "—") +
+		stat("Fastest", format_time(fastest)) +
+		stat("Average", format_time(average)) +
+		stat("Rounds kept", String(race_history.length + (live.rows.length ? 1 : 0)));
+}
+
+function stat(label, value) {
+	return '<div class="bc-stat"><div class="bc-stat-label">' + label +
+		'</div><div class="bc-stat-value">' + value + "</div></div>";
+}
+
+document.getElementById("clear_history").onclick = function () {
+	race_history = [];
+	save_history();
+	render_lap_tables();
+};
+
 /* ---------------- lap handling ---------------- */
 
 function on_lap(node, lap_index, lap_ms) {
@@ -350,6 +557,7 @@ function on_lap(node, lap_index, lap_ms) {
 	var is_counted = count_first || lap_index > 0;
 	if (!is_counted) {
 		render();
+		render_lap_tables();
 		return;
 	}
 
@@ -386,6 +594,7 @@ function on_lap(node, lap_index, lap_ms) {
 	}
 
 	render();
+	render_lap_tables();
 }
 
 BC.on_message(function (msg) {
@@ -472,6 +681,8 @@ function set_racing(value) {
 }
 
 function reset_race() {
+	// Keep the round that just ran; only the live table is cleared.
+	archive_current_race();
 	pilots.forEach(function (pilot) {
 		pilot.laps = [];
 		pilot.finished_at = null;
@@ -481,6 +692,7 @@ function reset_race() {
 	announced_last_lap = false;
 	container.dataset.signature = ""; // force a rebuild
 	render();
+	render_lap_tables();
 }
 
 document.getElementById("race_button").onclick = function () {
@@ -489,7 +701,7 @@ document.getElementById("race_button").onclick = function () {
 	} else {
 		reset_race();
 		BC.send("R*R1\n");
-		Announcer.say("Go");
+		Announcer.go();
 	}
 };
 
@@ -536,10 +748,46 @@ function set_roster_open(open) {
 /* ---------------- options ---------------- */
 
 var voice_select = document.getElementById("voice_select");
-Announcer.populate_voices(voice_select);
+var lang_select = document.getElementById("lang_select");
+var voice_hint = document.getElementById("voice_hint");
+
+try {
+	var stored_lang = localStorage.getItem("bc_lang");
+	if (stored_lang) lang_select.value = stored_lang;
+} catch (e) { /* ignore */ }
+Announcer.set_language(lang_select.value);
+
+// The browser can only speak with voices the device already has, so say so
+// plainly when the chosen language has none rather than failing silently.
+function on_voices_ready(found_match) {
+	if (found_match) {
+		voice_hint.innerText = "";
+		return;
+	}
+	voice_hint.innerText = lang_select.value == "ar"
+		? "No Arabic voice is installed on this device, so callouts will use " +
+		  "whatever voice is selected. Add one under Settings › Accessibility " +
+		  "› Spoken Content › Voices on iOS, or in the Google " +
+		  "text-to-speech settings on Android."
+		: "No voice for this language is installed on this device.";
+}
+
+Announcer.populate_voices(voice_select, on_voices_ready);
+
 voice_select.addEventListener("change", function () {
 	Announcer.set_voice(this.value);
 	try { localStorage.setItem("bc_voice", this.value); } catch (e) { /* ignore */ }
+});
+
+lang_select.addEventListener("change", function () {
+	Announcer.set_language(this.value);
+	try {
+		localStorage.setItem("bc_lang", this.value);
+		// The stored voice belongs to the previous language, so let the picker
+		// choose a fitting one again.
+		localStorage.removeItem("bc_voice");
+	} catch (e) { /* ignore */ }
+	Announcer.populate_voices(voice_select, on_voices_ready);
 });
 
 var opt_voice = document.getElementById("opt_voice");
@@ -583,6 +831,7 @@ refresh_awake();
 build_roster();
 render_roster();
 render();
+render_lap_tables();
 
 BC.fetch_version(function (version) {
 	if (version != null) {

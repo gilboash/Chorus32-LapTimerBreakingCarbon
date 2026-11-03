@@ -23,7 +23,7 @@ import time
 WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 NUM_PILOTS = 8
-ACTIVE = [True, True, True, True, False, False, False, False]
+ACTIVE = [True, True, True, True, True, True, False, False]
 BANDS = [0, 0, 0, 0, 0, 0, 0, 0]
 CHANNELS = [0, 1, 2, 3, 4, 5, 6, 7]
 THRESHOLDS = [180] * NUM_PILOTS  # as sent, i.e. raw/12

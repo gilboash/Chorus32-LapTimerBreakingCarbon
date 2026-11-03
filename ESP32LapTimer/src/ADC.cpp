@@ -185,6 +185,17 @@ void ConfigureADC(bool disable_all_modules) {
   memset(pilots, 0, MAX_NUM_PILOTS * sizeof(pilot_data_t));
   for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
     pilots[i].number = i;
+    // Pin every pilot to one receiver by default rather than time-sharing.
+    // Multiplexing retunes a module between pilots every few milliseconds, and
+    // samples taken while the RX5808 is still settling get credited to
+    // whichever pilot the module now belongs to -- which reads as one pilot
+    // scoring another's laps. Correct timing for as many pilots as there are
+    // modules beats approximate timing for more of them.
+    //
+    // setNextPilot() only refuses to switch a receiver that already has a
+    // pilot, so each module still claims one on its first pass and then keeps
+    // it. Pilots past the module count stay unassigned.
+    pilots[i].disable_multiplexing = true;
   }
   memset(receivers, 0, MAX_NUM_RECEIVERS * sizeof(receiver_data_t));
   pilot_queue.curr_size = 0;

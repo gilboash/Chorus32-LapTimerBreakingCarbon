@@ -12,8 +12,66 @@ var Announcer = (function () {
 
 	var enabled = true;
 	var voice_name = null;
+	var language = "en";
 	var queue = [];
 	var speaking = false;
+
+	// Callouts are phrased per language rather than translated word by word,
+	// because an Arabic voice reading English word order sounds wrong. The
+	// voice itself has to be installed on the device -- the Web Speech API has
+	// no way to ship or fetch one -- so picking Arabic here only helps if the
+	// phone has an Arabic voice (iOS: Settings > Accessibility > Spoken
+	// Content > Voices; Android: Google TTS language packs).
+	var PHRASES = {
+		en: {
+			tag: "en",
+			go: "Go",
+			lap: function (pilot, lap, seconds) {
+				return pilot + ", lap " + lap + ", " + seconds.toFixed(2) + " seconds";
+			},
+			lead: function (pilot) { return pilot + " takes the lead"; },
+			last: function (pilot) { return pilot + ", last lap"; },
+			finish: function (pilot, position) {
+				var words = ["", "first", "second", "third", "fourth",
+					"fifth", "sixth", "seventh", "eighth"];
+				return pilot + " finishes " + (words[position] || position);
+			},
+		},
+		ar: {
+			tag: "ar-SA",
+			go: "انطلق",
+			lap: function (pilot, lap, seconds) {
+				// "<pilot>, lap <n>, <t> seconds"
+				return pilot + "، لفة " + lap + "، " +
+					seconds.toFixed(2) + " ثانية";
+			},
+			// "<pilot> takes the lead"
+			lead: function (pilot) { return pilot + " يتصدر"; },
+			// "<pilot>, the last lap"
+			last: function (pilot) {
+				return pilot + "، اللفة الأخيرة";
+			},
+			// "<pilot> finished in <n>th place"
+			finish: function (pilot, position) {
+				var words = ["", "الأول", "الثاني",
+					"الثالث", "الرابع",
+					"الخامس", "السادس",
+					"السابع", "الثامن"];
+				return pilot + " أنهى في المركز " +
+					(words[position] || position);
+			},
+		},
+	};
+
+	function phrases() {
+		return PHRASES[language] || PHRASES.en;
+	}
+
+	function set_language(lang) {
+		language = PHRASES[lang] ? lang : "en";
+	}
+
+	function get_language() { return language; }
 
 	// A lap callout is worth about this long; after that the race has moved on.
 	var LAP_TTL_MS = 6000;
@@ -51,7 +109,7 @@ var Announcer = (function () {
 		if (item == null) return;
 
 		var utterance = new SpeechSynthesisUtterance(item.text);
-		utterance.lang = "en";
+		utterance.lang = phrases().tag;
 		var voice = pick_voice();
 		if (voice != null) utterance.voice = voice;
 		utterance.onend = function () { speaking = false; pump(); };
@@ -74,21 +132,23 @@ var Announcer = (function () {
 	// Lap callouts expire; the race has usually moved on by the time a backlog
 	// would reach them.
 	function lap(pilot, lap_number, seconds) {
-		say(pilot + ", lap " + lap_number + ", " + seconds.toFixed(2) + " seconds", LAP_TTL_MS);
+		say(phrases().lap(pilot, lap_number, seconds), LAP_TTL_MS);
 	}
 
 	function lead_change(pilot) {
-		say(pilot + " takes the lead");
+		say(phrases().lead(pilot));
 	}
 
 	function last_lap(pilot) {
-		say(pilot + ", last lap");
+		say(phrases().last(pilot));
 	}
 
 	function finish(pilot, position) {
-		var words = ["", "first", "second", "third", "fourth",
-			"fifth", "sixth", "seventh", "eighth"];
-		say(pilot + " finishes " + (words[position] || position));
+		say(phrases().finish(pilot, position));
+	}
+
+	function go() {
+		say(phrases().go);
 	}
 
 	// Voices load asynchronously and the list is empty on first call in most
@@ -98,26 +158,37 @@ var Announcer = (function () {
 			var voices = speechSynthesis.getVoices();
 			if (voices.length == 0) return false;
 
+			// Show the language tag next to every name. Device voice names
+			// give no clue what language they speak ("Maged", "Samantha"), so
+			// without this an Arabic voice is unfindable in a list of forty.
 			select.innerHTML = "";
+			var want = (phrases().tag || "en").slice(0, 2).toLowerCase();
 			var preferred = null;
-			voices.forEach(function (voice) {
+
+			voices.slice().sort(function (a, b) {
+				return (a.lang || "").localeCompare(b.lang || "") ||
+					a.name.localeCompare(b.name);
+			}).forEach(function (voice) {
 				var option = document.createElement("option");
 				option.value = voice.name;
-				option.textContent = voice.name;
+				option.textContent = voice.name +
+					(voice.lang ? " (" + voice.lang + ")" : "");
 				select.appendChild(option);
-				// Prefer an english voice, by lang tag rather than by sniffing
-				// the display name for a lowercase "english" that never matches.
+				// Prefer a voice for the chosen callout language, by lang tag
+				// rather than by sniffing the display name.
 				if (preferred == null && voice.lang &&
-					voice.lang.toLowerCase().indexOf("en") == 0) {
+					voice.lang.toLowerCase().indexOf(want) == 0) {
 					preferred = voice.name;
 				}
 			});
 
 			var stored = null;
 			try { stored = localStorage.getItem("bc_voice"); } catch (e) { /* ignore */ }
-			select.value = stored || preferred || voices[0].name;
+			// Only honour a stored voice if it still exists on this device.
+			var has_stored = stored && voices.some(function (v) { return v.name === stored; });
+			select.value = has_stored ? stored : (preferred || voices[0].name);
 			set_voice(select.value);
-			if (on_ready) on_ready();
+			if (on_ready) on_ready(preferred != null);
 			return true;
 		}
 
@@ -129,7 +200,10 @@ var Announcer = (function () {
 	return {
 		set_enabled: set_enabled,
 		set_voice: set_voice,
+		set_language: set_language,
+		get_language: get_language,
 		say: say,
+		go: go,
 		lap: lap,
 		lead_change: lead_change,
 		last_lap: last_lap,
