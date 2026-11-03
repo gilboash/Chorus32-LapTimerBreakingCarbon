@@ -299,7 +299,7 @@ function on_websocket_event(event) {
 }
 
 create_pilots();
-startWebsocket("ws://192.168.4.1/ws");
+startWebsocket("ws://" + location.host + "/ws");
 
 document.getElementById("ADCVBATmode").oninput = function() {
 	set_value_pending(this);

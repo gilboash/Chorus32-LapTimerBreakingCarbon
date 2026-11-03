@@ -55,6 +55,15 @@
 				</tr>
 				<tr>
 					<td>
+						Keep screen awake
+					</td>
+					<td colspan="2">
+						<input id="keep_awake" type="checkbox" checked></input>
+						<span id="keep_awake_state"></span>
+					</td>
+				</tr>
+				<tr>
+					<td>
 						Race Mode:<br> <span id="race_mode">Finished</span>
 					</td>
 					<td>
@@ -130,6 +139,8 @@ function openRound(evt, num) {
 </script>
 
 <script src="chartist.min.js"></script>
+
+<script src="nosleep.js"></script>
 
 <script src="laptimes_socket.js"></script>
 

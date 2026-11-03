@@ -16,7 +16,9 @@ var chart_current_end = 0;
 
 var rssi_interval = 0;
 
-var last_lap = 9999;
+// previous lap time per pilot, used for the two-consecutive-laps result.
+// undefined means the pilot has no countable previous lap yet.
+var last_lap = [];
 
 const cells_before_lap = 2;
 
@@ -265,9 +267,11 @@ function add_lap(race_num, pilot_num, lap_num, lap_time) {
 			}
 		}
 
-		var consec_lap_now = last_lap+lap_time;
-		consec_lap_best = Math.min(consec_lap_now, consec_lap_best);
-		last_lap = lap_time;
+		if(last_lap[pilot_num] != undefined) {
+			var consec_lap_now = last_lap[pilot_num]+lap_time;
+			consec_lap_best = Math.min(consec_lap_now, consec_lap_best);
+		}
+		last_lap[pilot_num] = lap_time;
 
 	}
 	set_lap(race_num, pilot_num, (lap_num % number_of_lap_cells), lap_time);
@@ -330,7 +334,7 @@ function on_websocket_event(event) {
 	}
 }
 
-startWebsocket("ws://192.168.4.1/ws");
+startWebsocket("ws://" + location.host + "/ws");
 document.getElementById("start_race_button").onclick = function () {
 	current_race += 1;
 	max_laps = parseInt(document.getElementById("max_laps").value);
@@ -360,6 +364,40 @@ document.getElementById("rssi_interval").addEventListener('input', function () {
 	localStorage.setItem("rssi_interval", rssi_interval);
 	update_rssi_interval();
 });
+
+var keep_awake_box = document.getElementById("keep_awake");
+var keep_awake_state = document.getElementById("keep_awake_state");
+
+// Default to on: this page is meant to be left open through a race.
+if(localStorage.getItem("keep_awake") == "0") {
+	keep_awake_box.checked = false;
+}
+
+function update_keep_awake() {
+	localStorage.setItem("keep_awake", keep_awake_box.checked ? "1" : "0");
+	if(keep_awake_box.checked) {
+		NoSleep.enable();
+		keep_awake_state.innerText = NoSleep.is_enabled() ? "on" : "tap anywhere to arm";
+	} else {
+		NoSleep.disable();
+		keep_awake_state.innerText = "off";
+	}
+}
+
+keep_awake_box.addEventListener("change", update_keep_awake);
+
+// Playback needs a user gesture, so arm it on the first tap on the page and
+// keep listening until it actually took.
+function arm_keep_awake() {
+	if(keep_awake_box.checked && !NoSleep.is_enabled()) {
+		NoSleep.enable();
+		keep_awake_state.innerText = NoSleep.is_enabled() ? "on" : "tap anywhere to arm";
+	}
+}
+document.addEventListener("click", arm_keep_awake);
+document.addEventListener("touchend", arm_keep_awake);
+
+update_keep_awake();
 
 function load_voices() {
 	const voiceSelect = document.getElementById('voices');
@@ -421,24 +459,33 @@ function get_chart_data(starttime, endtime) {
 }
 
 
-var chart_options = {
-	low: 800,
-	high: 3000,
-	showPoint: false,
-	lineSmooth: false,
-	axisX: {
-		type: Chartist.AutoScaleAxis,
-		onlyInteger: true,
-		labelInterpolationFnc: function(value, index) {
-			return index % 13 === 0 ? value/1000 : null;
+var count = 0;
+var myChart = null;
+
+// The chart is optional: if chartist.min.js is missing from the filesystem we
+// still want the lap table and the websocket to work, so don't touch Chartist
+// outside this guard.
+if(typeof Chartist !== "undefined") {
+	var chart_options = {
+		low: 800,
+		high: 3000,
+		showPoint: false,
+		lineSmooth: false,
+		axisX: {
+			type: Chartist.AutoScaleAxis,
+			onlyInteger: true,
+			labelInterpolationFnc: function(value, index) {
+				return index % 13 === 0 ? value/1000 : null;
+			}
 		}
 	}
+	myChart = new Chartist.Line('.ct-chart', {}, chart_options);
+} else {
+	console.log("Chartist is not available, the RSSI graph is disabled");
 }
 
-var count = 0;
-var myChart = new Chartist.Line('.ct-chart', {}, chart_options);
-
 function update_graph() {
+	if(myChart == null) return;
 	if(chart_autoscroll) {
 		start = Math.max(0, max_time - chart_length);
 		end = undefined;
