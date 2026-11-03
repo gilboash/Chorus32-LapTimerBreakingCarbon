@@ -4,6 +4,12 @@ BC.start("race.html");
 
 var NUM_PILOTS = 8;
 var MAX_RSSI_SCALE = 341; // the timer reports RSSI already divided by 12
+
+// Receiver 1 is Ron. Everyone else is numbered until someone types over them.
+// Declared up here because the pilots array below is built immediately: var
+// hoists the declaration but not the assignment, so defining this lower down
+// leaves it undefined at the point load_name() first needs it.
+var DEFAULT_NAMES = ["Ron"];
 var num_receivers = NUM_PILOTS;
 var race_num = 0;
 var racing = false;
@@ -48,11 +54,15 @@ function channel_label(pilot) {
 	return BAND_LABELS[pilot.band] + (pilot.channel + 1) + (freq ? " · " + freq : "");
 }
 
+function default_name(node) {
+	return DEFAULT_NAMES[node] || "Pilot " + (node + 1);
+}
+
 function load_name(node) {
 	try {
-		return localStorage.getItem("pilot_name_" + node) || "Pilot " + (node + 1);
+		return localStorage.getItem("pilot_name_" + node) || default_name(node);
 	} catch (e) {
-		return "Pilot " + (node + 1);
+		return default_name(node);
 	}
 }
 
