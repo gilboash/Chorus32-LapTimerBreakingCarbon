@@ -101,8 +101,15 @@ function wire_receiver(node) {
 
 	var threshold = id("rx_threshold_" + node);
 	threshold.addEventListener("change", function () {
+		// See race.js: threshold 0 makes the pilot trigger on every sample, so
+		// an empty or invalid field must not be sent as 0.
+		var value = parseInt(this.value, 10);
+		if (isNaN(value) || value < 1) {
+			this.value = thresholds[node] != null ? thresholds[node] : "";
+			return;
+		}
 		pending(this);
-		BC.set_value(node, "T", parseInt(this.value, 10) || 0, 16);
+		BC.set_value(node, "T", value, 16);
 	});
 
 	var active = id("rx_active_" + node);

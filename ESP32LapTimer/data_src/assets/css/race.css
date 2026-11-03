@@ -144,6 +144,14 @@
 	background: var(--text);
 }
 
+.bc-rx-row .bc-rx-warn {
+	grid-column: 2 / -1;
+	display: none;
+	font-size: 11px;
+	line-height: 1.3;
+	color: var(--err);
+}
+
 .bc-rx-row .bc-rx-rssi {
 	font-size: 12px;
 	font-variant-numeric: tabular-nums;

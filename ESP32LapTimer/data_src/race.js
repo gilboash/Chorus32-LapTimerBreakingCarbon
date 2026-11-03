@@ -171,6 +171,7 @@ function build_roster() {
 					"</span>" +
 					'<span class="bc-rx-rssi" id="roster_rssi_' + node + '">0</span>' +
 				"</div>" +
+				'<div class="bc-rx-warn" id="roster_warn_' + node + '"></div>' +
 			"</div>";
 	}
 	document.getElementById("roster").innerHTML = html;
@@ -202,8 +203,18 @@ function wire_roster(node) {
 
 	var threshold = document.getElementById("roster_threshold_" + node);
 	threshold.addEventListener("change", function () {
+		// Never fall back to 0 here. A number input reads "" when empty or
+		// invalid, and this field starts empty until the timer echoes a value,
+		// so a careless "|| 0" sends threshold 0 -- which is not "disabled":
+		// ADCvalue > 0 is true on every sample, so the pilot free-runs laps at
+		// the minimum lap time. Put the known value back instead.
+		var value = parseInt(this.value, 10);
+		if (isNaN(value) || value < 1) {
+			this.value = pilot.threshold != null ? pilot.threshold : "";
+			return;
+		}
 		BC.pending(this);
-		BC.set_value(node, "T", parseInt(this.value, 10) || 0, 16);
+		BC.set_value(node, "T", value, 16);
 	});
 }
 
@@ -221,6 +232,19 @@ function render_roster() {
 		if (pilot.active) included++;
 
 		document.getElementById("roster_chan_" + node).innerText = channel_label(pilot);
+
+		// A threshold of 0 isn't "off": the detector compares RSSI > threshold,
+		// so it matches every sample and the pilot scores phantom laps at the
+		// minimum lap time. Worth shouting about, because the symptom looks
+		// like a receiver picking up someone else's quad.
+		var warn = document.getElementById("roster_warn_" + node);
+		if (pilot.active && pilot.threshold === 0) {
+			warn.style.display = "";
+			warn.innerText = "Threshold is 0, so this pilot will score laps " +
+				"continuously. Set it above the noise floor.";
+		} else {
+			warn.style.display = "none";
+		}
 
 		var level = document.getElementById("roster_level_" + node);
 		var mark = document.getElementById("roster_mark_" + node);
