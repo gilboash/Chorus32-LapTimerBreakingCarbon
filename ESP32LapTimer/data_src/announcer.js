@@ -68,7 +68,12 @@ var Announcer = (function () {
 	}
 
 	function set_language(lang) {
-		language = PHRASES[lang] ? lang : "en";
+		var next = PHRASES[lang] ? lang : "en";
+		if (next === language) return;
+		language = next;
+		// Queued lines are in the old language and were built for the old
+		// voice, so they are no longer worth saying.
+		reset();
 	}
 
 	function get_language() { return language; }
@@ -86,7 +91,22 @@ var Announcer = (function () {
 	}
 
 	function set_voice(name) {
+		if (voice_name === name) return;
 		voice_name = name;
+		// Drop anything already queued or mid-sentence. Otherwise the callout
+		// you just changed the voice for is still read out in the old one.
+		reset();
+	}
+
+	// Clears the queue and stops whatever is being spoken right now.
+	function reset() {
+		queue = [];
+		speaking = false;
+		try {
+			speechSynthesis.cancel();
+		} catch (e) {
+			// Not supported; nothing queued to clear either.
+		}
 	}
 
 	function pick_voice() {
@@ -123,8 +143,38 @@ var Announcer = (function () {
 		}
 	}
 
+	/* ---------------- one speaker at a time ---------------- */
+
+	// Every open copy of the race page has its own websocket, so every copy
+	// hears every lap and every copy would announce it. Two of them left open
+	// read the same callout twice, and if the voice was changed in only one
+	// they read it in two different voices.
+	//
+	// The page loaded most recently claims the role; the others fall silent.
+	// A storage event only fires in the *other* documents of an origin, which
+	// is exactly the signal needed.
+	var speaker_id = String(Date.now()) + "-" + Math.random().toString(36).slice(2);
+	var is_speaker = true;
+
+	function claim_speaker() {
+		is_speaker = true;
+		try {
+			localStorage.setItem("bc_speaker", speaker_id);
+		} catch (e) {
+			// No storage: assume this is the only copy, which it usually is.
+		}
+	}
+
+	window.addEventListener("storage", function (event) {
+		if (event.key !== "bc_speaker" || event.newValue == null) return;
+		if (event.newValue === speaker_id) return;
+		// Another copy of the page took over.
+		is_speaker = false;
+		reset();
+	});
+
 	function say(text, ttl) {
-		if (!enabled || !text) return;
+		if (!enabled || !text || !is_speaker) return;
 		queue.push({ text: text, ttl: ttl === undefined ? null : ttl, queued: Date.now() });
 		pump();
 	}
@@ -197,11 +247,15 @@ var Announcer = (function () {
 		}
 	}
 
+	claim_speaker();
+
 	return {
 		set_enabled: set_enabled,
 		set_voice: set_voice,
 		set_language: set_language,
 		get_language: get_language,
+		reset: reset,
+		is_speaker: function () { return is_speaker; },
 		say: say,
 		go: go,
 		lap: lap,

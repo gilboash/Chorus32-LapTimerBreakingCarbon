@@ -767,10 +767,28 @@ try {
 } catch (e) { /* ignore */ }
 Announcer.set_language(lang_select.value);
 
+var voice_match_found = true;
+
 // The browser can only speak with voices the device already has, so say so
 // plainly when the chosen language has none rather than failing silently.
 function on_voices_ready(found_match) {
-	if (found_match) {
+	voice_match_found = found_match;
+	update_voice_hint();
+}
+
+function update_voice_hint() {
+	// Silence because another copy of the page took the callouts is the more
+	// surprising of the two, so it is reported first.
+	if (!Announcer.is_speaker()) {
+		voice_hint.style.color = "var(--warn)";
+		voice_hint.innerText = "Callouts are muted here: the race page is open " +
+			"somewhere else and that copy is doing the announcing. Reload this " +
+			"page to take it back.";
+		return;
+	}
+
+	voice_hint.style.color = "";
+	if (voice_match_found) {
 		voice_hint.innerText = "";
 		return;
 	}
@@ -781,6 +799,8 @@ function on_voices_ready(found_match) {
 		  "text-to-speech settings on Android."
 		: "No voice for this language is installed on this device.";
 }
+
+setInterval(update_voice_hint, 2000);
 
 Announcer.populate_voices(voice_select, on_voices_ready);
 
