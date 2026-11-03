@@ -405,9 +405,20 @@ function load_voices() {
 
 	// This was the most reliable way of getting the voices to load :/
 	if(voices.length == 0) {
-		setTimeout(() => {load_voices(),1000});
+		// The 1000 used to sit inside the arrow body, so this was setTimeout(fn)
+		// with no delay re-entering load_voices() immediately: a tight retry loop
+		// on the main thread until the voices happened to show up.
+		setTimeout(load_voices, 1000);
 		return;
 	}
+
+	// Pick an english voice by default. This used to test
+	// name.includes("english"), which is case sensitive and so never matched the
+	// real names ("Google US English", "Samantha", "Daniel"): no default was
+	// ever chosen. Prefer the voice's lang tag, which is what it's for, and fall
+	// back to sniffing the name. Track it with a flag rather than checking
+	// voiceSelect.value, because appending the first option already selects it.
+	var picked_english = false;
 
 	voices.forEach((voice) => {
 		const option = document.createElement('option');
@@ -415,9 +426,11 @@ function load_voices() {
 		option.innerHTML = voice.name;
 		option.id = voice.name;
 		voiceSelect.appendChild(option);
-		// just hope we get an english voice with this
-		if(voice.name.includes("english")) {
+		if(!picked_english &&
+		   ((voice.lang && voice.lang.toLowerCase().startsWith("en")) ||
+		    voice.name.toLowerCase().includes("english"))) {
 			voiceSelect.value = voice.name;
+			picked_english = true;
 		}
 	});
 

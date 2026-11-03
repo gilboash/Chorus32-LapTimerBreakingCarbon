@@ -37,5 +37,12 @@ void beeper_add_to_queue(const pattern_t* pattern = &BEEP_SINGLE);
 void beeperUpdate();
 void beeper_init();
 
+/// Gates every queued pattern. Not persisted in EEPROM on purpose: adding a
+/// field there would bump EEPROM_VERSION_NUMBER and wipe everyone's channels,
+/// thresholds and calibration on upgrade. The app pushes its sound setting on
+/// connect anyway, which is how the original Chorus protocol worked.
+void beeper_set_enabled(bool enabled);
+bool beeper_is_enabled();
+
 
 #endif // __BEEPER_H__

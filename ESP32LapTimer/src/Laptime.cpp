@@ -23,6 +23,7 @@
 #include "HardwareConfig.h"
 #include "settings_eeprom.h"
 #include "Comms.h"
+#include "Beeper.h"
 
 struct lap_data {
   uint32_t lap_times[MAX_LAPS_NUM];
@@ -60,8 +61,15 @@ void sendNewLaps() {
     data = &LapTimes[i];
 #if 1 // Send order fixed
     j = data->last_lap_sent;
-    for (j = (j ? j : 1); j <= data->lap_counter && j <= MAX_LAPS_NUM; j++) {
+    uint8_t first_to_send = (j ? j : 1);
+    for (j = first_to_send; j <= data->lap_counter && j <= MAX_LAPS_NUM; j++) {
       sendLap(j, i, true);
+    }
+    // Beep once per pilot rather than once per lap, in case several are
+    // pending. This runs in the main loop, so it's safe to touch the beeper
+    // queue here -- addLap() itself is called from the ADC task.
+    if (j > first_to_send) {
+      beeper_add_to_queue(&BEEP_SINGLE);
     }
     data->last_lap_sent = j;
 #else

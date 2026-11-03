@@ -39,6 +39,8 @@
 
 #include "Comms.h"
 
+#include "Beeper.h"
+
 #include "RX5808.h"
 #include "Utils.h"
 #include "HardwareConfig.h"
@@ -344,7 +346,7 @@ void commsSetup() {
 void setRaceMode(uint8_t mode) {
   if (mode == 0) { // stop race
     raceMode = 0;
-    //playEndRaceTones();
+    beeper_add_to_queue(&BEEP_FIVE);
   } else { // start race in specified mode
     //holeShot = true;
     raceMode = mode;
@@ -356,7 +358,7 @@ void setRaceMode(uint8_t mode) {
         sendThresholdMode(i);
       }
     }
-    //playStartRaceTones();
+    beeper_add_to_queue(&BEEP_DOUBLE);
   }
 
 #if defined(ESP_NOW_PEERS)
@@ -420,9 +422,9 @@ void SetThresholdValue(uint16_t threshold, uint8_t NodeAddr) {
   EepromSettings.RSSIthresholds[NodeAddr] = getRSSIThreshold(NodeAddr);
   setSaveRequired();
   if (threshold != 0) {
-    //playClickTones();
+    beeper_add_to_queue(&BEEP_SINGLE);
   } else {
-    //playClearThresholdTones();
+    beeper_add_to_queue(&BEEP_DOUBLE);
   }
 }
 
@@ -525,7 +527,7 @@ void setupThreshold(uint8_t phase, uint8_t node) {
 
   if (phase == RSSI_SETUP_INITIALIZE) {
     // initialization step
-    //playThresholdSetupStartTones();
+    beeper_add_to_queue(&BEEP_CHIRPS);
     thresholdSetupMode[node] = 1;
     rssiLow[node] = rssi; // using slowRssi to avoid catching random current rssi
     rssiHigh[node] = rssiLow[node];
@@ -555,7 +557,7 @@ void setupThreshold(uint8_t phase, uint8_t node) {
       if (accumulatedRssi > rssiHighEnoughForMonitoring[node]) {
         thresholdSetupMode[node] = 2;
         accumulatedShiftedRssi[node] = rssiHigh[node] * ACCUMULATION_TIME_CONSTANT;
-        //playThresholdSetupMiddleTones();
+        beeper_add_to_queue(&BEEP_SINGLE);
         sendThresholdMode(node);
       }
     } else {
@@ -581,7 +583,7 @@ void setupThreshold(uint8_t phase, uint8_t node) {
         SetThresholdValue(rssiThreshold / 12, node); // Function expects the threshold in / 12
         thresholdSetupMode[node] = 0;
         isConfigured = 1;
-        //playThresholdSetupDoneTones();
+        beeper_add_to_queue(&BEEP_DOUBLE);
         sendThresholdMode(node);
         SendThresholdValue(node);
       }
@@ -682,7 +684,7 @@ void SendSoundMode(uint8_t NodeAddr) {
   addToSendQueue('S');
   addToSendQueue(TO_HEX(NodeAddr));
   addToSendQueue(RESPONSE_SOUND);
-  addToSendQueue('0');
+  addToSendQueue(TO_HEX(beeper_is_enabled()));
   addToSendQueue('\n');
 }
 
@@ -1067,7 +1069,7 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
         valueToSet = TO_BYTE(controlData[3]);
         setCountFirstLap(valueToSet);
         WaitFirstLap(0);
-        //playClickTones();
+        beeper_add_to_queue(&BEEP_SINGLE);
         isConfigured = 1;
         break;
 
@@ -1102,18 +1104,14 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
         valueToSet = HEX_TO_BYTE(controlData[3], controlData[4]);
         setMinLap(valueToSet);
         SendMinLap(NodeAddrByte);
-        //playClickTones();
+        beeper_add_to_queue(&BEEP_SINGLE);
 
         break;
 
       case CONTROL_SOUND:
-        //valueToSet = TO_BYTE(controlData[1]);
-        //        isSoundEnabled = valueToSet;
-        //        if (!isSoundEnabled) {
-        //          noTone(buzzerPin);
-        //        }
-        //addToSendQueue(SEND_SOUND_STATE);
-        //playClickTones();
+        valueToSet = TO_BYTE(controlData[3]);
+        beeper_set_enabled(valueToSet != 0);
+        beeper_add_to_queue(&BEEP_SINGLE);
         for (int i = 0; i < MAX_NUM_PILOTS; i++) {
           SendSoundMode(i);
         }
@@ -1145,7 +1143,7 @@ void handleSerialControlInput(char *controlData, uint8_t  ControlByte, uint8_t N
         if (thresholdSetupMode[node]) {
           setupThreshold(RSSI_SETUP_INITIALIZE, node);
         } else {
-          //playThresholdSetupStopTones();
+          beeper_add_to_queue(&BEEP_DOUBLE);
         }
         break;
     }
