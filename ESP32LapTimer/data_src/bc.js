@@ -189,6 +189,25 @@ var BC = (function () {
 		});
 	}
 
+	/* ---------------- value confirmation ---------------- */
+
+	// The protocol's only acknowledgement is the timer echoing a value back, so
+	// every control marks itself orange when sent and green when confirmed.
+	// Confirmation is a moment rather than a state: leaving every field green
+	// after load is just noise, so it clears itself.
+	function pending(el) {
+		if (el) el.setAttribute("val_state", "pending");
+	}
+
+	function received(el) {
+		if (!el) return;
+		el.setAttribute("val_state", "received");
+		clearTimeout(el._confirm_timer);
+		el._confirm_timer = setTimeout(function () {
+			el.removeAttribute("val_state");
+		}, 1200);
+	}
+
 	function on_message(fn) { handlers.push(fn); }
 	function on_open(fn) { open_handlers.push(fn); }
 	function on_status(fn) { status_handlers.push(fn); }
@@ -209,6 +228,8 @@ var BC = (function () {
 		on_message: on_message,
 		on_open: on_open,
 		on_status: on_status,
+		pending: pending,
+		received: received,
 		fetch_version: fetch_version,
 		toggle_theme: toggle_theme,
 		hex: hex,

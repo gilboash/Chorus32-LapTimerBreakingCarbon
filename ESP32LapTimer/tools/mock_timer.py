@@ -26,7 +26,7 @@ NUM_PILOTS = 8
 ACTIVE = [True, True, True, True, False, False, False, False]
 BANDS = [0, 0, 0, 0, 0, 0, 0, 0]
 CHANNELS = [0, 1, 2, 3, 4, 5, 6, 7]
-THRESHOLD = 180  # as sent, i.e. raw/12
+THRESHOLDS = [180] * NUM_PILOTS  # as sent, i.e. raw/12
 
 MIME = {
     ".html": "text/html", ".js": "application/javascript", ".css": "text/css",
@@ -105,7 +105,7 @@ class Client(threading.Thread):
             self.send_text("S{}A{}\n".format(hx(node, 1), 1 if ACTIVE[node] else 0))
             self.send_text("S{}B{}\n".format(hx(node, 1), hx(BANDS[node], 1)))
             self.send_text("S{}C{}\n".format(hx(node, 1), hx(CHANNELS[node], 1)))
-            self.send_text("S{}T{}\n".format(hx(node, 1), hx(THRESHOLD, 4)))
+            self.send_text("S{}T{}\n".format(hx(node, 1), hx(THRESHOLDS[node], 4)))
         self.send_text("S0R{}\n".format(1 if self.race_on else 0))
         self.send_text("S0v{}\n".format(hx(int(12.4 / 11 * (1024 / 5)), 4)))
 
@@ -142,6 +142,10 @@ class Client(threading.Thread):
                 self.send_text("ES*R{}\n".format(hx(self.race_num, 2)))
             for node in range(NUM_PILOTS):
                 self.send_text("S{}R{}\n".format(hx(node, 1), 1 if self.race_on else 0))
+        elif len(line) >= 7 and line[0] == "R" and line[2] == "T":
+            node = int(line[1], 16)
+            THRESHOLDS[node] = int(line[3:7], 16)
+            self.send_text("S{}T{}\n".format(hx(node, 1), hx(THRESHOLDS[node], 4)))
         elif len(line) >= 4 and line[0] == "R" and line[2] == "A":
             node = int(line[1], 16)
             ACTIVE[node] = line[3] == "1"

@@ -3,6 +3,8 @@
 BC.start("race.html");
 
 var NUM_PILOTS = 8;
+var MAX_RSSI_SCALE = 341; // the timer reports RSSI already divided by 12
+var num_receivers = NUM_PILOTS;
 var race_num = 0;
 var racing = false;
 var race_started_at = 0;
@@ -20,7 +22,30 @@ for (var i = 0; i < NUM_PILOTS; ++i) {
 		laps: [],          // every lap time in ms, index 0 is the hole shot
 		finished_at: null, // finishing position once they complete target_laps
 		last_is_best: false,
+		band: 0,
+		channel: 0,
+		threshold: null,   // as the timer reports it, i.e. already /12
+		rssi: 0,
 	};
+}
+
+var BAND_LABELS = ["R", "A", "B", "E", "F", "D", "CX", "CX2"];
+
+// Mirrors channelFreqTable in src/RX5808.h.
+var FREQ_TABLE = [
+	5658, 5695, 5732, 5769, 5806, 5843, 5880, 5917,
+	5865, 5845, 5825, 5805, 5785, 5765, 5745, 5725,
+	5733, 5752, 5771, 5790, 5809, 5828, 5847, 5866,
+	5705, 5685, 5665, 5645, 5885, 5905, 5925, 5945,
+	5740, 5760, 5780, 5800, 5820, 5840, 5860, 5880,
+	5362, 5399, 5436, 5473, 5510, 5547, 5584, 5621,
+	5180, 5200, 5220, 5240, 5745, 5765, 5785, 5805,
+	5825, 5845, 5845, 5845, 5845, 5845, 5845, 5845,
+];
+
+function channel_label(pilot) {
+	var freq = FREQ_TABLE[pilot.channel + 8 * pilot.band];
+	return BAND_LABELS[pilot.band] + (pilot.channel + 1) + (freq ? " · " + freq : "");
 }
 
 function load_name(node) {
@@ -110,11 +135,108 @@ function format_time(ms) {
 }
 
 function gap_text(pilot, lead) {
-	if (lead == null || pilot === lead) return "leader";
+	// Before anyone has completed a lap there is no order to report, so don't
+	// crown a leader or quote a 0.00s gap off an empty table.
+	if (lead == null || lap_count(lead) == 0) return "";
+	if (lap_count(pilot) == 0) return "no laps";
+	if (pilot === lead) return "leader";
 	var lap_diff = lap_count(lead) - lap_count(pilot);
 	if (lap_diff > 0) return "+" + lap_diff + (lap_diff == 1 ? " lap" : " laps");
 	var delta = elapsed_time(pilot) - elapsed_time(lead);
 	return "+" + (delta / 1000).toFixed(2) + "s";
+}
+
+/* ---------------- roster ---------------- */
+
+// Who is in the race, and what each receiver is listening to. The old race
+// page had an include checkbox per pilot and this one lost it in the rebuild,
+// which left no way to set the grid from the page you actually race from.
+// Threshold lives here too rather than only in Settings, because tuning it is
+// something you do against live RSSI just before and during a session.
+function build_roster() {
+	var html = "";
+	for (var node = 0; node < NUM_PILOTS; ++node) {
+		html +=
+			'<div class="bc-rx-row" id="roster_row_' + node + '" ' +
+			'style="--rx-colour:var(--rx' + (node + 1) + ')">' +
+				'<input class="bc-rx-check" type="checkbox" id="roster_active_' + node + '" />' +
+				'<input class="bc-rx-name" id="roster_name_' + node + '" value="" />' +
+				'<span class="bc-rx-chan" id="roster_chan_' + node + '">&mdash;</span>' +
+				'<div class="bc-rx-tune">' +
+					'<label for="roster_threshold_' + node + '">Thr</label>' +
+					'<input type="number" min="0" max="341" id="roster_threshold_' + node + '" />' +
+					'<span class="bc-meter">' +
+						'<span class="bc-meter-level" id="roster_level_' + node + '"></span>' +
+						'<span class="bc-meter-mark" id="roster_mark_' + node + '"></span>' +
+					"</span>" +
+					'<span class="bc-rx-rssi" id="roster_rssi_' + node + '">0</span>' +
+				"</div>" +
+			"</div>";
+	}
+	document.getElementById("roster").innerHTML = html;
+
+	for (node = 0; node < NUM_PILOTS; ++node) {
+		wire_roster(node);
+	}
+}
+
+function wire_roster(node) {
+	var pilot = pilots[node];
+
+	var active = document.getElementById("roster_active_" + node);
+	active.addEventListener("change", function () {
+		BC.pending(this);
+		BC.set_value(node, "A", this.checked ? 1 : 0, 4);
+	});
+
+	var name = document.getElementById("roster_name_" + node);
+	name.value = pilot.name;
+	name.addEventListener("input", function () {
+		pilot.name = this.value;
+		save_name(node, this.value);
+		var standing_name = document.getElementById("name_" + node);
+		if (standing_name != null && standing_name.value != this.value) {
+			standing_name.value = this.value;
+		}
+	});
+
+	var threshold = document.getElementById("roster_threshold_" + node);
+	threshold.addEventListener("change", function () {
+		BC.pending(this);
+		BC.set_value(node, "T", parseInt(this.value, 10) || 0, 16);
+	});
+}
+
+function render_roster() {
+	var included = 0;
+	for (var node = 0; node < NUM_PILOTS; ++node) {
+		var pilot = pilots[node];
+		var row = document.getElementById("roster_row_" + node);
+		if (row == null) continue;
+
+		row.style.display = node < num_receivers ? "" : "none";
+		if (node >= num_receivers) continue;
+
+		row.className = "bc-rx-row" + (pilot.active ? "" : " off");
+		if (pilot.active) included++;
+
+		document.getElementById("roster_chan_" + node).innerText = channel_label(pilot);
+
+		var level = document.getElementById("roster_level_" + node);
+		var mark = document.getElementById("roster_mark_" + node);
+		var value = document.getElementById("roster_rssi_" + node);
+		value.innerText = pilot.rssi;
+		level.style.width = Math.min(100, (pilot.rssi / MAX_RSSI_SCALE) * 100) + "%";
+		if (pilot.threshold != null) {
+			mark.style.display = "";
+			mark.style.left = Math.min(100, (pilot.threshold / MAX_RSSI_SCALE) * 100) + "%";
+		} else {
+			mark.style.display = "none";
+		}
+	}
+
+	document.getElementById("roster_count").innerText =
+		included + (included == 1 ? " pilot" : " pilots");
 }
 
 /* ---------------- rendering ---------------- */
@@ -140,7 +262,8 @@ function render() {
 				'<div class="bc-pos"></div>' +
 				'<input class="bc-name" id="name_' + pilot.node + '" value="" />' +
 				'<div class="bc-meta"></div>' +
-				'<div class="bc-last"><span class="bc-value"></span>' +
+				'<div class="bc-last"><span class="bc-last-label">Last lap</span>' +
+				'<span class="bc-value"></span>' +
 				'<span class="bc-gap"></span></div>' +
 				"</div>";
 		}).join("");
@@ -178,6 +301,7 @@ function render() {
 
 		var consec = best_consecutive(pilot);
 		row.querySelector(".bc-meta").innerHTML =
+			"<span>" + channel_label(pilot) + "</span>" +
 			"<span>Lap " + lap_count(pilot) + "/" + target_laps + "</span>" +
 			"<span>Best " + format_time(best_lap(pilot)) + "</span>" +
 			"<span>2&nbsp;consec " + format_time(consec) + "</span>";
@@ -242,9 +366,15 @@ function on_lap(node, lap_index, lap_ms) {
 
 BC.on_message(function (msg) {
 	if (msg.extended) {
-		if (msg.cmd == "R") {
-			race_num = parseInt(msg.payload, 16);
-			document.getElementById("race_num").innerText = race_num;
+		switch (msg.cmd) {
+			case "R":
+				race_num = parseInt(msg.payload, 16);
+				document.getElementById("race_num").innerText = race_num;
+				break;
+			case "M": // how many receivers the timer is configured for
+				num_receivers = parseInt(msg.payload[0], 16) || NUM_PILOTS;
+				render_roster();
+				break;
 		}
 		return;
 	}
@@ -257,7 +387,31 @@ BC.on_message(function (msg) {
 			break;
 		case "A":
 			pilots[msg.node].active = msg.payload[0] == "1";
+			BC.received(document.getElementById("roster_active_" + msg.node));
+			document.getElementById("roster_active_" + msg.node).checked =
+				pilots[msg.node].active;
+			render_roster();
 			render();
+			break;
+		case "B":
+			pilots[msg.node].band = parseInt(msg.payload[0], 16);
+			render_roster();
+			break;
+		case "C":
+			pilots[msg.node].channel = parseInt(msg.payload[0], 16);
+			render_roster();
+			break;
+		case "T":
+			pilots[msg.node].threshold = parseInt(msg.payload, 16);
+			var field = document.getElementById("roster_threshold_" + msg.node);
+			if (field != null && document.activeElement !== field) {
+				field.value = pilots[msg.node].threshold;
+			}
+			BC.received(field);
+			render_roster();
+			break;
+		case "r": // current RSSI, already divided by 12 by the timer
+			pilots[msg.node].rssi = parseInt(msg.payload, 16);
 			break;
 		case "R":
 			set_racing(parseInt(msg.payload[0]) != 0);
@@ -283,11 +437,13 @@ function set_racing(value) {
 		document.getElementById("race_status").innerText = "Racing";
 		button.innerText = "Stop";
 		button.className = "bc-danger";
+		set_roster_open(false);
 	} else {
 		bar.classList.remove("racing");
 		document.getElementById("race_status").innerText = "Finished";
 		button.innerText = "Start";
 		button.className = "bc-primary";
+		set_roster_open(true);
 	}
 }
 
@@ -337,9 +493,21 @@ setInterval(function () {
 
 BC.on_open(function () {
 	BC.request_all();
-	// No RSSI stream on this page: it's a lot of traffic and nothing here plots it.
+	// The roster meters need RSSI, but polling R*r is far lighter than the
+	// extended stream and this page plots nothing.
 	BC.set_rssi_interval(0);
 });
+
+// Poll RSSI for the threshold meters, and repaint them off the same timer so
+// a burst of samples can't drive a repaint per message.
+setInterval(function () { BC.send("R*r\n"); }, 300);
+setInterval(render_roster, 300);
+
+// Collapse the roster when a race starts so the standings are what's on screen,
+// and open it again when the race ends.
+function set_roster_open(open) {
+	document.getElementById("roster_card").open = open;
+}
 
 /* ---------------- options ---------------- */
 
@@ -388,6 +556,8 @@ document.addEventListener("click", arm_on_gesture);
 document.addEventListener("touchend", arm_on_gesture);
 
 refresh_awake();
+build_roster();
+render_roster();
 render();
 
 BC.fetch_version(function (version) {

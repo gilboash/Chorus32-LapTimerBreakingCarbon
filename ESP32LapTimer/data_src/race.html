@@ -24,12 +24,26 @@
 		<button id="race_button" class="bc-primary">Start</button>
 	</section>
 
-	<div id="standings"></div>
+	<details class="bc-card bc-roster" id="roster_card" open>
+		<summary>
+			<span>Pilots in this race</span>
+			<span class="bc-roster-count" id="roster_count">0</span>
+		</summary>
+		<p class="bc-small bc-dim">
+			Tick a pilot to include them. The bar shows live RSSI against that
+			receiver's threshold: the threshold should sit above the noise but below
+			the peak as a quad passes the gate.
+		</p>
+		<div id="roster"></div>
+	</details>
 
-	<div class="bc-empty" id="standings_empty">
-		No receivers are enabled.<br />
-		<a href="settings.html">Enable them in Settings</a>
-	</div>
+	<section class="bc-card">
+		<h2>Standings</h2>
+		<div id="standings"></div>
+		<div class="bc-empty" id="standings_empty">
+			No pilots are in the race yet. Tick one above.
+		</div>
+	</section>
 
 	<section class="bc-card">
 		<h2>Race options</h2>

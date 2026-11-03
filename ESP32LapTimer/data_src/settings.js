@@ -33,21 +33,8 @@ var FREQ_TABLE = [
 	5825, 5845, 5845, 5845, 5845, 5845, 5845, 5845,
 ];
 
-function pending(el) {
-	if (el) el.setAttribute("val_state", "pending");
-}
-
-// Confirmation is a moment, not a state: leaving every field outlined green
-// just adds noise once the page has loaded. Pending and error stay put,
-// because those are conditions you need to keep seeing.
-function received(el) {
-	if (!el) return;
-	el.setAttribute("val_state", "received");
-	clearTimeout(el._confirm_timer);
-	el._confirm_timer = setTimeout(function () {
-		el.removeAttribute("val_state");
-	}, 1200);
-}
+var pending = BC.pending;
+var received = BC.received;
 
 function id(name) { return document.getElementById(name); }
 
