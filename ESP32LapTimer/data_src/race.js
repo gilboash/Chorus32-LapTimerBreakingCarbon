@@ -15,7 +15,10 @@ var race_num = 0;
 var racing = false;
 var race_started_at = 0;
 var count_first = 0;   // whether lap 0 (the hole shot) counts
-var target_laps = 5;
+// A practice round is the common case and people fly until the pack runs out,
+// so the default is a number nobody hits by accident. A short final is set
+// deliberately; a target of 2 reached mid-practice just stops the scoring.
+var target_laps = 20;
 var leader = null;
 var announced_last_lap = false;
 
@@ -27,6 +30,7 @@ for (var i = 0; i < NUM_PILOTS; ++i) {
 		name: load_name(i),
 		laps: [],          // every lap time in ms, index 0 is the hole shot
 		finished_at: null, // finishing position once they complete target_laps
+		finish_index: null, // index of the lap that took the flag; later ones are extra
 		last_is_best: false,
 		band: 0,
 		channel: 0,
@@ -72,11 +76,47 @@ function save_name(node, name) {
 
 /* ---------------- race maths ---------------- */
 
+// Laps that count towards the result.
+//
+// Crossing the gate after taking the flag is normal -- a pilot with pack left
+// keeps flying, and the timer keeps reporting it. Those laps are recorded and
+// shown, but they must not reach any scored figure: a flyer who stays up after
+// winning would otherwise keep adding laps and total time, and out-lap the
+// pilots still racing.
+function scoring_laps(pilot) {
+	if (pilot.finish_index == null) return pilot.laps;
+	return pilot.laps.slice(0, pilot.finish_index + 1);
+}
+
+// Crossings flown after the flag. Kept for the timing sheet only.
+function extra_laps(pilot) {
+	if (pilot.finish_index == null) return [];
+	return pilot.laps.slice(pilot.finish_index + 1).filter(function (lap) {
+		return lap !== undefined;
+	});
+}
+
+// Which lap of the course a given array index is, for callouts.
+function lap_number(lap_index) {
+	return count_first ? lap_index + 1 : lap_index;
+}
+
+// Is anybody still racing? Only pilots who have actually crossed the gate
+// count: a receiver can be enabled with nobody on it -- the usual case when
+// six are wired and two are flying -- and waiting on those would mean a pilot
+// doing practice laps never got their times read.
+function everyone_home() {
+	return pilots.filter(function (p) {
+		return p.active && p.laps.length > 0;
+	}).every(function (p) { return p.finished_at != null; });
+}
+
 // Lap 0 is the hole shot: the run from the start line to the gate for the
 // first time. It is not a lap of the course, so unless the timer is set to
 // count it, it stays out of totals, bests and the lap count.
 function counted_laps(pilot) {
-	var laps = count_first ? pilot.laps : pilot.laps.slice(1);
+	var scored = scoring_laps(pilot);
+	var laps = count_first ? scored : scored.slice(1);
 	// Laps arrive indexed, so a replay that starts mid-race can leave holes.
 	// Those would turn Math.min into NaN and the lap count into a lie.
 	return laps.filter(function (lap) { return lap !== undefined; });
@@ -98,7 +138,7 @@ function total_time(pilot) {
 // laps quickly can have the lower total_time while actually being behind on
 // track, which showed up as the standings disagreeing with the finish order.
 function elapsed_time(pilot) {
-	return pilot.laps.reduce(function (sum, lap) {
+	return scoring_laps(pilot).reduce(function (sum, lap) {
 		return sum + (lap === undefined ? 0 : lap);
 	}, 0);
 }
@@ -348,12 +388,19 @@ function render() {
 		row.querySelector(".bc-pos").innerText =
 			lap_count(pilot) > 0 || pilot.finished_at != null ? index + 1 : "–";
 
+		// The headline figure is the last crossing, whichever side of the flag
+		// it fell -- it is labelled "last", and a pilot still flying wants to
+		// see the lap they just put in.
 		var laps = counted_laps(pilot);
-		var last = laps.length ? laps[laps.length - 1] : null;
+		var extras = extra_laps(pilot);
+		var last = extras.length ? extras[extras.length - 1]
+			: (laps.length ? laps[laps.length - 1] : null);
 
 		var value = row.querySelector(".bc-value");
 		value.innerText = format_time(last);
-		value.parentNode.className = "bc-last" + (pilot.last_is_best ? " personal-best" : "");
+		value.parentNode.className = "bc-last" +
+			(pilot.last_is_best ? " personal-best" : "") +
+			(extras.length ? " bc-last-extra" : "");
 
 		row.querySelector(".bc-gap").innerText =
 			pilot.finished_at != null ? "finished" : gap_text(pilot, lead);
@@ -362,6 +409,8 @@ function render() {
 		row.querySelector(".bc-meta").innerHTML =
 			"<span>" + channel_label(pilot) + "</span>" +
 			"<span>Lap " + lap_count(pilot) + "/" + target_laps + "</span>" +
+			(extras.length ? '<span class="bc-meta-extra">+' + extras.length +
+				" after flag</span>" : "") +
 			"<span>Best " + format_time(best_lap(pilot)) + "</span>" +
 			"<span>2&nbsp;consec " + format_time(consec) + "</span>";
 	});
@@ -407,7 +456,8 @@ function archive_current_race() {
 	var rows = pilots.filter(function (p) {
 		return p.active && p.laps.length > 0;
 	}).map(function (p) {
-		return { node: p.node, name: p.name, laps: p.laps.slice() };
+		return { node: p.node, name: p.name, laps: p.laps.slice(),
+			finish_index: p.finish_index };
 	});
 	if (rows.length == 0) return;
 
@@ -425,7 +475,13 @@ function archive_current_race() {
 	save_history();
 }
 
-function counted_from(laps, counts_first) {
+// The scored laps of a stored or live row: hole shot excluded unless the timer
+// counts it, and nothing flown after that pilot took the flag. Rounds saved
+// before extra laps were kept have no finish_index, so all of their laps are
+// scored -- which is what they were at the time.
+function counted_from(row, counts_first) {
+	var laps = row.finish_index == null ? row.laps
+		: row.laps.slice(0, row.finish_index + 1);
 	var list = counts_first ? laps : laps.slice(1);
 	return list.filter(function (lap) { return lap !== undefined; });
 }
@@ -438,10 +494,14 @@ function round_html(round, is_live) {
 	});
 	if (max_laps == 0) return "";
 
+	// Set while building the cells, so the legend only appears when it has
+	// something to explain.
+	var any_extra = false;
+
 	// Fastest counted lap anywhere in this round, so it can be called out.
 	var fastest = Infinity;
 	round.rows.forEach(function (row) {
-		counted_from(row.laps, round.count_first).forEach(function (lap) {
+		counted_from(row, round.count_first).forEach(function (lap) {
 			if (lap < fastest) fastest = lap;
 		});
 	});
@@ -455,7 +515,7 @@ function round_html(round, is_live) {
 	header += '<th class="bc-col-sep">Best</th><th>2&nbsp;cons</th><th>Total</th>';
 
 	var body = round.rows.map(function (row) {
-		var counted = counted_from(row.laps, round.count_first);
+		var counted = counted_from(row, round.count_first);
 		var best = counted.length ? Math.min.apply(null, counted) : null;
 
 		var consec = null;
@@ -476,9 +536,14 @@ function round_html(round, is_live) {
 				continue;
 			}
 			var is_holeshot = !round.count_first && i == 0;
-			var cls = is_holeshot ? "bc-cell-holeshot"
+			// Flown after this pilot took the flag, so it is timed but not
+			// scored. Marked rather than hidden: the time is real.
+			var is_extra = row.finish_index != null && i > row.finish_index;
+			if (is_extra) any_extra = true;
+			var cls = is_extra ? "bc-cell-extra"
+				: (is_holeshot ? "bc-cell-holeshot"
 				: (lap === fastest ? "bc-cell-fastest"
-				: (lap === best ? "bc-cell-best" : ""));
+				: (lap === best ? "bc-cell-best" : "")));
 			cells += '<td class="' + cls + '">' + (lap / 1000).toFixed(2) + "</td>";
 		}
 
@@ -496,7 +561,10 @@ function round_html(round, is_live) {
 		"</div>" +
 		'<div class="bc-laptable-wrap"><table class="bc-laptable">' +
 		"<thead><tr>" + header + "</tr></thead><tbody>" + body + "</tbody>" +
-		"</table></div></div>";
+		"</table></div>" +
+		(any_extra ? '<p class="bc-laptable-legend">Greyed times were flown ' +
+			"after that pilot took the flag: timed, but outside the result.</p>" : "") +
+		"</div>";
 }
 
 // Time of day for a round flown today, date and time for anything older.
@@ -526,7 +594,8 @@ function current_round() {
 		rows: pilots.filter(function (p) {
 			return p.active && p.laps.length > 0;
 		}).map(function (p) {
-			return { node: p.node, name: p.name, laps: p.laps.slice() };
+			return { node: p.node, name: p.name, laps: p.laps.slice(),
+				finish_index: p.finish_index };
 		}),
 	};
 }
@@ -546,7 +615,7 @@ function render_lap_tables() {
 function render_lap_stats(live) {
 	var all = [];
 	live.rows.forEach(function (row) {
-		all = all.concat(counted_from(row.laps, live.count_first));
+		all = all.concat(counted_from(row, live.count_first));
 	});
 
 	var fastest = all.length ? Math.min.apply(null, all) : null;
@@ -576,10 +645,6 @@ document.getElementById("clear_history").onclick = function () {
 function on_lap(node, lap_index, lap_ms) {
 	var pilot = pilots[node];
 
-	// Their race is over; the timer keeps reporting crossings until someone
-	// stops the race, but those laps are no longer part of this result.
-	if (pilot.finished_at != null) return;
-
 	// The timer replays all known laps on "R*a", so ignore anything we already
 	// have rather than counting it twice.
 	if (pilot.laps[lap_index] !== undefined) return;
@@ -590,6 +655,22 @@ function on_lap(node, lap_index, lap_ms) {
 	// acknowledgement -- the spoken callout is a sentence long and may be
 	// queued behind another pilot's.
 	Beep.lap(node);
+
+	// Past the flag: timed and shown, but out of the result. The beep above
+	// already acknowledged the crossing.
+	if (pilot.finish_index != null && lap_index > pilot.finish_index) {
+		// Never green: a quick lap flown after finishing is not a race best.
+		pilot.last_is_best = false;
+		// While anyone is still out the callouts belong to them -- a pilot
+		// doing practice laps must not talk over the race. Once everyone is
+		// home the voice is free, so their times get read again.
+		if (everyone_home()) {
+			Announcer.lap(pilot.name, lap_number(lap_index), lap_ms / 1000);
+		}
+		render();
+		render_lap_tables();
+		return;
+	}
 
 	var laps = counted_laps(pilot);
 	var is_counted = count_first || lap_index > 0;
@@ -628,6 +709,8 @@ function on_lap(node, lap_index, lap_ms) {
 			return p.finished_at != null && elapsed_time(p) < mine;
 		}).length;
 		pilot.finished_at = ahead + 1;
+		// Everything after this index is a lap flown past the flag.
+		pilot.finish_index = lap_index;
 		Beep.finish();
 		Announcer.finish(pilot.name, pilot.finished_at);
 	}
@@ -732,6 +815,7 @@ function reset_race() {
 	pilots.forEach(function (pilot) {
 		pilot.laps = [];
 		pilot.finished_at = null;
+		pilot.finish_index = null;
 		pilot.last_is_best = false;
 	});
 	leader = null;
@@ -768,19 +852,31 @@ document.getElementById("min_lap").addEventListener("change", function () {
 	BC.set_value("*", "M", seconds, 8);
 });
 
+// The lap target persists per device: it is a property of how this club races,
+// not of one round, and retyping it on a phone at a track is a nuisance.
+//
+// Deliberately a new key. The old one still holds whatever each browser last
+// had -- including values set while testing -- and because it persists, a
+// stale target would otherwise outlive every change to the default. Bumping
+// the key hands back the default once; the next edit sticks as before.
+var TARGET_LAPS_KEY = "bc_target_laps_v2";
+
 document.getElementById("target_laps").addEventListener("input", function () {
 	target_laps = Math.max(1, parseInt(this.value, 10) || 1);
-	try { localStorage.setItem("bc_target_laps", target_laps); } catch (e) { /* ignore */ }
+	try { localStorage.setItem(TARGET_LAPS_KEY, target_laps); } catch (e) { /* ignore */ }
 	render();
 });
 
 try {
-	var stored_laps = parseInt(localStorage.getItem("bc_target_laps"), 10);
-	if (!isNaN(stored_laps)) {
+	var stored_laps = parseInt(localStorage.getItem(TARGET_LAPS_KEY), 10);
+	if (!isNaN(stored_laps) && stored_laps >= 1) {
 		target_laps = stored_laps;
-		document.getElementById("target_laps").value = stored_laps;
 	}
+	localStorage.removeItem("bc_target_laps"); // superseded; don't leave it behind
 } catch (e) { /* ignore */ }
+// Either way the field has to agree with the variable, or the number on screen
+// is not the number being raced to.
+document.getElementById("target_laps").value = target_laps;
 
 setInterval(function () {
 	if (!racing) return;

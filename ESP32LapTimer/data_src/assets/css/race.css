@@ -257,6 +257,12 @@
 
 .bc-pilot .bc-last.personal-best { color: var(--ok); }
 
+/* The headline time is a lap flown after the flag, so it is still the last
+ * crossing but no longer part of the result. */
+.bc-pilot .bc-last.bc-last-extra { color: var(--text-dim); }
+
+.bc-pilot .bc-meta .bc-meta-extra { color: var(--text-dim); font-style: italic; }
+
 /* ---- lap table ---- */
 
 .bc-laps-head {
@@ -362,6 +368,22 @@ table.bc-laptable .bc-cell-empty { color: var(--text-dim); }
 
 /* The hole shot is recorded but not scored, so it must not read as a lap. */
 table.bc-laptable .bc-cell-holeshot { color: var(--text-dim); font-style: italic; }
+
+/* Flown after that pilot took the flag. Timed and shown, but outside the
+ * result, so it must not read as a scored lap -- hence no colour and a dotted
+ * underline rather than simply dimming, which is already what an empty cell
+ * and the hole shot look like. */
+table.bc-laptable .bc-cell-extra {
+	color: var(--text-dim);
+	border-bottom: 1px dotted var(--text-dim);
+}
+
+.bc-laptable-legend {
+	margin: 8px 0 0;
+	font-size: 11px;
+	line-height: 1.4;
+	color: var(--text-dim);
+}
 
 table.bc-laptable .bc-cell-best { color: var(--ok); font-weight: 700; }
 
