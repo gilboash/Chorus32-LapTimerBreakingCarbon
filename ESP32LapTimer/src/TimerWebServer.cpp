@@ -29,6 +29,7 @@
 #include "CrashDetection.h"
 #include "Logging.h"
 #include "Version.h"
+#include "Beeper.h"
 
 #include <esp_wifi.h>
 #include <FS.h>
@@ -166,6 +167,51 @@ static bool isCaptivePortalProbe(AsyncWebServerRequest* req) {
          url == "/fwlink";                      // Windows
 }
 
+// Live state dump, so the timer can be diagnosed over wifi instead of needing
+// a serial cable and a physical reset to see anything. Read-only.
+//
+// The receiver->pilot assignment is the important part: it is what decides
+// whose RSSI a module's samples are credited to, and a wrong assignment looks
+// exactly like one pilot scoring another's laps.
+void sendDebugState(AsyncWebServerRequest* req) {
+  String body = "{";
+  body += "\"uptime_ms\":" + String(millis());
+  body += ",\"free_heap\":" + String(ESP.getFreeHeap());
+  body += ",\"min_free_heap\":" + String(ESP.getMinFreeHeap());
+  body += ",\"racing\":" + String(isInRaceMode() ? "true" : "false");
+  body += ",\"race_num\":" + String(getRaceNum());
+  body += ",\"num_receivers\":" + String(getNumReceivers());
+  body += ",\"active_pilots\":" + String(getActivePilotCount());
+  body += ",\"count_first_lap\":" + String(getCountFirstLap());
+  body += ",\"min_lap_time_ms\":" + String(getMinLapTime());
+  body += ",\"buzzer\":" + String(beeper_is_enabled() ? "true" : "false");
+
+  body += ",\"receivers\":[";
+  for (uint8_t i = 0; i < MAX_NUM_RECEIVERS; ++i) {
+    if (i) body += ",";
+    body += "{\"rx\":" + String(i) + ",\"pilot\":" + String(getReceiverPilot(i)) + "}";
+  }
+  body += "]";
+
+  body += ",\"pilots\":[";
+  for (uint8_t i = 0; i < MAX_NUM_PILOTS; ++i) {
+    if (i) body += ",";
+    body += "{\"n\":" + String(i);
+    body += ",\"active\":" + String(isPilotActive(i) ? "true" : "false");
+    body += ",\"multiplex_off\":" + String(isPilotMultiplexOff(i) ? "true" : "false");
+    body += ",\"multiplex_user_set\":" + String(isPilotMultiplexUserSet(i) ? "true" : "false");
+    body += ",\"band\":" + String(getRXBandPilot(i));
+    body += ",\"channel\":" + String(getRXChannelPilot(i));
+    body += ",\"rssi\":" + String(getRSSI(i));
+    body += ",\"threshold\":" + String(getRSSIThreshold(i));
+    body += ",\"laps\":" + String(getCurrentLap(i));
+    body += "}";
+  }
+  body += "]}";
+
+  req->send(200, "application/json", body);
+}
+
 void updateRx (int band, int channel, int rx) {
   setPilotBand(rx, band);
   setPilotChannel(rx, channel);
@@ -301,6 +347,7 @@ void InitWebServer() {
 
 
   webServer.on("/version", HTTP_GET, sendVersion);
+  webServer.on("/debug", HTTP_GET, sendDebugState);
 
   webServer.on("/start_race", startRace_button);
   webServer.on("/stop_race", stopRace_button);

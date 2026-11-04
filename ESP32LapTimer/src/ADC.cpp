@@ -513,6 +513,23 @@ bool isPilotMultiplexOff(uint8_t pilot) {
   return pilots[pilot].disable_multiplexing;
 }
 
+bool isPilotMultiplexUserSet(uint8_t pilot) {
+  return multiplex_user_set[pilot];
+}
+
+/// Which pilot a receiver is currently tuned to, or -1 if it has none.
+/// This is the thing that actually decides whose RSSI a module's samples are
+/// credited to, and until now nothing could see it from outside.
+int8_t getReceiverPilot(uint8_t receiver) {
+  if(receiver >= MAX_NUM_RECEIVERS) return -1;
+  pilot_data_t* pilot = receivers[receiver].current_pilot;
+  return pilot ? (int8_t)pilot->number : -1;
+}
+
+uint8_t getActivePilotCount() {
+  return current_pilot_num;
+}
+
 void setPilotMultiplexOff(uint8_t pilot, bool off) {
   // A deliberate choice, so stop forcing the default on this pilot.
   multiplex_user_set[pilot] = true;

@@ -56,6 +56,13 @@ void setPilotMultiplexOff(uint8_t pilot, bool off);
 /// Forces multiplexing off for every pilot the user has not explicitly set.
 /// Safe to call repeatedly; it never overrides a deliberate choice.
 void apply_multiplex_defaults();
+
+bool isPilotMultiplexUserSet(uint8_t pilot);
+
+/// Which pilot a receiver is tuned to right now, or -1 for none.
+int8_t getReceiverPilot(uint8_t receiver);
+
+uint8_t getActivePilotCount();
 void setPilotFilters(uint16_t cutoff);
 
 void setPilotBand(uint8_t pilot, uint8_t band);
