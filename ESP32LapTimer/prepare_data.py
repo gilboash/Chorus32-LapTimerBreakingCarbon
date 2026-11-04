@@ -13,17 +13,10 @@ import sys
 
 SCRIPT_DIR = os.getcwd()
 
-def generate_constants():
-	# generate constants.js file
-	with open("{}/src/Comms.cpp".format(SCRIPT_DIR)) as comms_file, open("{}/data_src/constants.js".format(SCRIPT_DIR), "w") as constants_file:
-		regex = re.compile("#define (RESPONSE_|CONTROL_|EXTENDED_|BINARY_)")
-		for line in comms_file:
-			if re.match(regex, line):
-				values = line.split(" ")
-				values = list(filter(" ".__ne__, values))
-				values = list(filter("".__ne__, values))
-				values[2] = values[2].rstrip()
-				constants_file.write("export const {} = {};\n".format(values[1], values[2]))
+# constants.js used to be generated here from the #defines in Comms.cpp, for
+# settings_socket.js to import as an ES module. Both are gone: the current
+# pages are plain scripts that use the protocol letters directly, so the
+# generated file was being shipped to SPIFFS with nothing importing it.
 
 def generate_terser(terser_binary: str):
 	# use terser if present
@@ -39,10 +32,20 @@ def copy_files():
 	shutil.rmtree("{}/data".format(SCRIPT_DIR), ignore_errors=True)
 	shutil.copytree("{}/data_src".format(SCRIPT_DIR), "{}/data".format(SCRIPT_DIR))
 
+# Files that must not be gzipped.
+#   version.json - the firmware reads it out of SPIFFS itself
+#   nosleep.mp4  - already compressed, and some older Android builds choke on
+#                  a gzip-encoded media response
+# handleFileRead() sniffs the gzip magic, so leaving them uncompressed serves
+# them correctly too.
+NO_GZIP = ("version.json", "nosleep.mp4")
+
 def generate_gzip():
 	# gzip all files
 	for root, dirs, files in os.walk("{}/data".format(SCRIPT_DIR)):
 		for curr_file in files:
+			if curr_file in NO_GZIP:
+				continue
 			curr_file = "{}/{}".format(root, curr_file)
 			to_compress = None
 			with open(curr_file, "rb") as f:
@@ -58,7 +61,6 @@ if __name__ == "__main__" or __name__ == "SCons.Script":
 	parser.add_argument("--terser", dest="terser", help="Terser cmd [Default: %(default)s]", type=str, default= "{}/node_modules/terser/bin/terser".format(str(home)))
 	args, unknown = parser.parse_known_args()
 
-	generate_constants()
 	copy_files()
 	generate_terser(args.terser)
 	generate_gzip()

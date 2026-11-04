@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+	<title>Chorus32 &middot; Race</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+	<meta name="theme-color" content="#0b0b0c" />
+	<link rel="icon" href="logo.jpg" />
+	<link rel="stylesheet" href="assets/css/bc.css" />
+	<link rel="stylesheet" href="assets/css/race.css" />
+</head>
+
+<body>
+	<header class="bc-header"></header>
+	<nav class="bc-nav"></nav>
+
+	<section class="bc-card bc-race-bar">
+		<div class="bc-race-state">
+			<div class="bc-stat-label">Round <span id="race_num">&mdash;</span></div>
+			<div class="bc-race-status" id="race_status">Idle</div>
+			<div class="bc-stat-label bc-mono" id="race_clock">00:00</div>
+		</div>
+		<button id="race_button" class="bc-primary">Start</button>
+	</section>
+
+	<div class="bc-card bc-alert" id="capacity_alert" style="display:none">
+		<strong>More pilots than receivers</strong>
+		<p class="bc-small" id="capacity_text"></p>
+	</div>
+
+	<details class="bc-card bc-roster" id="roster_card" open>
+		<summary>
+			<span>Pilots in this race</span>
+			<span class="bc-roster-count" id="roster_count">0</span>
+		</summary>
+		<p class="bc-small bc-dim">
+			Tick a pilot to include them. The bar shows live RSSI against that
+			receiver's threshold: the threshold should sit above the noise but below
+			the peak as a quad passes the gate.
+		</p>
+		<div id="roster"></div>
+	</details>
+
+	<section class="bc-card">
+		<h2>Standings</h2>
+		<div id="standings"></div>
+		<div class="bc-empty" id="standings_empty">
+			No pilots are in the race yet. Tick one above.
+		</div>
+	</section>
+
+	<section class="bc-card">
+		<div class="bc-laps-head">
+			<h2>Lap times</h2>
+			<button id="clear_history" class="bc-small-btn">Clear history</button>
+		</div>
+		<div class="bc-stats" id="lap_stats"></div>
+		<div id="lap_rounds"></div>
+		<div class="bc-empty" id="lap_table_empty">No laps yet.</div>
+	</section>
+
+	<section class="bc-card">
+		<h2>Race options</h2>
+		<div class="bc-row">
+			<div class="bc-field" style="margin:0">
+				<label for="target_laps">Laps</label>
+				<input id="target_laps" type="number" min="1" max="99" value="20" />
+			</div>
+			<div class="bc-field" style="margin:0">
+				<label for="min_lap">Min lap (s)</label>
+				<input id="min_lap" type="number" min="1" max="120" />
+			</div>
+			<div class="bc-field" style="margin:0">
+				<label for="lang_select">Callout language</label>
+				<select id="lang_select">
+					<option value="en">English</option>
+					<option value="ar">&#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577; (Arabic)</option>
+				</select>
+			</div>
+		</div>
+		<div class="bc-field" style="margin-top:12px">
+			<label for="voice_select">Voice</label>
+			<div class="bc-row">
+				<select id="voice_select"></select>
+				<button id="voice_test" class="bc-shrink">Test</button>
+			</div>
+			<p class="bc-small bc-dim" id="voice_hint" style="margin:6px 0 0"></p>
+		</div>
+		<div class="bc-row" style="margin-top:12px">
+			<label class="bc-check"><input type="checkbox" id="opt_beep" checked /> Lap beep</label>
+			<label class="bc-check"><input type="checkbox" id="opt_voice" checked /> Callouts</label>
+		</div>
+		<div class="bc-row" style="margin-top:12px">
+			<label class="bc-check"><input type="checkbox" id="opt_awake" checked /> Keep screen awake</label>
+		</div>
+		<div class="bc-small bc-dim" id="awake_state" style="margin-top:8px"></div>
+	</section>
+
+	<footer class="bc-footer">
+		<span id="foot_version">&mdash;</span>
+		<span class="bc-dim">Lap times are reported by the timer</span>
+	</footer>
+
+	<script src="bc.js"></script>
+	<script src="nosleep.js"></script>
+	<script src="beep.js"></script>
+	<script src="announcer.js"></script>
+	<script src="race.js"></script>
+</body>
+
+</html>

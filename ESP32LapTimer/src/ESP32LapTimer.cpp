@@ -257,5 +257,16 @@ void loop() {
 
   if(UNLIKELY(!isInRaceMode())) {
     thresholdModeStep();
+    // Safety net for the no-multiplexing default. It is applied at init and
+    // on every pilot change already; re-asserting it periodically means that
+    // if any path still manages to clear it, a receiver goes back to being
+    // pinned to one pilot within a couple of seconds instead of silently
+    // crediting laps to the wrong person for a whole race. Only outside race
+    // mode, and it never overrides a setting the user chose.
+    static uint32_t last_multiplex_check = 0;
+    if(millis() - last_multiplex_check > 2000) {
+      last_multiplex_check = millis();
+      apply_multiplex_defaults();
+    }
   }
 }

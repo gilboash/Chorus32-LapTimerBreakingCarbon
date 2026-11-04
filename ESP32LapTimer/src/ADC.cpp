@@ -95,6 +95,13 @@ typedef struct receiver_data_s {
 static pilot_data_t pilots[MAX_NUM_PILOTS];
 static receiver_data_t receivers[MAX_NUM_RECEIVERS];
 
+// Which pilots the user has explicitly chosen a multiplexing setting for.
+// Everything else gets the default (multiplexing off) re-applied after any
+// path that rebuilds the pilot table, so the default cannot be quietly lost.
+// Not stored in EEPROM: adding a field to EepromSettingsStruct moves the CRC
+// and invalidates every existing timer's saved settings.
+static bool multiplex_user_set[MAX_NUM_PILOTS];
+
 // multiplexing queue
 static queue_t pilot_queue;
 static pilot_data_t* pilot_queue_data[MAX_NUM_PILOTS];
@@ -127,6 +134,27 @@ uint16_t multisample_adc1(adc1_channel_t channel, uint8_t samples) {
     val += adc1_get_raw(channel);
   }
   return val/samples;
+}
+
+/**
+ * Pin every pilot to one receiver rather than time-sharing, unless the user
+ * has deliberately asked otherwise for that pilot.
+ *
+ * Multiplexing retunes a module between pilots every few milliseconds, and
+ * samples taken while the RX5808 is still settling get credited to whichever
+ * pilot the module now belongs to, which reads as one pilot scoring another's
+ * laps. Correct timing for as many pilots as there are modules beats
+ * approximate timing for more of them.
+ *
+ * This is re-applied rather than set once: the pilot table is rebuilt on
+ * several paths and the default has to survive all of them.
+ */
+void apply_multiplex_defaults() {
+  for(uint8_t i = 0; i < MAX_NUM_PILOTS; ++i) {
+    if(!multiplex_user_set[i]) {
+      pilots[i].disable_multiplexing = true;
+    }
+  }
 }
 
 /**
@@ -186,6 +214,7 @@ void ConfigureADC(bool disable_all_modules) {
   for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
     pilots[i].number = i;
   }
+  apply_multiplex_defaults();
   memset(receivers, 0, MAX_NUM_RECEIVERS * sizeof(receiver_data_t));
   pilot_queue.curr_size = 0;
   pilot_queue.max_size = MAX_NUM_PILOTS;
@@ -429,6 +458,10 @@ void setPilotActive(uint8_t pilot, bool active) {
     }
   }
   current_pilot_num = 0;
+  // Re-apply the no-multiplexing default here too: this function rebuilds the
+  // whole assignment, and it runs on every channel, band and pilot change, so
+  // it is the point where a lost default would start costing laps.
+  apply_multiplex_defaults();
   // rebuild queue and delete all asignments. again this ist non-critical and the safest way to avoid bugs
   for(int i = 0; i < getNumReceivers(); ++i) {
     receivers[i].current_pilot = NULL;
@@ -436,8 +469,21 @@ void setPilotActive(uint8_t pilot, bool active) {
   for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
     // first reset all rx assignments
     pilots[i].current_rx = NULL;
-    if(pilots[i].state == PILOT_ACTIVE) {
-      ++current_pilot_num;
+    if(pilots[i].state != PILOT_ACTIVE) continue;
+    ++current_pilot_num;
+
+    // Pin a non-multiplexed pilot to the module of the same index instead of
+    // letting the queue decide. Previously every assignment was handed out by
+    // setNextPilot() in whatever order the ADC task's rotating module counter
+    // happened to be in, so the pilot-to-module mapping could come out
+    // different after any channel or band change. That matters because RSSI
+    // calibration is stored per module (RxCalibrationMin/Max are indexed by
+    // module, not by pilot), so a pilot landing on a different module gets its
+    // readings scaled differently and its threshold effectively moves.
+    if(i < getNumReceivers() && pilots[i].disable_multiplexing) {
+      receivers[i].current_pilot = &pilots[i];
+      pilots[i].current_rx = &receivers[i];
+    } else {
       queue_enqueue(&pilot_queue, &pilots[i]);
     }
   }
@@ -445,12 +491,35 @@ void setPilotActive(uint8_t pilot, bool active) {
   logToFile("New pilot num: ");
   logToFile("%d",current_pilot_num);
 
+  xSemaphoreGive(pilot_queue_lock);
+  xSemaphoreGive(pilots_lock);
+
+  // Hardware setup runs with the locks released. It used to sit inside them,
+  // and each isRxReady() spin is a MIN_TUNE_TIME_US (30ms) wait -- two per
+  // module, so up to 240ms for four, and setPilotChannel() calls this function
+  // twice. The ADC task takes pilots_lock with a one tick timeout, so it was
+  // locked out for that whole time and lap detection simply stopped for up to
+  // a second whenever someone changed a channel. Nothing below touches pilot
+  // state, and the ADC task already refuses to sample a module whose
+  // isRxReady() is false, so it is safe out here.
+  //
   // only reset active modules. a user might have 6 modules installed but only uses 4. using the all function all modules would power up
   for(int i = 0; i < MIN(current_pilot_num, getNumReceivers()); ++i) {
     RXreset(i);
     while(!isRxReady(i));
     rxLowPower(i);
     while(!isRxReady(i));
+  }
+
+  // Tune the modules we bound above. setNextPilot() deliberately refuses to
+  // touch a receiver that already holds a non-multiplexed pilot, and tuning
+  // only ever happened on that path, so without this the pinned modules would
+  // keep whatever frequency they had.
+  for(uint8_t i = 0; i < getNumReceivers(); ++i) {
+    pilot_data_t* bound = receivers[i].current_pilot;
+    if(bound == NULL) continue;
+    setModuleChannelBand(getRXChannelPilot(bound->number),
+                         getRXBandPilot(bound->number), i);
   }
 
   // adjust the filters for all active pilots
@@ -471,16 +540,33 @@ void setPilotActive(uint8_t pilot, bool active) {
       Serial.printf("Set filtering cutoff to %f hz\n", (6000.0 * on_fraction));
     }
   }*/
-
-  xSemaphoreGive(pilot_queue_lock);
-  xSemaphoreGive(pilots_lock);
+  // The locks are released above, before the hardware setup.
 }
 
 bool isPilotMultiplexOff(uint8_t pilot) {
   return pilots[pilot].disable_multiplexing;
 }
 
+bool isPilotMultiplexUserSet(uint8_t pilot) {
+  return multiplex_user_set[pilot];
+}
+
+/// Which pilot a receiver is currently tuned to, or -1 if it has none.
+/// This is the thing that actually decides whose RSSI a module's samples are
+/// credited to, and until now nothing could see it from outside.
+int8_t getReceiverPilot(uint8_t receiver) {
+  if(receiver >= MAX_NUM_RECEIVERS) return -1;
+  pilot_data_t* pilot = receivers[receiver].current_pilot;
+  return pilot ? (int8_t)pilot->number : -1;
+}
+
+uint8_t getActivePilotCount() {
+  return current_pilot_num;
+}
+
 void setPilotMultiplexOff(uint8_t pilot, bool off) {
+  // A deliberate choice, so stop forcing the default on this pilot.
+  multiplex_user_set[pilot] = true;
   pilots[pilot].disable_multiplexing = off;
 }
 
@@ -492,11 +578,44 @@ void setPilotFilters(uint16_t cutoff) {
   }
 }
 
+/**
+ * Retune just the module this pilot owns, leaving every other pilot alone.
+ *
+ * The toggle below (setPilotActive false then true) is a sledgehammer: it
+ * powers down every module, drops every pilot's assignment and rebuilds the
+ * lot, so changing one pilot's frequency disturbs all of them. When a pilot
+ * is pinned to its own module there is nothing to rebuild -- the module just
+ * needs a new frequency.
+ *
+ * \returns true if the pilot owned a module and it was retuned.
+ */
+static bool retunePinnedModule(uint8_t pilot) {
+  if(!pilots[pilot].disable_multiplexing) return false;
+
+  bool done = false;
+  while(!xSemaphoreTake(pilots_lock, portMAX_DELAY));
+  for(uint8_t i = 0; i < MAX_NUM_RECEIVERS; ++i) {
+    if(receivers[i].current_pilot != &pilots[pilot]) continue;
+    setModuleChannelBand(getRXChannelPilot(pilot), getRXBandPilot(pilot), i);
+    // Throw away any half-finished lap trigger: the readings either side of a
+    // retune belong to two different frequencies and must not be compared.
+    // Sampling is already suppressed until isRxReady() comes back, so there is
+    // no settling transient to guard against beyond this.
+    pilots[pilot].max_adc = 0;
+    pilots[pilot].max_time = 0;
+    pilots[pilot].samples = 0;
+    done = true;
+    break;
+  }
+  xSemaphoreGive(pilots_lock);
+  return done;
+}
+
 void setPilotChannel(uint8_t pilot, uint8_t channel) {
   setRXChannelPilot(pilot, channel);
   EepromSettings.RXChannel[pilot] = channel;
   setSaveRequired();
-  if(isPilotActive(pilot)) {
+  if(isPilotActive(pilot) && !retunePinnedModule(pilot)) {
     // Toggle pilot to force new channel
     setPilotActive(pilot, false);
     setPilotActive(pilot, true);
@@ -508,7 +627,7 @@ void setPilotBand(uint8_t pilot, uint8_t band) {
   setRXBandPilot(pilot, band);
   EepromSettings.RXBand[pilot] = band;
   setSaveRequired();
-  if(isPilotActive(pilot)) {
+  if(isPilotActive(pilot) && !retunePinnedModule(pilot)) {
     // Toggle pilot to force new band
     setPilotActive(pilot, false);
     setPilotActive(pilot, true);
@@ -522,7 +641,7 @@ void setPilotBandChannel(uint8_t pilot, uint8_t band, uint8_t channel)
   EepromSettings.RXChannel[pilot] = channel;
   EepromSettings.RXBand[pilot] = band;
   setSaveRequired();
-  if(isPilotActive(pilot)) {
+  if(isPilotActive(pilot) && !retunePinnedModule(pilot)) {
     // Toggle pilot to force new band
     setPilotActive(pilot, false);
     setPilotActive(pilot, true);

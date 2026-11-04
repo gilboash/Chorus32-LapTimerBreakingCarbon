@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+	<title>Chorus32 &middot; Settings</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+	<meta name="theme-color" content="#0b0b0c" />
+	<link rel="icon" href="logo.jpg" />
+	<link rel="stylesheet" href="assets/css/bc.css" />
+	<link rel="stylesheet" href="assets/css/settings.css" />
+</head>
+
+<body>
+	<header class="bc-header"></header>
+	<nav class="bc-nav"></nav>
+
+	<section class="bc-card">
+		<h2>Receivers</h2>
+		<div class="bc-field">
+			<label for="num_rx">Number of receivers</label>
+			<select id="num_rx">
+				<option value="1">1</option>
+				<option value="2">2</option>
+				<option value="3">3</option>
+				<option value="4">4</option>
+				<option value="5">5</option>
+				<option value="6">6</option>
+			</select>
+		</div>
+		<label class="bc-check"><input type="checkbox" id="opt_sound" /> Buzzer</label>
+	</section>
+
+	<div id="receivers"></div>
+
+	<section class="bc-card">
+		<h2>Calibration</h2>
+		<p class="bc-small bc-dim">
+			Run this with a VTX powered up at 25mW on any channel. Running it with no
+			active VTX will leave the timer unable to detect laps until you run it again.
+		</p>
+		<button id="calibrate_button">Calibrate RSSI</button>
+	</section>
+
+	<section class="bc-card">
+		<h2>Battery</h2>
+		<div class="bc-field">
+			<label for="vbat_mode">Measurement mode</label>
+			<select id="vbat_mode">
+				<option value="0">Off (6 channel mode, no VBAT)</option>
+				<option value="1">ADC channel 5 (GPIO 32)</option>
+				<option value="2">ADC channel 6 (GPIO 33)</option>
+				<option value="3">INA219 (6 channel mode)</option>
+			</select>
+		</div>
+		<div class="bc-field">
+			<label for="vbat_calib">Calibration constant</label>
+			<input id="vbat_calib" type="number" step="0.01" min="0" max="65" />
+		</div>
+	</section>
+
+	<section class="bc-card">
+		<h2>WiFi</h2>
+		<p class="bc-small bc-dim">Changes take effect after a reset.</p>
+		<div class="bc-field">
+			<label for="wifi_protocol">Protocol</label>
+			<select id="wifi_protocol">
+				<option value="0">b (longest range)</option>
+				<option value="1">bgn (fastest)</option>
+			</select>
+		</div>
+		<div class="bc-row">
+			<div class="bc-field">
+				<label for="wifi_channel">Channel (1-13)</label>
+				<input id="wifi_channel" type="number" min="1" max="13" />
+			</div>
+			<div class="bc-field">
+				<label for="wifi_ssid">Name suffix</label>
+				<input id="wifi_ssid" type="number" min="0" max="9999" />
+			</div>
+		</div>
+		<p class="bc-small bc-dim">Network will be Chorus32_naco_<span id="ssid_preview">&mdash;</span></p>
+	</section>
+
+	<section class="bc-card">
+		<h2>Advanced</h2>
+		<div class="bc-row">
+			<div class="bc-field">
+				<label for="filter_cutoff">RX filter cutoff</label>
+				<input id="filter_cutoff" type="number" min="0" max="1000" />
+			</div>
+			<div class="bc-field">
+				<label for="display_timeout">Display timeout (s)</label>
+				<input id="display_timeout" type="number" min="0" />
+			</div>
+		</div>
+	</section>
+
+	<section class="bc-card">
+		<h2>Reset</h2>
+		<div class="bc-row">
+			<button id="chorus_reset">Restart timer</button>
+			<button id="eeprom_reset" class="bc-danger">Reset settings</button>
+		</div>
+		<p class="bc-small bc-dim" style="margin-bottom:0">
+			Resetting settings clears channels, thresholds and calibration.
+		</p>
+	</section>
+
+	<footer class="bc-footer">
+		<span id="foot_version">&mdash;</span>
+		<span class="bc-dim">Orange means sent, green means confirmed by the timer</span>
+	</footer>
+
+	<script src="bc.js"></script>
+	<script src="settings.js"></script>
+</body>
+
+</html>

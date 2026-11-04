@@ -1,47 +1,87 @@
-td, th {
-  text-align: center;
-  vertical-align: middle;
+/* Settings page. The old UI put all nine per-receiver fields in one wide
+ * table, which on a phone meant horizontal scrolling to reach the channel
+ * selector. One card per receiver instead. */
+
+.bc-rx {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-left: 4px solid var(--rx-colour, var(--line));
+	border-radius: var(--radius);
+	padding: 12px;
+	margin: 8px 0;
 }
 
-#calib_table * {
-	border: 1px solid black;
-	width: 5em;
+.bc-rx-head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 10px;
 }
 
-#pilot_table {
-	width: 100%;
+.bc-rx-title {
+	font-weight: 700;
+	font-size: 15px;
+	flex: 1;
 }
 
-.band_select, .channel_select {
-	width: auto;
+.bc-rx-freq {
+	font-size: 12px;
+	color: var(--text-dim);
+	font-variant-numeric: tabular-nums;
 }
 
-.rssi_select {
-	width:3.5em;
+.bc-rx-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
 }
 
-[val_state="pending"] {
-	outline: 1px solid orange;
+.bc-rx-grid .bc-field { margin: 0; }
+
+.bc-rx-rssi {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 12px;
+	color: var(--text-dim);
+	font-variant-numeric: tabular-nums;
 }
 
-[val_state="received"] {
-	outline: 1px solid green;
+/* Live RSSI against the threshold, so you can set the threshold by eye. */
+.bc-rx-meter {
+	flex: 1;
+	height: 8px;
+	background: var(--surface-2);
+	border-radius: 4px;
+	position: relative;
+	overflow: hidden;
 }
 
-[val_state="error"] {
-	outline: 1px solid red;
+.bc-rx-meter .bc-rx-level {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	background: var(--rx-colour, var(--text-dim));
+	width: 0;
 }
 
-#update_progress {
-  width: 100%;
-  background-color: grey;
+.bc-rx-meter .bc-rx-mark {
+	position: absolute;
+	top: -2px;
+	bottom: -2px;
+	width: 2px;
+	background: var(--text);
 }
 
-#update_bar {
-  width: 1%;
-  height: 30px;
-  background-color: green;
-  text-align: center;
-  line-height: 30px;
-  color: white;
+.bc-check {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 14px;
+	color: var(--text);
+	margin: 0;
 }
+
+.bc-check input { flex: 0 0 auto; }

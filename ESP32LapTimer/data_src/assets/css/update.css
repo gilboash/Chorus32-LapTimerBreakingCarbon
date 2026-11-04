@@ -1,0 +1,44 @@
+/* Update page. */
+
+.bc-progress {
+	position: relative;
+	height: 28px;
+	background: var(--surface-2);
+	border-radius: var(--radius);
+	overflow: hidden;
+	margin: var(--gap) 0;
+}
+
+.bc-progress-bar {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 0;
+	background: var(--ok);
+	transition: width 0.15s linear;
+}
+
+.bc-progress-text {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 13px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	/* Sits above the bar, so it has to stay legible against both. */
+	mix-blend-mode: difference;
+	color: #fff;
+}
+
+.bc-upload-kind {
+	font-size: 13px;
+	margin-bottom: var(--gap);
+	min-height: 20px;
+}
+
+.bc-upload-kind.firmware { color: var(--ok); }
+.bc-upload-kind.filesystem { color: var(--ok); }
+.bc-upload-kind.unknown { color: var(--err); }

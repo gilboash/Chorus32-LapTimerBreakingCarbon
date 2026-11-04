@@ -33,7 +33,26 @@ static pattern_t* current_pattern = NULL;
 static uint32_t start_time = 0;
 static uint8_t repeat_count = 0;
 
+// Off until something asks for it. A timer that starts beeping the moment it
+// powers up is a nuisance on the bench and at a start line.
+static bool sound_enabled = false;
+
+void beeper_set_enabled(bool enabled) {
+  sound_enabled = enabled;
+  if(!enabled) {
+    // Drop whatever is queued and shut the buzzer up immediately.
+    while(queue_dequeue(&beep_queue) != NULL) {}
+    current_pattern = NULL;
+    digitalWrite(BEEPER, LOW);
+  }
+}
+
+bool beeper_is_enabled() {
+  return sound_enabled;
+}
+
 void beeper_add_to_queue(const pattern_t* pattern) {
+  if(!sound_enabled) return;
   queue_enqueue(&beep_queue, (void*)pattern);
 }
 
@@ -43,7 +62,10 @@ void beeperUpdate() {
     if(millis() - start_time < current_pattern->on_time) {
       digitalWrite(BEEPER, HIGH);
     }
-    else if (millis() - start_time < current_pattern->off_time) {
+    // off_time is the length of the silence, so the pattern's period is
+    // on_time + off_time. Comparing against off_time alone made every repeat
+    // end the moment the tone did, so a double beep came out as one long one.
+    else if (millis() - start_time < (uint32_t)current_pattern->on_time + current_pattern->off_time) {
       digitalWrite(BEEPER, LOW);
     }
     else { // pattern end

@@ -1,0 +1,374 @@
+/* Breaking Carbon theme for the Chorus32 timer.
+ *
+ * Phone-portrait first: this is used one-handed at a track, so touch targets
+ * are >=44px and the important numbers are large. Dark by default to match the
+ * logo, with a daylight mode (data-theme="light") because a black UI is hard
+ * to read in direct sun.
+ *
+ * Everything here ships in a 192KB SPIFFS on a device with no internet, so
+ * there are no webfonts and no external stylesheets. System font stack only.
+ */
+
+:root {
+	--bg: #0b0b0c;
+	--surface: #141416;
+	--surface-2: #1c1c20;
+	--line: #2c2c33;
+	--text: #f2f2f3;
+	--text-dim: #93939c;
+
+	--ok: #3ddc84;
+	--warn: #ffb020;
+	--err: #ff4d4f;
+
+	/* Per-receiver series colours, used by the plot and the standings.
+	 * Chosen to stay distinguishable against both themes. */
+	--rx1: #4ea3ff;
+	--rx2: #ff6b4a;
+	--rx3: #3ddc84;
+	--rx4: #ffd93d;
+	--rx5: #c084fc;
+	--rx6: #22d3ee;
+	--rx7: #f472b6;
+	--rx8: #a3e635;
+
+	--radius: 10px;
+	--gap: 12px;
+	--tap: 44px;
+}
+
+:root[data-theme="light"] {
+	--bg: #ffffff;
+	--surface: #f3f3f5;
+	--surface-2: #e8e8ec;
+	--line: #d2d2d8;
+	--text: #0b0b0c;
+	--text-dim: #5c5c66;
+
+	--ok: #0f9d58;
+	--warn: #b26a00;
+	--err: #c62828;
+
+	/* Darkened so they keep contrast on white. */
+	--rx1: #0b63c5;
+	--rx2: #c03a16;
+	--rx3: #0f9d58;
+	--rx4: #a07800;
+	--rx5: #7c3aed;
+	--rx6: #0e7490;
+	--rx7: #be185d;
+	--rx8: #4d7c0f;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+	margin: 0;
+	padding: 0;
+	background: var(--bg);
+	color: var(--text);
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	font-size: 16px;
+	line-height: 1.4;
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	padding: 0 16px 48px;
+	max-width: 960px;
+	margin: 0 auto;
+}
+
+/* ---- header ---- */
+
+.bc-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 0;
+	border-bottom: 1px solid var(--line);
+	position: sticky;
+	top: 0;
+	background: var(--bg);
+	z-index: 10;
+}
+
+/* Two marks: the Chorus32 flag and the Breaking Carbon wordmark. Both are
+ * drawn light-on-dark, so both get inverted in daylight mode -- otherwise the
+ * flag is near-white on white and the wordmark is a black box. */
+.bc-header img {
+	width: auto;
+	flex: 0 0 auto;
+}
+
+.bc-header .bc-mark { height: 26px; }
+
+.bc-header .bc-wordmark {
+	height: 28px;
+	border-radius: 3px;
+}
+
+:root[data-theme="light"] .bc-header img {
+	filter: invert(1);
+}
+
+.bc-header .bc-title {
+	font-weight: 700;
+	font-size: 13px;
+	line-height: 1.15;
+	letter-spacing: 0.01em;
+	flex: 1;
+	min-width: 0;
+}
+
+.bc-header .bc-sub {
+	display: block;
+	font-weight: 400;
+	font-size: 12px;
+	color: var(--text-dim);
+}
+
+/* ---- nav ---- */
+
+.bc-nav {
+	display: flex;
+	gap: 8px;
+	overflow-x: auto;
+	padding: 12px 0;
+	-webkit-overflow-scrolling: touch;
+}
+
+.bc-nav a {
+	flex: 1 0 auto;
+	min-height: var(--tap);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 16px;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	color: var(--text);
+	text-decoration: none;
+	font-weight: 600;
+	font-size: 14px;
+	white-space: nowrap;
+}
+
+.bc-nav a.active {
+	background: var(--text);
+	color: var(--bg);
+	border-color: var(--text);
+}
+
+/* ---- cards ---- */
+
+.bc-card {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	padding: 14px;
+	margin: var(--gap) 0;
+}
+
+.bc-card h2 {
+	margin: 0 0 10px;
+	font-size: 13px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--text-dim);
+}
+
+/* ---- controls ---- */
+
+button, .bc-btn {
+	min-height: var(--tap);
+	padding: 0 18px;
+	background: var(--surface-2);
+	color: var(--text);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	font-size: 15px;
+	font-weight: 600;
+	font-family: inherit;
+	cursor: pointer;
+}
+
+button:active { transform: translateY(1px); }
+
+/* Fading a coloured button alone still leaves it looking tappable, so drop the
+ * colour entirely: a disabled Upload must not read as a live green button. */
+button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	background: var(--surface-2);
+	border-color: var(--line);
+	color: var(--text-dim);
+}
+
+button.bc-primary {
+	background: var(--ok);
+	border-color: var(--ok);
+	color: #04210f;
+}
+
+button.bc-danger {
+	background: var(--err);
+	border-color: var(--err);
+	color: #fff;
+}
+
+input[type="text"], input[type="number"], input[type="file"], select {
+	min-height: var(--tap);
+	width: 100%;
+	padding: 0 12px;
+	background: var(--surface-2);
+	color: var(--text);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	font-size: 16px; /* 16px stops iOS zooming the page on focus */
+	font-family: inherit;
+}
+
+input[type="checkbox"] {
+	width: 24px;
+	height: 24px;
+	accent-color: var(--ok);
+}
+
+label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 6px; }
+
+.bc-field { margin-bottom: var(--gap); }
+
+.bc-row {
+	display: flex;
+	align-items: center;
+	gap: var(--gap);
+}
+
+.bc-row > * { flex: 1; }
+.bc-row > .bc-shrink { flex: 0 0 auto; }
+
+/* Value-sync states, carried over from the old UI: orange while a change is
+ * in flight to the timer, green once it has echoed back. */
+[val_state="pending"] { outline: 2px solid var(--warn); outline-offset: -2px; }
+[val_state="received"] { outline: 2px solid var(--ok); outline-offset: -2px; }
+[val_state="error"] { outline: 2px solid var(--err); outline-offset: -2px; }
+
+/* ---- status pills ---- */
+
+.bc-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 10px;
+	border-radius: 999px;
+	background: var(--surface-2);
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-dim);
+}
+
+.bc-pill .bc-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--text-dim);
+}
+
+.bc-pill.ok .bc-dot { background: var(--ok); }
+.bc-pill.warn .bc-dot { background: var(--warn); }
+.bc-pill.err .bc-dot { background: var(--err); }
+.bc-pill.ok { color: var(--ok); }
+.bc-pill.warn { color: var(--warn); }
+.bc-pill.err { color: var(--err); }
+
+/* ---- stat grid ---- */
+
+.bc-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+	gap: var(--gap);
+}
+
+.bc-stat .bc-stat-label {
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-dim);
+}
+
+.bc-stat .bc-stat-value {
+	font-size: 22px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+/* ---- plot ---- */
+
+.bc-plot-wrap { position: relative; }
+
+canvas.bc-plot {
+	display: block;
+	width: 100%;
+	height: 220px;
+	background: var(--surface-2);
+	border-radius: var(--radius);
+	touch-action: pan-y;
+}
+
+.bc-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+.bc-legend .bc-legend-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+	color: var(--text-dim);
+	background: var(--surface-2);
+	border-radius: 999px;
+	padding: 4px 10px;
+}
+
+.bc-legend .bc-swatch {
+	width: 10px;
+	height: 10px;
+	border-radius: 2px;
+}
+
+/* ---- empty state ---- */
+
+.bc-empty {
+	text-align: center;
+	color: var(--text-dim);
+	font-size: 14px;
+	padding: 24px 12px;
+}
+
+.bc-empty a { color: var(--text); }
+
+/* ---- utility ---- */
+
+.bc-mono { font-variant-numeric: tabular-nums; }
+.bc-dim { color: var(--text-dim); }
+.bc-small { font-size: 12px; }
+.bc-hidden { display: none !important; }
+
+.bc-footer {
+	margin-top: 24px;
+	padding-top: 12px;
+	border-top: 1px solid var(--line);
+	font-size: 11px;
+	color: var(--text-dim);
+	display: flex;
+	justify-content: space-between;
+	gap: var(--gap);
+	flex-wrap: wrap;
+}

@@ -28,6 +28,8 @@
 #include "Output.h"
 #include "CrashDetection.h"
 #include "Logging.h"
+#include "Version.h"
+#include "Beeper.h"
 
 #include <esp_wifi.h>
 #include <FS.h>
@@ -79,8 +81,23 @@ String getContentType(String filename) { // convert the file extension to the MI
   else if (filename.endsWith(".xml")) return "text/xml";
   else if (filename.endsWith(".pdf")) return "application/x-pdf";
   else if (filename.endsWith(".zip")) return "application/x-zip";
+  else if (filename.endsWith(".json")) return "application/json";
+  else if (filename.endsWith(".mp4")) return "video/mp4";
   else if (filename.endsWith(".gz")) return "application/x-gzip";
   return "text/plain";
+}
+
+// prepare_data.py gzips most files in place, but not all of them, and a
+// filesystem image flashed over OTA may not have come from our build at all.
+// Sniff the gzip magic instead of assuming, so we never label a plain file as
+// compressed (which makes the browser discard it).
+static bool isGzipped(String path) {
+  File f = SPIFFS.open(path, "r");
+  if (!f) return false;
+  uint8_t magic[2] = {0, 0};
+  size_t read = f.read(magic, sizeof(magic));
+  f.close();
+  return read == sizeof(magic) && magic[0] == 0x1F && magic[1] == 0x8B;
 }
 
 bool handleFileRead(AsyncWebServerRequest* req, String path) { // send the right file to the client (if it exists)
@@ -88,11 +105,121 @@ bool handleFileRead(AsyncWebServerRequest* req, String path) { // send the right
   String contentType = getContentType(path);            // Get the MIME type
   if (SPIFFS.exists(path)) {
     AsyncWebServerResponse *response = req->beginResponse(SPIFFS, path, contentType);
-    response->addHeader("Content-Encoding", "gzip");
+    if (isGzipped(path)) {
+      response->addHeader("Content-Encoding", "gzip");
+    }
     req->send(response);
     return true;
   }
   return false;                                         // If the file doesn't exist, return false
+}
+
+// Reads one field out of the generated /version.json that ships in the
+// filesystem image. Deliberately a hand-rolled scan rather than a JSON parser:
+// the file is ours, it is three fields long, and this avoids a dependency.
+static String getFilesystemField(const char* field) {
+  if (!SPIFFS.exists("/version.json")) return String("unknown");
+  File f = SPIFFS.open("/version.json", "r");
+  if (!f) return String("unknown");
+  String content = f.readString();
+  f.close();
+
+  int key = content.indexOf(String("\"") + field + "\"");
+  if (key < 0) return String("unknown");
+  int colon = content.indexOf(':', key);
+  if (colon < 0) return String("unknown");
+  int start = content.indexOf('"', colon);
+  if (start < 0) return String("unknown");
+  int end = content.indexOf('"', ++start);
+  if (end < 0) return String("unknown");
+  return content.substring(start, end);
+}
+
+// Firmware and filesystem are two separate OTA uploads, so report both and let
+// the UI shout if they drifted apart.
+void sendVersion(AsyncWebServerRequest* req) {
+  String fs_version = getFilesystemField("version");
+  String fs_git = getFilesystemField("git");
+
+  // Compare the build hashes, not the version strings. FIRMWARE_VERSION is
+  // bumped by hand and rarely changes, so two images from entirely different
+  // commits both call themselves the same version -- which made this check
+  // report a match while the firmware and the web UI were in fact from
+  // different builds, exactly the case it exists to catch.
+  bool matched = (fs_version == FIRMWARE_VERSION) && (fs_git == String(GIT_HASH));
+
+  String body = String("{\"firmware\":\"") + FIRMWARE_VERSION +
+                "\",\"filesystem\":\"" + fs_version +
+                "\",\"match\":" + (matched ? "true" : "false") +
+                ",\"git\":\"" + GIT_HASH +
+                "\",\"filesystem_git\":\"" + fs_git +
+                "\",\"built\":\"" + BUILD_DATE +
+                "\",\"api\":\"0004\"}";
+  req->send(200, "application/json", body);
+}
+
+// The connectivity-check URLs the major platforms hit after associating. Any of
+// them answered with a redirect makes the OS pop the captive portal page, which
+// is how we get the timer's UI to open by itself on connect.
+static bool isCaptivePortalProbe(AsyncWebServerRequest* req) {
+  String url = req->url();
+  return url == "/generate_204" ||              // Android
+         url == "/gen_204" ||                   // Android (older)
+         url == "/hotspot-detect.html" ||       // iOS / macOS
+         url == "/library/test/success.html" || // iOS / macOS (older)
+         url == "/success.txt" ||               // Firefox / iOS
+         url == "/canonical.html" ||            // Firefox
+         url == "/connectivity-check.html" ||   // Ubuntu
+         url == "/check_network_status.txt" ||  // Ubuntu
+         url == "/connecttest.txt" ||           // Windows
+         url == "/redirect" ||                  // Windows
+         url == "/ncsi.txt" ||                  // Windows
+         url == "/fwlink";                      // Windows
+}
+
+// Live state dump, so the timer can be diagnosed over wifi instead of needing
+// a serial cable and a physical reset to see anything. Read-only.
+//
+// The receiver->pilot assignment is the important part: it is what decides
+// whose RSSI a module's samples are credited to, and a wrong assignment looks
+// exactly like one pilot scoring another's laps.
+void sendDebugState(AsyncWebServerRequest* req) {
+  String body = "{";
+  body += "\"uptime_ms\":" + String(millis());
+  body += ",\"free_heap\":" + String(ESP.getFreeHeap());
+  body += ",\"min_free_heap\":" + String(ESP.getMinFreeHeap());
+  body += ",\"racing\":" + String(isInRaceMode() ? "true" : "false");
+  body += ",\"race_num\":" + String(getRaceNum());
+  body += ",\"num_receivers\":" + String(getNumReceivers());
+  body += ",\"active_pilots\":" + String(getActivePilotCount());
+  body += ",\"count_first_lap\":" + String(getCountFirstLap());
+  body += ",\"min_lap_time_ms\":" + String(getMinLapTime());
+  body += ",\"buzzer\":" + String(beeper_is_enabled() ? "true" : "false");
+
+  body += ",\"receivers\":[";
+  for (uint8_t i = 0; i < MAX_NUM_RECEIVERS; ++i) {
+    if (i) body += ",";
+    body += "{\"rx\":" + String(i) + ",\"pilot\":" + String(getReceiverPilot(i)) + "}";
+  }
+  body += "]";
+
+  body += ",\"pilots\":[";
+  for (uint8_t i = 0; i < MAX_NUM_PILOTS; ++i) {
+    if (i) body += ",";
+    body += "{\"n\":" + String(i);
+    body += ",\"active\":" + String(isPilotActive(i) ? "true" : "false");
+    body += ",\"multiplex_off\":" + String(isPilotMultiplexOff(i) ? "true" : "false");
+    body += ",\"multiplex_user_set\":" + String(isPilotMultiplexUserSet(i) ? "true" : "false");
+    body += ",\"band\":" + String(getRXBandPilot(i));
+    body += ",\"channel\":" + String(getRXChannelPilot(i));
+    body += ",\"rssi\":" + String(getRSSI(i));
+    body += ",\"threshold\":" + String(getRSSIThreshold(i));
+    body += ",\"laps\":" + String(getCurrentLap(i));
+    body += "}";
+  }
+  body += "]}";
+
+  req->send(200, "application/json", body);
 }
 
 void updateRx (int band, int channel, int rx) {
@@ -188,8 +315,13 @@ void InitWebServer() {
 
   if (!SPIFFS.exists("/index.html")) {
     Serial.println("SPIFFS filesystem was not found");
+    // Serve the built-in page directly. Going through handleFileRead would look
+    // for /recovery.html *in SPIFFS*, which is exactly what we don't have here:
+    // it would find nothing, return false and never send a response, leaving the
+    // request to hang. This is the path a half-finished filesystem update lands
+    // on, so it has to work without a serial cable.
     webServer.on("/", HTTP_GET, [](AsyncWebServerRequest* req) {
-      handleFileRead(req, "/recovery.html");
+      req->send(200, "text/html", NOSPIFFS);
     });
   } else {
     webServer.on("/", HTTP_GET, [](AsyncWebServerRequest* req) {
@@ -202,16 +334,11 @@ void InitWebServer() {
 
   webServer.onNotFound([](AsyncWebServerRequest* req) {
 
-    if (
-      (req->url() == "/generate_204") ||
-      (req->url() == "/gen_204") ||
-      (req->url() == "/library/test/success.html") ||
-      (req->url() == "/hotspot-detect.html") ||
-      (req->url() == "/connectivity-check.html")  ||
-      (req->url() == "/check_network_status.txt")  ||
-      (req->url() == "/ncsi.txt")
-    ) {
-      req->redirect("/");
+    if (isCaptivePortalProbe(req)) {
+      // Every OS probes a URL it expects a specific answer from, and shows the
+      // "sign in to network" sheet when it gets a redirect instead. Send an
+      // absolute URL: some clients ignore a relative Location on a probe.
+      req->redirect(String("http://") + WiFi.softAPIP().toString() + "/");
     } else {
       // If the client requests any URI
       if (!handleFileRead(req, req->url()))                  // send it if it exists
@@ -228,6 +355,9 @@ void InitWebServer() {
         }
     });
 
+
+  webServer.on("/version", HTTP_GET, sendVersion);
+  webServer.on("/debug", HTTP_GET, sendDebugState);
 
   webServer.on("/start_race", startRace_button);
   webServer.on("/stop_race", stopRace_button);
