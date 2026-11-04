@@ -656,6 +656,13 @@ BC.on_message(function (msg) {
 		case "r": // current RSSI, already divided by 12 by the timer
 			pilots[msg.node].rssi = parseInt(msg.payload, 16);
 			break;
+		case "M": // minimum lap time, in whole seconds, two hex digits
+			var min_field = document.getElementById("min_lap");
+			if (min_field != null && document.activeElement !== min_field) {
+				min_field.value = parseInt(msg.payload.substr(0, 2), 16);
+			}
+			BC.received(min_field);
+			break;
 		case "R":
 			set_racing(parseInt(msg.payload[0]) != 0);
 			break;
@@ -714,6 +721,22 @@ document.getElementById("race_button").onclick = function () {
 		Announcer.go();
 	}
 };
+
+// Minimum lap time lives on the timer, not in this page: it is what stops a
+// single gate pass being counted twice, and it is the first thing to raise if
+// phantom laps appear. Uses CONTROL_MIN_LAP_TIME, which is part of the
+// original protocol, so the app keeps setting it too.
+document.getElementById("min_lap").addEventListener("change", function () {
+	var seconds = parseInt(this.value, 10);
+	if (isNaN(seconds) || seconds < 1 || seconds > 120) {
+		// The firmware silently ignores anything outside 1..120, so don't
+		// pretend it was applied; ask for the current value back instead.
+		BC.send("R*M\n");
+		return;
+	}
+	BC.pending(this);
+	BC.set_value("*", "M", seconds, 8);
+});
 
 document.getElementById("target_laps").addEventListener("input", function () {
 	target_laps = Math.max(1, parseInt(this.value, 10) || 1);

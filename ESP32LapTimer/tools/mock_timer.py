@@ -27,6 +27,7 @@ ACTIVE = [True, True, True, True, True, True, False, False]
 BANDS = [0, 0, 0, 0, 0, 0, 0, 0]
 CHANNELS = [0, 1, 2, 3, 4, 5, 6, 7]
 THRESHOLDS = [180] * NUM_PILOTS  # as sent, i.e. raw/12
+MIN_LAP_S = [10]  # whole seconds, as CONTROL_MIN_LAP_TIME carries it
 
 MIME = {
     ".html": "text/html", ".js": "application/javascript", ".css": "text/css",
@@ -106,6 +107,7 @@ class Client(threading.Thread):
             self.send_text("S{}B{}\n".format(hx(node, 1), hx(BANDS[node], 1)))
             self.send_text("S{}C{}\n".format(hx(node, 1), hx(CHANNELS[node], 1)))
             self.send_text("S{}T{}\n".format(hx(node, 1), hx(THRESHOLDS[node], 4)))
+        self.send_text("S0M{}\n".format(hx(MIN_LAP_S[0], 2)))
         self.send_text("S0R{}\n".format(1 if self.race_on else 0))
         self.send_text("S0v{}\n".format(hx(int(12.4 / 11 * (1024 / 5)), 4)))
 
@@ -142,6 +144,12 @@ class Client(threading.Thread):
                 self.send_text("ES*R{}\n".format(hx(self.race_num, 2)))
             for node in range(NUM_PILOTS):
                 self.send_text("S{}R{}\n".format(hx(node, 1), 1 if self.race_on else 0))
+        elif line.startswith("R*M"):
+            if len(line) >= 5:
+                value = int(line[3:5], 16)
+                if 1 <= value <= 120:  # firmware clamps the same way
+                    MIN_LAP_S[0] = value
+            self.send_text("S0M{}\n".format(hx(MIN_LAP_S[0], 2)))
         elif len(line) >= 7 and line[0] == "R" and line[2] == "T":
             node = int(line[1], 16)
             THRESHOLDS[node] = int(line[3:7], 16)

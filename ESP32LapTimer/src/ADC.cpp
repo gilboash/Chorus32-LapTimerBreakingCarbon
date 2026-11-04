@@ -469,8 +469,21 @@ void setPilotActive(uint8_t pilot, bool active) {
   for(int i = 0; i < MAX_NUM_PILOTS; ++i) {
     // first reset all rx assignments
     pilots[i].current_rx = NULL;
-    if(pilots[i].state == PILOT_ACTIVE) {
-      ++current_pilot_num;
+    if(pilots[i].state != PILOT_ACTIVE) continue;
+    ++current_pilot_num;
+
+    // Pin a non-multiplexed pilot to the module of the same index instead of
+    // letting the queue decide. Previously every assignment was handed out by
+    // setNextPilot() in whatever order the ADC task's rotating module counter
+    // happened to be in, so the pilot-to-module mapping could come out
+    // different after any channel or band change. That matters because RSSI
+    // calibration is stored per module (RxCalibrationMin/Max are indexed by
+    // module, not by pilot), so a pilot landing on a different module gets its
+    // readings scaled differently and its threshold effectively moves.
+    if(i < getNumReceivers() && pilots[i].disable_multiplexing) {
+      receivers[i].current_pilot = &pilots[i];
+      pilots[i].current_rx = &receivers[i];
+    } else {
       queue_enqueue(&pilot_queue, &pilots[i]);
     }
   }
@@ -478,12 +491,35 @@ void setPilotActive(uint8_t pilot, bool active) {
   logToFile("New pilot num: ");
   logToFile("%d",current_pilot_num);
 
+  xSemaphoreGive(pilot_queue_lock);
+  xSemaphoreGive(pilots_lock);
+
+  // Hardware setup runs with the locks released. It used to sit inside them,
+  // and each isRxReady() spin is a MIN_TUNE_TIME_US (30ms) wait -- two per
+  // module, so up to 240ms for four, and setPilotChannel() calls this function
+  // twice. The ADC task takes pilots_lock with a one tick timeout, so it was
+  // locked out for that whole time and lap detection simply stopped for up to
+  // a second whenever someone changed a channel. Nothing below touches pilot
+  // state, and the ADC task already refuses to sample a module whose
+  // isRxReady() is false, so it is safe out here.
+  //
   // only reset active modules. a user might have 6 modules installed but only uses 4. using the all function all modules would power up
   for(int i = 0; i < MIN(current_pilot_num, getNumReceivers()); ++i) {
     RXreset(i);
     while(!isRxReady(i));
     rxLowPower(i);
     while(!isRxReady(i));
+  }
+
+  // Tune the modules we bound above. setNextPilot() deliberately refuses to
+  // touch a receiver that already holds a non-multiplexed pilot, and tuning
+  // only ever happened on that path, so without this the pinned modules would
+  // keep whatever frequency they had.
+  for(uint8_t i = 0; i < getNumReceivers(); ++i) {
+    pilot_data_t* bound = receivers[i].current_pilot;
+    if(bound == NULL) continue;
+    setModuleChannelBand(getRXChannelPilot(bound->number),
+                         getRXBandPilot(bound->number), i);
   }
 
   // adjust the filters for all active pilots
@@ -504,9 +540,7 @@ void setPilotActive(uint8_t pilot, bool active) {
       Serial.printf("Set filtering cutoff to %f hz\n", (6000.0 * on_fraction));
     }
   }*/
-
-  xSemaphoreGive(pilot_queue_lock);
-  xSemaphoreGive(pilots_lock);
+  // The locks are released above, before the hardware setup.
 }
 
 bool isPilotMultiplexOff(uint8_t pilot) {
