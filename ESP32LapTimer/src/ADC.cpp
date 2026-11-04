@@ -578,11 +578,44 @@ void setPilotFilters(uint16_t cutoff) {
   }
 }
 
+/**
+ * Retune just the module this pilot owns, leaving every other pilot alone.
+ *
+ * The toggle below (setPilotActive false then true) is a sledgehammer: it
+ * powers down every module, drops every pilot's assignment and rebuilds the
+ * lot, so changing one pilot's frequency disturbs all of them. When a pilot
+ * is pinned to its own module there is nothing to rebuild -- the module just
+ * needs a new frequency.
+ *
+ * \returns true if the pilot owned a module and it was retuned.
+ */
+static bool retunePinnedModule(uint8_t pilot) {
+  if(!pilots[pilot].disable_multiplexing) return false;
+
+  bool done = false;
+  while(!xSemaphoreTake(pilots_lock, portMAX_DELAY));
+  for(uint8_t i = 0; i < MAX_NUM_RECEIVERS; ++i) {
+    if(receivers[i].current_pilot != &pilots[pilot]) continue;
+    setModuleChannelBand(getRXChannelPilot(pilot), getRXBandPilot(pilot), i);
+    // Throw away any half-finished lap trigger: the readings either side of a
+    // retune belong to two different frequencies and must not be compared.
+    // Sampling is already suppressed until isRxReady() comes back, so there is
+    // no settling transient to guard against beyond this.
+    pilots[pilot].max_adc = 0;
+    pilots[pilot].max_time = 0;
+    pilots[pilot].samples = 0;
+    done = true;
+    break;
+  }
+  xSemaphoreGive(pilots_lock);
+  return done;
+}
+
 void setPilotChannel(uint8_t pilot, uint8_t channel) {
   setRXChannelPilot(pilot, channel);
   EepromSettings.RXChannel[pilot] = channel;
   setSaveRequired();
-  if(isPilotActive(pilot)) {
+  if(isPilotActive(pilot) && !retunePinnedModule(pilot)) {
     // Toggle pilot to force new channel
     setPilotActive(pilot, false);
     setPilotActive(pilot, true);
@@ -594,7 +627,7 @@ void setPilotBand(uint8_t pilot, uint8_t band) {
   setRXBandPilot(pilot, band);
   EepromSettings.RXBand[pilot] = band;
   setSaveRequired();
-  if(isPilotActive(pilot)) {
+  if(isPilotActive(pilot) && !retunePinnedModule(pilot)) {
     // Toggle pilot to force new band
     setPilotActive(pilot, false);
     setPilotActive(pilot, true);
@@ -608,7 +641,7 @@ void setPilotBandChannel(uint8_t pilot, uint8_t band, uint8_t channel)
   EepromSettings.RXChannel[pilot] = channel;
   EepromSettings.RXBand[pilot] = band;
   setSaveRequired();
-  if(isPilotActive(pilot)) {
+  if(isPilotActive(pilot) && !retunePinnedModule(pilot)) {
     // Toggle pilot to force new band
     setPilotActive(pilot, false);
     setPilotActive(pilot, true);

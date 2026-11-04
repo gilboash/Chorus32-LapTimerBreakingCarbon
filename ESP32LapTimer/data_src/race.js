@@ -832,6 +832,20 @@ voice_select.addEventListener("change", function () {
 	try { localStorage.setItem("bc_voice", this.value); } catch (e) { /* ignore */ }
 });
 
+// Auditioning the voice needs a real tap anyway, which doubles as the user
+// gesture speech synthesis requires before it will make any sound at all.
+document.getElementById("voice_test").addEventListener("click", function () {
+	var was_enabled = opt_voice.checked;
+	if (!was_enabled) Announcer.set_enabled(true);
+	// Name the first pilot, so the test says something you will actually hear
+	// during a race rather than a placeholder.
+	Announcer.preview(pilots[0].name);
+	if (!was_enabled) {
+		// Leave callouts as they were once the sample has been spoken.
+		setTimeout(function () { Announcer.set_enabled(false); }, 12000);
+	}
+});
+
 lang_select.addEventListener("change", function () {
 	Announcer.set_language(this.value);
 	try {

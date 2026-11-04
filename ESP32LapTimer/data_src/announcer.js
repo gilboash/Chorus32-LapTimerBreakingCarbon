@@ -201,6 +201,20 @@ var Announcer = (function () {
 		say(phrases().go);
 	}
 
+	// Speaks one of each callout so the chosen voice and language can be
+	// judged by ear without running a race. Uses the real phrase builders, so
+	// what you hear here is exactly what a race will say.
+	function preview(pilot_name) {
+		var name = pilot_name || "Ron";
+		reset();
+		var p = phrases();
+		say(p.go);
+		say(p.lap(name, 3, 24.81));
+		say(p.lead(name));
+		say(p.last(name));
+		say(p.finish(name, 1));
+	}
+
 	// Voices load asynchronously and the list is empty on first call in most
 	// browsers, so fill the picker when it arrives rather than polling.
 	function populate_voices(select, on_ready) {
@@ -258,6 +272,7 @@ var Announcer = (function () {
 		is_speaker: function () { return is_speaker; },
 		say: say,
 		go: go,
+		preview: preview,
 		lap: lap,
 		lead_change: lead_change,
 		last_lap: last_lap,
