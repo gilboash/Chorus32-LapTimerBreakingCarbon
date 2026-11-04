@@ -563,6 +563,12 @@ function on_lap(node, lap_index, lap_ms) {
 	if (pilot.laps[lap_index] !== undefined) return;
 	pilot.laps[lap_index] = lap_ms;
 
+	// Beep on every crossing, the hole shot included: someone physically went
+	// through the gate, whether or not the lap is scored. This is the instant
+	// acknowledgement -- the spoken callout is a sentence long and may be
+	// queued behind another pilot's.
+	Beep.lap(node);
+
 	var laps = counted_laps(pilot);
 	var is_counted = count_first || lap_index > 0;
 	if (!is_counted) {
@@ -600,6 +606,7 @@ function on_lap(node, lap_index, lap_ms) {
 			return p.finished_at != null && elapsed_time(p) < mine;
 		}).length;
 		pilot.finished_at = ahead + 1;
+		Beep.finish();
 		Announcer.finish(pilot.name, pilot.finished_at);
 	}
 
@@ -718,6 +725,7 @@ document.getElementById("race_button").onclick = function () {
 	} else {
 		reset_race();
 		BC.send("R*R1\n");
+		Beep.start();
 		Announcer.go();
 	}
 };
@@ -857,6 +865,19 @@ lang_select.addEventListener("change", function () {
 	Announcer.populate_voices(voice_select, on_voices_ready);
 });
 
+var opt_beep = document.getElementById("opt_beep");
+try {
+	if (localStorage.getItem("bc_beep") == "0") opt_beep.checked = false;
+} catch (e) { /* ignore */ }
+Beep.set_enabled(opt_beep.checked);
+opt_beep.addEventListener("change", function () {
+	Beep.set_enabled(this.checked);
+	try { localStorage.setItem("bc_beep", this.checked ? "1" : "0"); } catch (e) { /* ignore */ }
+	// Give immediate confirmation that sound actually works on this device,
+	// since the audio context only starts on a gesture like this one.
+	if (this.checked) Beep.lap(0);
+});
+
 var opt_voice = document.getElementById("opt_voice");
 try {
 	if (localStorage.getItem("bc_callouts") == "0") opt_voice.checked = false;
@@ -912,7 +933,10 @@ setInterval(report_awake, 3000);
 opt_awake.addEventListener("change", refresh_awake);
 
 // Both the wake lock and speech need a user gesture before they'll start.
+// The wake lock, speech and the audio context all refuse to start until the
+// page has been interacted with, so arm them together on the first tap.
 function arm_on_gesture() {
+	if (opt_beep.checked && !Beep.is_ready()) Beep.arm();
 	if (opt_awake.checked && !NoSleep.is_enabled()) {
 		NoSleep.enable();
 		setTimeout(report_awake, 300);
