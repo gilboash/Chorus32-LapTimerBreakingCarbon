@@ -114,17 +114,17 @@ bool handleFileRead(AsyncWebServerRequest* req, String path) { // send the right
   return false;                                         // If the file doesn't exist, return false
 }
 
-// Reads the version string out of the generated /version.json that ships in the
+// Reads one field out of the generated /version.json that ships in the
 // filesystem image. Deliberately a hand-rolled scan rather than a JSON parser:
 // the file is ours, it is three fields long, and this avoids a dependency.
-static String getFilesystemVersion() {
+static String getFilesystemField(const char* field) {
   if (!SPIFFS.exists("/version.json")) return String("unknown");
   File f = SPIFFS.open("/version.json", "r");
   if (!f) return String("unknown");
   String content = f.readString();
   f.close();
 
-  int key = content.indexOf("\"version\"");
+  int key = content.indexOf(String("\"") + field + "\"");
   if (key < 0) return String("unknown");
   int colon = content.indexOf(':', key);
   if (colon < 0) return String("unknown");
@@ -138,11 +138,21 @@ static String getFilesystemVersion() {
 // Firmware and filesystem are two separate OTA uploads, so report both and let
 // the UI shout if they drifted apart.
 void sendVersion(AsyncWebServerRequest* req) {
-  String fs_version = getFilesystemVersion();
+  String fs_version = getFilesystemField("version");
+  String fs_git = getFilesystemField("git");
+
+  // Compare the build hashes, not the version strings. FIRMWARE_VERSION is
+  // bumped by hand and rarely changes, so two images from entirely different
+  // commits both call themselves the same version -- which made this check
+  // report a match while the firmware and the web UI were in fact from
+  // different builds, exactly the case it exists to catch.
+  bool matched = (fs_version == FIRMWARE_VERSION) && (fs_git == String(GIT_HASH));
+
   String body = String("{\"firmware\":\"") + FIRMWARE_VERSION +
                 "\",\"filesystem\":\"" + fs_version +
-                "\",\"match\":" + (fs_version == FIRMWARE_VERSION ? "true" : "false") +
+                "\",\"match\":" + (matched ? "true" : "false") +
                 ",\"git\":\"" + GIT_HASH +
+                "\",\"filesystem_git\":\"" + fs_git +
                 "\",\"built\":\"" + BUILD_DATE +
                 "\",\"api\":\"0004\"}";
   req->send(200, "application/json", body);

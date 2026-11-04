@@ -160,9 +160,10 @@ BC.fetch_version(function (version) {
 	if (!version.match) {
 		document.getElementById("mismatch_card").style.display = "";
 		document.getElementById("mismatch_text").innerText =
-			"Firmware is " + version.firmware + " but the web interface is " +
-			version.filesystem + ". These are two separate uploads, so one of " +
-			"them did not take. Re-upload the matching file.";
+			"The firmware (" + version.git + ") and this web interface (" +
+			(version.filesystem_git || "unknown") + ") are from different " +
+			"builds. These are two separate uploads, so one of them did not " +
+			"take. Re-upload the matching file.";
 	}
 });
 

@@ -153,10 +153,12 @@ function wait_for_reboot() {
 			show_version(version);
 			status_label.style.color = "var(--ok)";
 			status_label.innerText = version.match
-				? "Done. Firmware and web interface are both " + version.firmware + "."
-				: "Done, but firmware is " + version.firmware + " and the web " +
-				  "interface is " + version.filesystem + ". Upload the other file " +
-				  "from the same release.";
+				? "Done. Firmware and web interface are both " + version.firmware +
+				  " (" + version.git + ")."
+				: "Done, but the two halves are from different builds: firmware " +
+				  version.git + ", web interface " +
+				  (version.filesystem_git || "unknown") +
+				  ". Upload the other file from the same release.";
 			upload_button.disabled = false;
 			file_input.disabled = false;
 			file_input.value = "";
@@ -180,9 +182,13 @@ function show_version(version) {
 		warning.style.display = "none";
 	} else {
 		warning.style.display = "";
+		// Name the build hashes, not the version numbers: those are bumped by
+		// hand and are usually identical across the two halves, so quoting
+		// them would describe a mismatch as "3.0.0 versus 3.0.0".
 		warning.innerText =
-			"Firmware and web interface are from different releases. Upload the " +
-			"missing half, otherwise the pages and the timer may disagree.";
+			"Firmware and web interface are from different builds (firmware " +
+			version.git + ", web interface " + (version.filesystem_git || "unknown") +
+			"). Upload the other file from the same release.";
 	}
 }
 
