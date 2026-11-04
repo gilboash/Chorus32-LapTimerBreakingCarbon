@@ -382,7 +382,12 @@ function load_history() {
 	try {
 		var raw = localStorage.getItem("bc_history");
 		var parsed = raw ? JSON.parse(raw) : [];
-		return Array.isArray(parsed) ? parsed : [];
+		if (!Array.isArray(parsed)) return [];
+		// Order by when they were flown, newest first. Insertion order is
+		// usually the same, but rounds stored either side of a timer reboot
+		// carry race numbers that restart, so the clock is the reliable key.
+		// Anything saved before timestamps existed sorts to the bottom.
+		return parsed.sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
 	} catch (e) {
 		return [];
 	}
@@ -408,6 +413,10 @@ function archive_current_race() {
 
 	race_history.unshift({
 		race_num: race_num,
+		// When it was flown. The timer's race number restarts at 0 on every
+		// boot, so after a reset a new "Round 2" can sit above a stored
+		// "Round 3" and the list stops making sense. The clock does not reset.
+		at: Date.now(),
 		target_laps: target_laps,
 		count_first: count_first,
 		rows: rows,
@@ -482,11 +491,24 @@ function round_html(round, is_live) {
 
 	return '<div class="bc-round">' +
 		'<div class="bc-round-title"><span>Round ' + round.race_num + "</span>" +
-		(is_live ? '<span class="bc-round-live">live</span>' : "") +
+		(is_live ? '<span class="bc-round-live">live</span>'
+			: '<span class="bc-round-when">' + when_text(round.at) + "</span>") +
 		"</div>" +
 		'<div class="bc-laptable-wrap"><table class="bc-laptable">' +
 		"<thead><tr>" + header + "</tr></thead><tbody>" + body + "</tbody>" +
 		"</table></div></div>";
+}
+
+// Time of day for a round flown today, date and time for anything older.
+// Rounds stored before timestamps existed have no "at" and just say so.
+function when_text(at) {
+	if (!at) return "earlier";
+	var then = new Date(at);
+	var pad = function (n) { return String(n).padStart(2, "0"); };
+	var clock = pad(then.getHours()) + ":" + pad(then.getMinutes());
+	var today = new Date();
+	if (then.toDateString() === today.toDateString()) return clock;
+	return pad(then.getDate()) + "/" + pad(then.getMonth() + 1) + " " + clock;
 }
 
 function escape_html(text) {

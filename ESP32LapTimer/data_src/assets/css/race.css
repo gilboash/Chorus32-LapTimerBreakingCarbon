@@ -300,6 +300,13 @@
 	font-size: 11px;
 }
 
+.bc-round-title .bc-round-when {
+	letter-spacing: 0;
+	text-transform: none;
+	font-size: 11px;
+	font-variant-numeric: tabular-nums;
+}
+
 
 /* A lap per column and a pilot per row. Too wide for a phone by nature, so it
  * scrolls sideways with the pilot column pinned -- otherwise you lose track of
