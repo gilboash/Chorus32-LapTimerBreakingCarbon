@@ -1,0 +1,614 @@
+/* Breaking Carbon project site.
+ *
+ * Shares its colour tokens with the timer's own web UI (ESP32LapTimer/
+ * data_src/assets/css/bc.css) so the site and the device look like one
+ * product. Unlike that stylesheet this one is not squeezed into a 192KB
+ * SPIFFS, but it still carries no webfonts and no external dependencies:
+ * the whole site is a folder of static files you can drop on any host.
+ */
+
+:root {
+	--bg: #0b0b0c;
+	--surface: #141416;
+	--surface-2: #1c1c20;
+	--line: #2c2c33;
+	--text: #f2f2f3;
+	--text-dim: #93939c;
+
+	--ok: #3ddc84;
+	--warn: #ffb020;
+	--err: #ff4d4f;
+	--accent: #4ea3ff;
+
+	--radius: 10px;
+	--gap: 12px;
+	--tap: 44px;
+
+	--maxw: 1080px;
+	--shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .25);
+}
+
+:root[data-theme="light"] {
+	--bg: #ffffff;
+	--surface: #f3f3f5;
+	--surface-2: #e8e8ec;
+	--line: #d2d2d8;
+	--text: #0b0b0c;
+	--text-dim: #5c5c66;
+
+	--ok: #0f9d58;
+	--warn: #b26a00;
+	--err: #c62828;
+	--accent: #0b63c5;
+
+	--shadow: 0 1px 2px rgba(0, 0, 0, .08), 0 8px 24px rgba(0, 0, 0, .06);
+}
+
+* { box-sizing: border-box; }
+
+html {
+	scroll-behavior: smooth;
+	/* Anchored headings must clear the sticky header. */
+	scroll-padding-top: 80px;
+}
+
+html, body {
+	margin: 0;
+	padding: 0;
+	background: var(--bg);
+	color: var(--text);
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	font-size: 16px;
+	line-height: 1.55;
+	-webkit-text-size-adjust: 100%;
+}
+
+img { max-width: 100%; height: auto; display: block; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+code, kbd, .mono {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: .92em;
+}
+
+code {
+	background: var(--surface-2);
+	border: 1px solid var(--line);
+	border-radius: 5px;
+	padding: 1px 5px;
+	/* Long flash offsets and file paths must not widen the page on a phone. */
+	overflow-wrap: anywhere;
+}
+
+pre {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	padding: 14px 16px;
+	overflow-x: auto;
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+pre code { background: none; border: 0; padding: 0; }
+
+kbd {
+	background: var(--surface-2);
+	border: 1px solid var(--line);
+	border-bottom-width: 2px;
+	border-radius: 5px;
+	padding: 1px 6px;
+	font-size: .85em;
+}
+
+/* ---------------- shell ---------------- */
+
+.wrap {
+	max-width: var(--maxw);
+	margin: 0 auto;
+	padding: 0 16px;
+}
+
+.site-header {
+	position: sticky;
+	top: 0;
+	z-index: 20;
+	background: color-mix(in srgb, var(--bg) 88%, transparent);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	border-bottom: 1px solid var(--line);
+}
+
+.site-header .wrap {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-height: 60px;
+	flex-wrap: wrap;
+}
+
+.brand {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	color: var(--text);
+	font-weight: 700;
+	letter-spacing: -.01em;
+	margin-right: auto;
+}
+
+.brand:hover { text-decoration: none; }
+.brand img { width: 30px; height: 30px; }
+
+.brand span { display: block; line-height: 1.1; }
+.brand .sub {
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--text-dim);
+	letter-spacing: .06em;
+	text-transform: uppercase;
+}
+
+.site-nav {
+	display: flex;
+	gap: 2px;
+	flex-wrap: wrap;
+}
+
+.site-nav a {
+	display: inline-flex;
+	align-items: center;
+	height: 36px;
+	padding: 0 11px;
+	border-radius: 8px;
+	color: var(--text-dim);
+	font-size: 15px;
+	font-weight: 500;
+}
+
+.site-nav a:hover { background: var(--surface); color: var(--text); text-decoration: none; }
+.site-nav a.active { color: var(--text); background: var(--surface-2); }
+
+.icon-btn {
+	height: 36px;
+	min-width: 36px;
+	border: 1px solid var(--line);
+	background: var(--surface);
+	color: var(--text);
+	border-radius: 8px;
+	cursor: pointer;
+	font-size: 15px;
+	line-height: 1;
+}
+
+.icon-btn:hover { background: var(--surface-2); }
+
+/* ---------------- hero ---------------- */
+
+.hero {
+	border-bottom: 1px solid var(--line);
+	background:
+		radial-gradient(900px 420px at 78% -12%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+		var(--bg);
+}
+
+.hero .wrap {
+	display: grid;
+	grid-template-columns: 1.05fr .95fr;
+	gap: 40px;
+	align-items: center;
+	padding-top: 54px;
+	padding-bottom: 54px;
+}
+
+.hero h1 {
+	font-size: clamp(30px, 5.2vw, 48px);
+	line-height: 1.08;
+	letter-spacing: -.02em;
+	margin: 12px 0 14px;
+}
+
+.hero .lede {
+	font-size: 18px;
+	color: var(--text-dim);
+	margin: 0 0 22px;
+	max-width: 46ch;
+}
+
+.eyebrow {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: .09em;
+	text-transform: uppercase;
+	color: var(--text-dim);
+}
+
+.eyebrow .dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--ok);
+}
+
+.hero-shot {
+	border-radius: 14px;
+	border: 1px solid var(--line);
+	box-shadow: var(--shadow);
+	overflow: hidden;
+}
+
+/* The hardware and the thing you hold while using it, in one frame. The
+ * phone is a sibling rather than a composited image so it stays sharp and
+ * can simply be dropped on a narrow screen. */
+.hero-stack { position: relative; }
+
+.hero-phone {
+	position: absolute;
+	/* Overhangs by less than the wrap's 16px gutter, so it can never push the
+	 * page sideways at an in-between window width. */
+	right: -8px;
+	bottom: -34px;
+	width: 33%;
+	max-width: 196px;
+	border-radius: 14px;
+	border: 1px solid var(--line);
+	box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+	overflow: hidden;
+	/* The screenshot is dark-themed, so on a white page it needs its own
+	 * edge to sit against. */
+	background: #0b0b0c;
+}
+
+:root[data-theme="light"] .hero-phone { box-shadow: 0 10px 30px rgba(0, 0, 0, .28); }
+
+/* ---------------- buttons ---------------- */
+
+.btn-row { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-height: var(--tap);
+	padding: 0 18px;
+	border-radius: 9px;
+	border: 1px solid var(--line);
+	background: var(--surface);
+	color: var(--text);
+	font-size: 15px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.btn:hover { background: var(--surface-2); text-decoration: none; }
+
+.btn.primary {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: #fff;
+}
+
+.btn.primary:hover { filter: brightness(1.08); }
+
+/* ---------------- sections ---------------- */
+
+section.band { padding: 54px 0; border-bottom: 1px solid var(--line); }
+section.band:last-of-type { border-bottom: 0; }
+
+.band h2 {
+	font-size: clamp(22px, 3.4vw, 30px);
+	letter-spacing: -.015em;
+	margin: 0 0 8px;
+}
+
+.band .band-lede {
+	color: var(--text-dim);
+	margin: 0 0 28px;
+	max-width: 62ch;
+}
+
+.grid { display: grid; gap: 16px; }
+.grid.two { grid-template-columns: repeat(2, 1fr); }
+.grid.three { grid-template-columns: repeat(3, 1fr); }
+
+.card {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	padding: 18px;
+}
+
+.card h3 { margin: 0 0 6px; font-size: 17px; letter-spacing: -.01em; }
+.card p { margin: 0; color: var(--text-dim); font-size: 15px; }
+.card p + p { margin-top: 10px; }
+
+a.card { color: inherit; display: block; }
+a.card:hover { text-decoration: none; border-color: var(--accent); }
+a.card h3::after { content: " \2192"; color: var(--accent); }
+
+.card .tag {
+	display: inline-block;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: .07em;
+	text-transform: uppercase;
+	color: var(--text-dim);
+	margin-bottom: 8px;
+}
+
+/* ---------------- guide pages ---------------- */
+
+.page-head {
+	padding: 40px 0 26px;
+	border-bottom: 1px solid var(--line);
+}
+
+.page-head h1 {
+	font-size: clamp(26px, 4.4vw, 38px);
+	letter-spacing: -.02em;
+	margin: 8px 0 10px;
+}
+
+.page-head p { color: var(--text-dim); margin: 0; max-width: 62ch; }
+
+.doc { padding: 32px 0 64px; }
+
+.doc h2 {
+	font-size: 23px;
+	letter-spacing: -.015em;
+	margin: 40px 0 12px;
+	padding-top: 4px;
+}
+
+.doc h2:first-child { margin-top: 0; }
+.doc h3 { font-size: 17px; margin: 26px 0 8px; }
+.doc p, .doc li { color: var(--text); }
+.doc p { margin: 0 0 14px; max-width: 72ch; }
+.doc ul, .doc ol { margin: 0 0 16px; padding-left: 22px; max-width: 72ch; }
+.doc li { margin: 5px 0; }
+
+figure { margin: 22px 0; }
+
+figure img {
+	border-radius: var(--radius);
+	border: 1px solid var(--line);
+	background: var(--surface);
+}
+
+figcaption {
+	color: var(--text-dim);
+	font-size: 14px;
+	margin-top: 8px;
+}
+
+/* Portrait photos and phone screenshots blown up to the full 72ch measure
+ * swamp the text they belong to. */
+/* min() so the cap never beats the global max-width:100% on a narrow
+ * screen -- a bare 440px here pushes the whole page sideways on a phone. */
+figure.narrow img { max-width: min(440px, 100%); }
+figure.narrow figcaption { max-width: min(440px, 100%); }
+
+/* Numbered procedure. The number is the anchor the eye returns to after
+ * looking away at the hardware, so it stays visible while scrolling past. */
+ol.steps {
+	list-style: none;
+	counter-reset: step;
+	padding: 0;
+	max-width: none;
+}
+
+ol.steps > li {
+	counter-increment: step;
+	position: relative;
+	padding: 0 0 22px 46px;
+	margin: 0;
+	border-left: 2px solid var(--line);
+	margin-left: 15px;
+}
+
+ol.steps > li:last-child { border-left-color: transparent; padding-bottom: 0; }
+
+ol.steps > li::before {
+	content: counter(step);
+	position: absolute;
+	left: -16px;
+	top: -2px;
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	background: var(--surface-2);
+	border: 1px solid var(--line);
+	color: var(--text);
+	font-size: 14px;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+ol.steps > li > h3 { margin: 2px 0 6px; }
+
+.note {
+	border: 1px solid var(--line);
+	border-left: 3px solid var(--accent);
+	background: var(--surface);
+	border-radius: var(--radius);
+	padding: 14px 16px;
+	margin: 20px 0;
+}
+
+.note.warn { border-left-color: var(--warn); }
+.note.danger { border-left-color: var(--err); }
+.note p { margin: 0; }
+.note p + p { margin-top: 10px; }
+
+/* Only the note's own title line, never a <strong> emphasising a word
+ * inside the body text -- that one has to stay inline. */
+.note > strong:first-child { display: block; margin-bottom: 4px; }
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: 18px 0;
+	font-size: 15px;
+	display: block;
+	overflow-x: auto;
+}
+
+th, td {
+	text-align: left;
+	padding: 9px 12px;
+	border-bottom: 1px solid var(--line);
+	vertical-align: top;
+}
+
+th {
+	font-size: 12px;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	color: var(--text-dim);
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+tbody tr:last-child td { border-bottom: 0; }
+
+/* ---------------- downloads ---------------- */
+
+.dl {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	padding: 14px 16px;
+	margin-bottom: 10px;
+}
+
+.dl-body { flex: 1 1 auto; min-width: 0; }
+.dl-body strong { display: block; font-size: 15px; }
+.dl-body span { display: block; color: var(--text-dim); font-size: 14px; }
+
+.dl .btn { flex: 0 0 auto; min-height: 38px; padding: 0 14px; font-size: 14px; }
+
+.size {
+	flex: 0 0 auto;
+	color: var(--text-dim);
+	font-size: 13px;
+	font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- video ---------------- */
+
+/* 16:9 without the padding-top hack, and without loading YouTube's player
+ * (and its cookies) until someone actually clicks. */
+.video {
+	position: relative;
+	aspect-ratio: 16 / 9;
+	border-radius: var(--radius);
+	border: 1px solid var(--line);
+	overflow: hidden;
+	background: var(--surface);
+}
+
+.video iframe {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
+
+.video-poster {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	padding: 0;
+	cursor: pointer;
+	background: #000 center/cover no-repeat;
+}
+
+.video-poster::after {
+	content: "";
+	width: 72px;
+	height: 72px;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, .62) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'><path d='M8 5v14l11-7z'/></svg>") center/34px no-repeat;
+	border: 2px solid rgba(255, 255, 255, .9);
+}
+
+.video-poster:hover::after { background-color: rgba(0, 0, 0, .8); }
+
+/* ---------------- footer ---------------- */
+
+.site-footer {
+	border-top: 1px solid var(--line);
+	padding: 30px 0 46px;
+	color: var(--text-dim);
+	font-size: 14px;
+}
+
+.site-footer .wrap {
+	display: flex;
+	gap: 16px;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.site-footer .spacer { margin-left: auto; }
+
+/* ---------------- responsive ---------------- */
+
+@media (max-width: 860px) {
+	.hero .wrap {
+		grid-template-columns: 1fr;
+		gap: 28px;
+		padding-top: 36px;
+		padding-bottom: 36px;
+	}
+
+	.grid.three { grid-template-columns: repeat(2, 1fr); }
+
+	/* Once the hero stacks, the board photo is full width and a thumbnail
+	 * pasted over its corner is just clutter -- the same screenshot appears
+	 * at a readable size further down the page. */
+	.hero-phone { display: none; }
+}
+
+@media (max-width: 620px) {
+	.grid.two, .grid.three { grid-template-columns: 1fr; }
+
+	.site-header .wrap { min-height: 56px; padding-top: 8px; padding-bottom: 8px; }
+
+	/* The nav wraps to its own full-width row rather than squeezing the
+	 * brand, and scrolls sideways if it still does not fit. */
+	.site-nav {
+		order: 3;
+		width: 100%;
+		overflow-x: auto;
+		flex-wrap: nowrap;
+		scrollbar-width: none;
+	}
+
+	.site-nav::-webkit-scrollbar { display: none; }
+
+	/* Tightened so all five fit a 390px phone without a scroll nobody can
+	 * see. They still scroll if a translation makes them longer. */
+	.site-nav a { flex: 0 0 auto; font-size: 14px; padding: 0 8px; }
+
+	section.band { padding: 38px 0; }
+
+	.dl { flex-wrap: wrap; }
+	.dl .btn { width: 100%; }
+}

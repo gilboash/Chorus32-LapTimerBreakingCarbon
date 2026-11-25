@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="theme-color" content="#0b0b0c" />
+	<title>Build the board &middot; Chorus32 Lap Timer</title>
+	<meta name="description"
+		content="PCB options, bill of materials and assembly notes for the Chorus32 Breaking Carbon lap timer." />
+	<link rel="icon" href="assets/img/logo.jpg" />
+	<link rel="stylesheet" href="assets/css/site.css" />
+	<script src="assets/js/site.js"></script>
+</head>
+
+<body>
+
+	<header class="site-header">
+		<div class="wrap">
+			<a class="brand" href="index.html">
+				<img src="assets/img/flag.svg" alt="" />
+				<span>Chorus32 Lap Timer
+					<span class="sub">Breaking Carbon</span></span>
+			</a>
+			<nav class="site-nav">
+				<a href="index.html">Overview</a>
+				<a href="build.html">Build</a>
+				<a href="install.html">Install</a>
+				<a href="race-day.html">Race day</a>
+				<a href="downloads.html">Downloads</a>
+			</nav>
+			<button class="icon-btn" id="theme_toggle" title="Toggle daylight mode">&#9728;</button>
+		</div>
+	</header>
+
+	<div class="page-head">
+		<div class="wrap">
+			<span class="eyebrow">Hardware</span>
+			<h1>Build the board</h1>
+			<p>
+				One PCB, one ESP32, and one RX5808 receiver per pilot you want to time.
+				Everything here is through the PCB &mdash; there is no breadboard version.
+			</p>
+		</div>
+	</div>
+
+	<div class="doc">
+		<div class="wrap">
+
+			<div class="note danger">
+				<strong>This is surface-mount work</strong>
+				<p>
+					In Aaron Smith's words: if you can't solder well, this is not the lap
+					timer for you. You need to drag-solder or use paste and a heat gun. The
+					ESP32 module and the analogue switch are both fine-pitch parts.
+				</p>
+			</div>
+
+			<h2 id="pcb">Pick a PCB</h2>
+
+			<p>
+				Two families of board exist for this project. The firmware here is built
+				and released for the first one.
+			</p>
+
+			<table>
+				<thead>
+					<tr>
+						<th>Board</th>
+						<th>Processor</th>
+						<th>Notes</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><strong>Aaron Smith PCB V2</strong><br /><span
+								style="color:var(--text-dim)">recommended</span></td>
+						<td>LilyGO TTGO Micro-32</td>
+						<td>
+							Smaller board, external antenna, per-module power switching, on-board
+							power monitoring for all six nodes with no extra modules. This is the
+							board the released binaries target
+							(<code>BOARD_MICRO32</code>).
+						</td>
+					</tr>
+					<tr>
+						<td><strong>Jye Smith V1</strong></td>
+						<td>Full-size ESP32 dev board</td>
+						<td>
+							Tested, but the INA219 <code>Vin+</code> and <code>Vin-</code> pads are
+							reversed. Do not solder those pins &mdash; use patch wires. Also check
+							your OLED's pin order; both variants are sold.
+						</td>
+					</tr>
+					<tr>
+						<td><strong>Jye Smith V2</strong></td>
+						<td>Full-size ESP32 dev board</td>
+						<td>
+							Adds a beeper and LEDs. Marked untested by its author. Source on
+							<a href="https://easyeda.com/jyesmith/alessandroau-chorus32-esp32laptimer">EasyEDA</a>.
+						</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<p>
+				Gerbers for the Jye Smith boards are in
+				<a href="downloads.html#pcb">Downloads</a>. The Aaron Smith board can be
+				ordered directly from its
+				<a href="https://www.pcbway.com/project/shareproject/Chorus_32_Lap_Timer_PCB.html">PCBWay
+					shared project</a>.
+			</p>
+
+			<div class="grid two">
+				<figure style="margin:0">
+					<img src="assets/img/board-top.jpg" width="1400" height="933" loading="lazy"
+						alt="Top side of the assembled board: three RX5808 modules with heatsinks, the Micro-32, the MP1584 regulator and a whip antenna." />
+					<figcaption>Top side. Three RX5808s with heatsinks, the Micro-32, the
+						MP1584 power module.</figcaption>
+				</figure>
+				<figure style="margin:0">
+					<img src="assets/img/board-bottom.jpg" width="1400" height="933" loading="lazy"
+						alt="Bottom side of the board with three more RX5808 modules, the buzzer, an XT60 lead and switch wiring." />
+					<figcaption>Bottom side carries RX4&ndash;6, so a six-pilot timer is
+						three modules a side.</figcaption>
+				</figure>
+			</div>
+
+			<h2 id="bom">Bill of materials</h2>
+
+			<p>
+				For the Aaron Smith PCB V2. You do not need all six receivers &mdash; fit
+				as many as you want to time, starting at RX1.
+			</p>
+
+			<h3>Required</h3>
+
+			<table>
+				<thead>
+					<tr>
+						<th>Part</th>
+						<th>Ref</th>
+						<th>Use</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>ESP Micro 32 (LilyGO TTGO Micro-32 V2.0)</td>
+						<td>U1</td>
+						<td>The processor</td>
+					</tr>
+					<tr>
+						<td>RX5808 &times;1&ndash;6</td>
+						<td>RX1&ndash;6</td>
+						<td>One video receiver per pilot</td>
+					</tr>
+					<tr>
+						<td>MP1584 buck module</td>
+						<td>U3</td>
+						<td>Board power supply</td>
+					</tr>
+					<tr>
+						<td>XT60</td>
+						<td>P5</td>
+						<td>Power connector</td>
+					</tr>
+					<tr>
+						<td>10k 0805 resistor</td>
+						<td>R2</td>
+						<td>ESP32 enable pull-up</td>
+					</tr>
+					<tr>
+						<td>Push button &times;2</td>
+						<td>SW1&ndash;2</td>
+						<td>Reset and prog</td>
+					</tr>
+					<tr>
+						<td>2.54mm header, 1&times;6</td>
+						<td>P1</td>
+						<td>Programming header</td>
+					</tr>
+					<tr>
+						<td>2.54mm pin header</td>
+						<td>&mdash;</td>
+						<td>To attach the power module</td>
+					</tr>
+					<tr>
+						<td>FT232RL FTDI serial adapter, 3.3V/5V</td>
+						<td>&mdash;</td>
+						<td>Used once, to flash the board</td>
+					</tr>
+					<tr>
+						<td>The PCB</td>
+						<td>&mdash;</td>
+						<td>Allow 2&ndash;3 weeks from China Post</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<h3>Optional</h3>
+
+			<table>
+				<thead>
+					<tr>
+						<th>Part</th>
+						<th>Ref</th>
+						<th>Use</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>Buzzer</td>
+						<td>BZ1</td>
+						<td>Beeping. Off by default in firmware 3.0.0.</td>
+					</tr>
+					<tr>
+						<td>NLAS4599DTT1G analogue switch</td>
+						<td>U2</td>
+						<td>Switch to read battery voltage</td>
+					</tr>
+					<tr>
+						<td>AO3400 or similar NMOS SOT-23 &times;4</td>
+						<td>Q1&ndash;Q4</td>
+						<td>Buzzer and LED control</td>
+					</tr>
+					<tr>
+						<td>470&micro;F 25V electrolytic (&le;13.5mm tall)</td>
+						<td>C2</td>
+						<td>Bulk storage</td>
+					</tr>
+					<tr>
+						<td>100nF 0805</td>
+						<td>C1</td>
+						<td>Decoupling</td>
+					</tr>
+					<tr>
+						<td>0805 LED &times;2</td>
+						<td>D1, D2</td>
+						<td>Power and status</td>
+					</tr>
+					<tr>
+						<td>10k, 47k, 1.8k, 1k 0805 resistors</td>
+						<td>R3, R5, R7, R8, R12</td>
+						<td>Buzzer pull-down, LED resistors, voltage divider</td>
+					</tr>
+					<tr>
+						<td>2.4GHz u.FL whip antenna</td>
+						<td>&mdash;</td>
+						<td>External antenna, worth having</td>
+					</tr>
+					<tr>
+						<td>DPDT ON-OFF-ON switch</td>
+						<td>&mdash;</td>
+						<td>Selects how many receivers are powered</td>
+					</tr>
+					<tr>
+						<td>2-position switch</td>
+						<td>&mdash;</td>
+						<td>Main power</td>
+					</tr>
+					<tr>
+						<td>4-pin JST SM male + female</td>
+						<td>&mdash;</td>
+						<td>LED connector</td>
+					</tr>
+					<tr>
+						<td>Heatsinks &times;6 + thermal adhesive</td>
+						<td>&mdash;</td>
+						<td>Extends RX5808 life. Fit them.</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<p>
+				The full BOM with purchase links lives in
+				<a
+					href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/blob/dev/pcb/AaronSmith/PCB%20V2/bom.md"><code>pcb/AaronSmith/PCB
+						V2/bom.md</code></a>.
+			</p>
+
+			<h2 id="assembly">Assembly notes</h2>
+
+			<ol class="steps">
+				<li>
+					<h3>Set the MP1584 voltage before it goes on the board</h3>
+					<p>
+						Adjust it on the bench, then hot-glue over the potentiometer so it
+						cannot drift later. Attach it with the 2.54mm header pins.
+					</p>
+				</li>
+				<li>
+					<h3>Drag-solder the ESP32 and the NLAS4599</h3>
+					<p>
+						Tack one corner of the ESP32 and check the pin alignment carefully
+						before committing &mdash; do not rush this. Tack the opposite corner,
+						then drag. A fat tip helps; a 4mm chisel is a good size.
+					</p>
+				</li>
+				<li>
+					<h3>Inspect under magnification</h3>
+					<p>
+						Check every pin and reflow anything doubtful. Flux is your friend.
+					</p>
+				</li>
+				<li>
+					<h3>Watch the two parts that mount on the wrong side</h3>
+					<p>
+						Solder <strong>BZ1</strong> and <strong>C2</strong> on the opposite
+						side of the PCB from the one the silkscreen shows, and observe the
+						polarity.
+					</p>
+				</li>
+				<li>
+					<h3>Heatsink the receivers</h3>
+					<p>
+						RX5808 modules run hot and die of it. Thermal adhesive and a heatsink
+						on each one is cheap insurance.
+					</p>
+				</li>
+			</ol>
+
+			<figure>
+				<img src="assets/img/board-wired.jpg" width="1400" height="933" loading="lazy"
+					alt="The board with its XT60 lead, switch wiring and a ribbon to the receiver-enable header attached." />
+				<figcaption>
+					Wired up: XT60 in, main switch, the receiver-count selector and the LED
+					connector.
+				</figcaption>
+			</figure>
+
+			<h2 id="wiring">Reference drawings</h2>
+
+			<p>
+				These cover the original full-size build. They are still the clearest
+				picture of how the receivers, the ESP32 and the power section relate, even
+				if your board routes it for you.
+			</p>
+
+			<figure>
+				<img src="assets/img/wiring.jpg" width="1600" height="1131" loading="lazy"
+					alt="Wiring diagram showing the RX5808 modules connected to the ESP32." />
+				<figcaption>Wiring overview.</figcaption>
+			</figure>
+
+			<figure>
+				<img src="assets/img/schematic.jpg" width="1800" height="1252" loading="lazy"
+					alt="Full schematic of the lap timer." />
+				<figcaption>Schematic. Full-resolution copies are in
+					<a href="downloads.html#pcb">Downloads</a>.</figcaption>
+			</figure>
+
+			<h2 id="case">Case</h2>
+
+			<p>
+				If you have a printer, there is a
+				<a href="https://www.thingiverse.com/thing:5164793">printable Chorus32 box
+					on Thingiverse</a>. Check the dimensions against your own board before
+				you start it &mdash; the two PCB families on this page are different sizes,
+				and a six-receiver build is taller than a three.
+			</p>
+
+			<div class="dl" style="margin:18px 0 24px">
+				<div class="dl-body">
+					<strong>Chorus32 box &mdash; STL</strong>
+					<span>Thingiverse thing:5164793</span>
+				</div>
+				<a class="btn" href="https://www.thingiverse.com/thing:5164793">Open</a>
+			</div>
+
+			<p>
+				The builds shown below instead use an off-the-shelf sealed enclosure with
+				cutouts for the antenna, the power connector and the switch &mdash; a clear
+				lid is handy because the OLED and the status LED are both worth being able
+				to see.
+			</p>
+
+			<div class="grid two">
+				<figure style="margin:0">
+					<img src="assets/img/case.jpg" width="1400" height="1352" loading="lazy"
+						alt="A finished timer in a clear-lidded sealed enclosure with a rocker switch and panel-mount antenna." />
+					<figcaption>Four receivers in a sealed box with a panel-mount antenna.
+					</figcaption>
+				</figure>
+				<figure style="margin:0">
+					<img src="assets/img/case-open.jpg" width="1400" height="538" loading="lazy"
+						alt="Two views inside the enclosure showing the board and wiring." />
+					<figcaption>Inside, before and after the receivers go in.</figcaption>
+				</figure>
+			</div>
+
+			<div class="note">
+				<strong>Designed a better one?</strong>
+				<p>
+					Drop the STL or STEP into <code>pcb/</code> and
+					<a href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/issues">open an
+						issue</a> &mdash; it will get linked from
+					<a href="downloads.html">Downloads</a>.
+				</p>
+			</div>
+
+			<h2 id="next">Next</h2>
+
+			<p>
+				With the board built and powered, it has no firmware on it yet.
+				<a href="install.html">Flashing the timer &rarr;</a>
+			</p>
+
+		</div>
+	</div>
+
+	<footer class="site-footer">
+		<div class="wrap">
+			<span>
+				PCB designs by Aaron Smith and Jye Smith. Firmware from the
+				<a href="https://github.com/AlessandroAU/Chorus32-ESP32LapTimer">Chorus32</a>
+				project.
+			</span>
+			<span class="spacer">
+				<a href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon">Source on GitHub</a>
+			</span>
+		</div>
+	</footer>
+
+</body>
+
+</html>

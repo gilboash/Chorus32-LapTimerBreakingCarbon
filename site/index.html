@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="theme-color" content="#0b0b0c" />
+	<title>Chorus32 Lap Timer &middot; Breaking Carbon</title>
+	<meta name="description"
+		content="A six-receiver FPV lap timer built on an ESP32. Flash it, join its WiFi, and run a race from your phone. Open hardware, open firmware, no subscription." />
+	<link rel="icon" href="assets/img/logo.jpg" />
+	<link rel="stylesheet" href="assets/css/site.css" />
+	<script src="assets/js/site.js"></script>
+</head>
+
+<body>
+
+	<header class="site-header">
+		<div class="wrap">
+			<a class="brand" href="index.html">
+				<img src="assets/img/flag.svg" alt="" />
+				<span>Chorus32 Lap Timer
+					<span class="sub">Breaking Carbon</span></span>
+			</a>
+			<nav class="site-nav">
+				<a href="index.html">Overview</a>
+				<a href="build.html">Build</a>
+				<a href="install.html">Install</a>
+				<a href="race-day.html">Race day</a>
+				<a href="downloads.html">Downloads</a>
+			</nav>
+			<button class="icon-btn" id="theme_toggle" title="Toggle daylight mode">&#9728;</button>
+		</div>
+	</header>
+
+	<div class="hero">
+		<div class="wrap">
+			<div>
+				<span class="eyebrow"><span class="dot"></span> Firmware 3.0.0</span>
+				<h1>Time six pilots<br />from your phone.</h1>
+				<p class="lede">
+					An FPV lap timer that listens to the video transmitters already on your
+					quads. No beacons, no transponders, no extra weight. Build the board,
+					flash two files, join its WiFi, and start a race.
+				</p>
+				<div class="btn-row">
+					<a class="btn primary" href="install.html">Get started</a>
+					<a class="btn" href="downloads.html">Downloads</a>
+					<a class="btn" href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon">GitHub</a>
+				</div>
+			</div>
+			<div class="hero-stack">
+				<figure class="hero-shot" style="margin:0">
+					<img src="assets/img/board-top.jpg" width="1400" height="933"
+						alt="The Chorus32 board with three RX5808 receiver modules, heatsinks, a LilyGO Micro-32 and an external antenna." />
+				</figure>
+				<figure class="hero-phone" style="margin:0">
+					<img src="assets/img/ui-race.jpg" width="420" height="613"
+						alt="The timer's race page on a phone, showing live standings mid-round." />
+				</figure>
+			</div>
+		</div>
+	</div>
+
+	<section class="band">
+		<div class="wrap">
+			<h2>What it is</h2>
+			<p class="band-lede">
+				Every racing quad already transmits analogue video on a known channel.
+				This timer parks a receiver on each pilot's channel and watches the signal
+				strength. When a quad flies through the gate the signal spikes, and that
+				spike is the lap.
+			</p>
+
+			<div class="grid three">
+				<div class="card">
+					<h3>Up to six pilots</h3>
+					<p>
+						One RX5808 receiver per pilot, up to six on a board. Each one has its
+						own band, channel and detection threshold, set from the web page and
+						stored on the timer.
+					</p>
+				</div>
+				<div class="card">
+					<h3>Nothing on the quad</h3>
+					<p>
+						No transponder, no beacon, no extra grams. If it flies with a video
+						transmitter on a band the RX5808 can tune, it can be timed.
+					</p>
+				</div>
+				<div class="card">
+					<h3>Runs its own network</h3>
+					<p>
+						The timer is the access point. At a field with no internet, phones
+						join <code>Chorus32_naco_&hellip;</code> and open the page. Nothing is
+						loaded from the web.
+					</p>
+				</div>
+				<div class="card">
+					<h3>Race from a phone</h3>
+					<p>
+						Pick the pilots, hit start, and watch standings and lap times update
+						live. Laps are beeped and called out loud, in English or Arabic, so
+						nobody has to look away from the sky.
+					</p>
+				</div>
+				<div class="card">
+					<h3>Or from the Android app</h3>
+					<p>
+						The original Chorus RF Laptimer app still works, over WiFi. The wire
+						protocol has not changed, so an app paired with an older timer keeps
+						working with this one.
+					</p>
+				</div>
+				<div class="card">
+					<h3>Updates over the air</h3>
+					<p>
+						After the first serial flash, new releases upload from the browser.
+						Your channels, thresholds and calibration survive the update.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="band">
+		<div class="wrap">
+			<h2>Watch it first</h2>
+			<p class="band-lede">
+				Both from Naco FPV. Posters are served from this site, so nothing is
+				requested from YouTube until you press play.
+			</p>
+
+			<div class="grid two">
+				<div>
+					<div class="video">
+						<button class="video-poster" data-video="dDGj_28wDJ0"
+							data-title="Chorus32 Lap Timer, Breaking Carbon edition | FPV Racing"
+							style="background-image:url('assets/img/video-build.jpg')"
+							aria-label="Play: Chorus32 Lap Timer, Breaking Carbon edition"></button>
+					</div>
+					<h3 style="margin:14px 0 4px">The build, start to finish</h3>
+					<p style="color:var(--text-dim);font-size:15px;margin:0">
+						The hardware, the flasher, the Android app, and the timer running at a
+						track.
+						<a href="https://www.youtube.com/watch?v=dDGj_28wDJ0">Open on
+							YouTube</a>
+					</p>
+				</div>
+
+				<div>
+					<div class="video">
+						<button class="video-poster" data-video="p0HdgJ5Kaas"
+							data-title="Chorus32 Lap Timer - Breaking Carbon V3 Web upgrade"
+							style="background-image:url('assets/img/video-v3.jpg')"
+							aria-label="Play: Chorus32 Lap Timer, Breaking Carbon V3 web upgrade"></button>
+					</div>
+					<h3 style="margin:14px 0 4px">The V3 web upgrade</h3>
+					<p style="color:var(--text-dim);font-size:15px;margin:0">
+						What changed in firmware 3.0.0, and updating a timer you already own
+						over WiFi.
+						<a href="https://www.youtube.com/watch?v=p0HdgJ5Kaas">Open on
+							YouTube</a>
+					</p>
+				</div>
+			</div>
+
+			<p style="margin:26px 0 0;color:var(--text-dim);font-size:14px">
+				<a href="https://www.youtube.com/@gilboash">More from Naco FPV &rarr;</a>
+			</p>
+		</div>
+	</section>
+
+	<section class="band">
+		<div class="wrap">
+			<h2>How a lap gets counted</h2>
+			<div class="grid two">
+				<div>
+					<p>
+						Each receiver reports a signal strength, many times a second. Far away
+						from the gate that number sits low and noisy. As a quad comes down the
+						straight it climbs, peaks as the quad passes the antenna, and falls
+						away again.
+					</p>
+					<p>
+						The timer calls a lap when the signal crosses that pilot's
+						<strong>threshold</strong> on the way up. Set it above the background
+						noise and below the pass peak and the timer sees one crossing per lap.
+						Set it too low and it counts a quad on the far side of the field; too
+						high and it misses the pass entirely.
+					</p>
+					<p>
+						A <strong>minimum lap time</strong> throws away a second crossing that
+						arrives impossibly soon after the first, which is what a quad hovering
+						next to the gate looks like.
+					</p>
+					<p style="margin-bottom:0">
+						The Live page plots the raw signal so you can see all of this while
+						somebody flies a lap. <a href="race-day.html#thresholds">Setting
+							thresholds &rarr;</a>
+					</p>
+				</div>
+				<figure style="margin:0">
+					<img src="assets/img/ui-live.jpg" width="420" height="613" loading="lazy"
+						alt="The Live page: four coloured signal traces running along a noise floor with tall spikes as quads pass the gate, and a dashed threshold line between the two." />
+					<figcaption>
+						Four receivers at once. The noise floor at the bottom, the gate passes
+						as spikes, and the dashed line is one pilot's threshold &mdash; sitting
+						exactly where it should.
+					</figcaption>
+				</figure>
+			</div>
+
+			<h3 style="margin-top:36px">How close does it get?</h3>
+			<div class="grid two">
+				<div>
+					<p style="margin-bottom:0">
+						The underlying Chorus timing has been checked against frame-by-frame
+						video scoring of the same race. It is good enough to run heats on, and
+						it costs nothing on the aircraft &mdash; which is the trade an RF timer
+						exists to make.
+					</p>
+				</div>
+				<figure style="margin:0">
+					<img src="assets/img/comparison.jpg" width="1400" height="958" loading="lazy"
+						alt="A Chorus lap list beside a frame-by-frame video scoring sheet, with the lap times lining up." />
+					<figcaption>
+						From the upstream Chorus32 project: Chorus lap times beside a manual
+						video score of the same laps.
+					</figcaption>
+				</figure>
+			</div>
+		</div>
+	</section>
+
+	<section class="band">
+		<div class="wrap">
+			<h2>The interface is on the timer</h2>
+			<div class="grid two">
+				<div>
+					<p>
+						There is nothing to install and nothing to log into. The timer serves
+						its own pages, over its own network, with no internet in sight.
+					</p>
+					<p>
+						The <strong>Race</strong> page is the one you hold during a round:
+						standings in order, each pilot's lap count against the target, their
+						best lap, their two best consecutive, and the gap to the leader. Lap
+						history is kept per round until you clear it.
+					</p>
+					<p>
+						Laps are beeped and spoken aloud, so the person running the round can
+						keep watching the sky. Timing carries on past the flag rather than
+						dropping the lap somebody was already on.
+					</p>
+					<p style="margin-bottom:0">
+						<a href="race-day.html">Running a round &rarr;</a>
+					</p>
+				</div>
+				<figure style="margin:0">
+					<img src="assets/img/ui-race.jpg" width="420" height="613" loading="lazy"
+						alt="The Race page on a phone: a round timer with a Stop button, and standings listing each pilot's lap, best lap and gap to the leader." />
+					<figcaption>Mid-round, four pilots, on a phone.</figcaption>
+				</figure>
+			</div>
+		</div>
+	</section>
+
+	<section class="band">
+		<div class="wrap">
+			<h2>Start here</h2>
+			<p class="band-lede">Three guides, in the order you will need them.</p>
+			<div class="grid three">
+				<a class="card" href="build.html">
+					<span class="tag">Hardware</span>
+					<h3>Build the board</h3>
+					<p>
+						The PCB options, the bill of materials, and the soldering notes that
+						matter. Surface-mount work, so read the warning first.
+					</p>
+				</a>
+				<a class="card" href="install.html">
+					<span class="tag">Firmware</span>
+					<h3>Flash the timer</h3>
+					<p>
+						The GUI flasher over an FTDI cable for a new board, then over-the-air
+						updates from the browser for every release after that.
+					</p>
+				</a>
+				<a class="card" href="race-day.html">
+					<span class="tag">Operation</span>
+					<h3>Run a race</h3>
+					<p>
+						Setting channels and thresholds, calibrating, running the round, and
+						what to do when the phone screen goes dark.
+					</p>
+				</a>
+			</div>
+		</div>
+	</section>
+
+	<section class="band">
+		<div class="wrap">
+			<h2>What this fork changes</h2>
+			<p class="band-lede">
+				It is a mix of Aaron Smith's minimal micro-ESP32 PCB with cruwaller's
+				firmware, plus the pieces needed to actually run it at a field.
+			</p>
+			<div class="grid two">
+				<div class="card">
+					<h3>A flasher, so you don't have to build</h3>
+					<p>
+						A small Python GUI that pushes the released binaries over an FTDI
+						cable. No toolchain, no PlatformIO, no Arduino IDE.
+					</p>
+				</div>
+				<div class="card">
+					<h3>An Android app that works on modern Android</h3>
+					<p>
+						The original app's TCP support was rebuilt so it connects on current
+						Android releases. The APK is in Downloads.
+					</p>
+				</div>
+				<div class="card">
+					<h3>A network name you can pick</h3>
+					<p>
+						Several timers at one field stop colliding: each gets its own SSID
+						suffix and WiFi channel, set from the Settings page.
+					</p>
+				</div>
+				<div class="card">
+					<h3>A phone-first web interface</h3>
+					<p>
+						Live signal plot, a race page with standings and lap history, spoken
+						callouts, and browser updates &mdash; all served from the timer itself.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<footer class="site-footer">
+		<div class="wrap">
+			<span>
+				Built on
+				<a href="https://github.com/voroshkov/Chorus-RF-Laptimer">Chorus RF Laptimer</a>
+				by Andrey Voroshkov and
+				<a href="https://github.com/AlessandroAU/Chorus32-ESP32LapTimer">Chorus32-ESP32LapTimer</a>
+				by AlessandroAU, with firmware from cruwaller's fork and PCBs by Aaron Smith
+				and Jye Smith.
+			</span>
+			<span class="spacer">
+				<a href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon">Source on GitHub</a>
+			</span>
+		</div>
+	</footer>
+
+</body>
+
+</html>

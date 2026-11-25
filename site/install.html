@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="theme-color" content="#0b0b0c" />
+	<title>Flash the timer &middot; Chorus32 Lap Timer</title>
+	<meta name="description"
+		content="Flash a new Chorus32 board over an FTDI cable with the GUI flasher, then update it over WiFi from the browser." />
+	<link rel="icon" href="assets/img/logo.jpg" />
+	<link rel="stylesheet" href="assets/css/site.css" />
+	<script src="assets/js/site.js"></script>
+</head>
+
+<body>
+
+	<header class="site-header">
+		<div class="wrap">
+			<a class="brand" href="index.html">
+				<img src="assets/img/flag.svg" alt="" />
+				<span>Chorus32 Lap Timer
+					<span class="sub">Breaking Carbon</span></span>
+			</a>
+			<nav class="site-nav">
+				<a href="index.html">Overview</a>
+				<a href="build.html">Build</a>
+				<a href="install.html">Install</a>
+				<a href="race-day.html">Race day</a>
+				<a href="downloads.html">Downloads</a>
+			</nav>
+			<button class="icon-btn" id="theme_toggle" title="Toggle daylight mode">&#9728;</button>
+		</div>
+	</header>
+
+	<div class="page-head">
+		<div class="wrap">
+			<span class="eyebrow">Firmware</span>
+			<h1>Flash the timer</h1>
+			<p>
+				A new board needs a cable once. After that every release goes on over
+				WiFi, from the same page you race from.
+			</p>
+		</div>
+	</div>
+
+	<div class="doc">
+		<div class="wrap">
+
+			<div class="note">
+				<strong>Which route do you need?</strong>
+				<p>
+					<strong>Never flashed before</strong> &mdash; use the
+					<a href="#serial">FTDI flasher</a> and write all five files.<br />
+					<strong>Already running V1, V2 or V3</strong> &mdash; use
+					<a href="#ota">over the air</a>. The partition table has not changed, so
+					no cable is needed.
+				</p>
+			</div>
+
+			<h2 id="serial">First flash, over a cable</h2>
+
+			<p>
+				The flasher is a small Python GUI that wraps <code>esptool</code>. You do
+				not need a build environment, a toolchain or the Arduino IDE &mdash; just
+				the released binaries.
+			</p>
+
+			<h3>What you need</h3>
+
+			<ul>
+				<li>An FT232RL FTDI serial adapter and a USB cable</li>
+				<li>Python 3</li>
+				<li>A battery to power the board &mdash; the FTDI does not power it</li>
+				<li>
+					The flasher and the binaries, from
+					<a href="downloads.html">Downloads</a>
+				</li>
+			</ul>
+
+			<pre><code>pip install esptool PyQt5 pyserial</code></pre>
+
+			<div class="note danger">
+				<strong>Pull the voltage jumper off the FTDI first</strong>
+				<p>
+					The board is powered from its own battery. Leaving the FTDI's voltage
+					select header in place feeds it a second supply, and that is how boards
+					get killed. Remove the jumper before you connect anything.
+				</p>
+			</div>
+
+			<figure class="narrow">
+				<img src="assets/img/ftdi.jpg" width="1050" height="1400" loading="lazy"
+					alt="An FTDI adapter plugged into the board's six-pin PROG header, with the board powered and its status LED lit." />
+				<figcaption>
+					The FTDI on the PROG header, in this orientation. The board is already
+					powered and already in bootloader mode.
+				</figcaption>
+			</figure>
+
+			<h3>Do it in this order</h3>
+
+			<ol class="steps">
+				<li>
+					<h3>Power the board from a battery</h3>
+					<p>Plug the battery into the XT60 and switch the timer on.</p>
+				</li>
+				<li>
+					<h3>Put it in bootloader mode</h3>
+					<p>
+						Press and hold <kbd>RST</kbd>, then press and hold <kbd>PROG</kbd>,
+						then release <kbd>RST</kbd> while still holding <kbd>PROG</kbd>, then
+						release <kbd>PROG</kbd>.
+					</p>
+				</li>
+				<li>
+					<h3>Connect the FTDI</h3>
+					<p>
+						Only now plug it into the PROG pins &mdash; after the button dance, not
+						before. Voltage jumper still removed.
+					</p>
+				</li>
+				<li>
+					<h3>Run the flasher</h3>
+					<pre><code>python naco_chorus32_flasher.py</code></pre>
+					<p>
+						Hit <strong>Refresh Ports</strong> and pick the FTDI's port. On Windows
+						it is a <code>COM</code> number you can confirm in Device Manager; on
+						macOS and Linux it looks like <code>/dev/tty.usbserial-&hellip;</code>.
+					</p>
+				</li>
+				<li>
+					<h3>Point it at the files</h3>
+					<p>
+						For a chip that has never been flashed, select all five. For a reflash
+						of a working board, <code>firmware.bin</code> and
+						<code>spiffs.bin</code> are enough.
+					</p>
+				</li>
+				<li>
+					<h3>Flash, then power-cycle</h3>
+					<p>
+						Press <strong>Flash ESP32</strong> and leave it alone until it finishes.
+						Then unplug the FTDI, switch the timer off and on, and look for its WiFi
+						network.
+					</p>
+				</li>
+			</ol>
+
+			<h3>What goes where</h3>
+
+			<table>
+				<thead>
+					<tr>
+						<th>File</th>
+						<th>Offset</th>
+						<th>Needed</th>
+						<th>What it is</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><code>bootloader.bin</code></td>
+						<td><code>0x1000</code></td>
+						<td>First flash only</td>
+						<td>Second-stage bootloader</td>
+					</tr>
+					<tr>
+						<td><code>partitions.bin</code></td>
+						<td><code>0x8000</code></td>
+						<td>First flash only</td>
+						<td>Partition table</td>
+					</tr>
+					<tr>
+						<td><code>ota_data_initial.bin</code></td>
+						<td><code>0xE000</code></td>
+						<td>First flash only</td>
+						<td>Marks which OTA slot to boot</td>
+					</tr>
+					<tr>
+						<td><code>firmware.bin</code></td>
+						<td><code>0x10000</code></td>
+						<td>Always</td>
+						<td>The program</td>
+					</tr>
+					<tr>
+						<td><code>spiffs.bin</code></td>
+						<td><code>0x3D0000</code></td>
+						<td>Always</td>
+						<td>The web interface</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<p>
+				V3 ships only the two files that changed. The other three are unchanged
+				since V2 &mdash; take them from the V2 folder, the partition table is
+				identical.
+			</p>
+
+			<figure>
+				<img src="assets/img/comport.jpg" width="1000" height="563" loading="lazy"
+					alt="Windows Device Manager showing the FTDI adapter's assigned COM port." />
+				<figcaption>Finding the port on Windows, if the list is ambiguous.
+				</figcaption>
+			</figure>
+
+			<h2 id="ota">Updating over WiFi</h2>
+
+			<p>
+				Once a board runs V1 or later, no cable is needed again. Join the timer's
+				network, open its page and go to <strong>Update</strong>. There is a
+				walkthrough of exactly this in the
+				<a href="https://www.youtube.com/watch?v=p0HdgJ5Kaas">V3 web upgrade
+					video</a>.
+			</p>
+
+			<div class="note warn">
+				<strong>Order matters</strong>
+				<p>
+					Upload <code>firmware.bin</code> first, let the timer restart, then
+					upload <code>spiffs.bin</code>. Both must come from the same release.
+				</p>
+				<p>
+					The reason is recovery. The fixed recovery page lives in the <em>new</em>
+					firmware, so installing it first means a failed filesystem upload can
+					still be retried from the browser. The other way round, a failed
+					filesystem upload leaves you on the old firmware's broken recovery route
+					and you are back to the cable.
+				</p>
+			</div>
+
+			<ol class="steps">
+				<li>
+					<h3>Join the timer's network</h3>
+					<p>
+						<code>Chorus32_naco_&hellip;</code>, open, no password. Open
+						<a href="http://192.168.4.1/">192.168.4.1</a> if your phone does not
+						offer the page by itself.
+					</p>
+				</li>
+				<li>
+					<h3>Upload the firmware</h3>
+					<p>
+						Update &rarr; choose <code>firmware.bin</code> &rarr; Upload. The page
+						tells you which of the two files it thinks you picked. The timer
+						restarts on its own.
+					</p>
+				</li>
+				<li>
+					<h3>Rejoin and upload the filesystem</h3>
+					<p>
+						Your phone has to reconnect to the network after the restart. Then
+						upload <code>spiffs.bin</code> the same way.
+					</p>
+					<p>
+						Between the two steps the timer runs new firmware behind the old pages.
+						The Update page reports both versions and warns while they disagree
+						&mdash; that warning is expected, and clears when the second upload
+						lands.
+					</p>
+				</li>
+			</ol>
+
+			<div class="note">
+				<strong>Your settings survive</strong>
+				<p>
+					Channels, thresholds, calibration and the WiFi name are stored outside
+					both of these images. An update does not clear them.
+				</p>
+			</div>
+
+			<h3>If an update fails</h3>
+
+			<p>
+				A half-finished <strong>filesystem</strong> upload loses the pages but not
+				the timer: the firmware still serves a built-in upload form. Reconnect to
+				its WiFi, open <code>192.168.4.1</code> and try again.
+			</p>
+
+			<p>
+				Only a failed <strong>firmware</strong> upload needs a cable, and even then
+				the timer keeps running the old firmware until a new one has been written
+				completely. Do not power it off mid-upload and you are unlikely to meet
+				this case.
+			</p>
+
+			<h2 id="source">Building from source</h2>
+
+			<p>
+				Only needed if you are changing the firmware. The project builds with
+				PlatformIO:
+			</p>
+
+			<pre><code>cd ESP32LapTimer
+pio run -e BOARD_MICRO32</code></pre>
+
+			<p>
+				The web interface is generated: edit <code>data_src/</code>, never the
+				<code>data/</code> folder the build produces. Other board targets are
+				defined in <code>platformio.ini</code>.
+			</p>
+
+			<h2 id="next">Next</h2>
+
+			<p>
+				The timer is running but it does not know your channels yet.
+				<a href="race-day.html">Setting it up and running a race &rarr;</a>
+			</p>
+
+		</div>
+	</div>
+
+	<footer class="site-footer">
+		<div class="wrap">
+			<span>Firmware 3.0.0 &middot; board target <code>BOARD_MICRO32</code></span>
+			<span class="spacer">
+				<a href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon">Source on GitHub</a>
+			</span>
+		</div>
+	</footer>
+
+</body>
+
+</html>

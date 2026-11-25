@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="theme-color" content="#0b0b0c" />
+	<title>Downloads &middot; Chorus32 Lap Timer</title>
+	<meta name="description"
+		content="Firmware binaries, the serial flasher, the Android APK and the PCB files for the Chorus32 Breaking Carbon lap timer." />
+	<link rel="icon" href="assets/img/logo.jpg" />
+	<link rel="stylesheet" href="assets/css/site.css" />
+	<script src="assets/js/site.js"></script>
+</head>
+
+<body>
+
+	<header class="site-header">
+		<div class="wrap">
+			<a class="brand" href="index.html">
+				<img src="assets/img/flag.svg" alt="" />
+				<span>Chorus32 Lap Timer
+					<span class="sub">Breaking Carbon</span></span>
+			</a>
+			<nav class="site-nav">
+				<a href="index.html">Overview</a>
+				<a href="build.html">Build</a>
+				<a href="install.html">Install</a>
+				<a href="race-day.html">Race day</a>
+				<a href="downloads.html">Downloads</a>
+			</nav>
+			<button class="icon-btn" id="theme_toggle" title="Toggle daylight mode">&#9728;</button>
+		</div>
+	</header>
+
+	<div class="page-head">
+		<div class="wrap">
+			<span class="eyebrow">Files</span>
+			<h1>Downloads</h1>
+			<p>
+				Everything is served straight from the GitHub repository, so what you get
+				here is always what is in the tree.
+			</p>
+		</div>
+	</div>
+
+	<div class="doc">
+		<div class="wrap">
+
+			<h2 id="firmware">Firmware &mdash; V3 (3.0.0)</h2>
+
+			<p>
+				Board target <code>BOARD_MICRO32</code>. Install
+				<code>firmware.bin</code> first, then <code>spiffs.bin</code>, both from
+				this release. <a href="install.html">Flashing instructions &rarr;</a>
+			</p>
+
+			<div class="dl">
+				<div class="dl-body">
+					<strong>firmware.bin</strong>
+					<span>The program &middot; flash offset <code>0x10000</code></span>
+				</div>
+				<span class="size">1.0 MB</span>
+				<a class="btn"
+					href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/raw/dev/release_bins/V3/firmware.bin">Download</a>
+			</div>
+
+			<div class="dl">
+				<div class="dl-body">
+					<strong>spiffs.bin</strong>
+					<span>The web interface &middot; flash offset <code>0x3D0000</code></span>
+				</div>
+				<span class="size">192 KB</span>
+				<a class="btn"
+					href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/raw/dev/release_bins/V3/spiffs.bin">Download</a>
+			</div>
+
+			<div class="note">
+				<strong>What is new in 3.0.0</strong>
+				<p>
+					The buzzer and receiver multiplexing both default to <strong>off</strong>.
+					Multiplexing time-shared one receiver across several pilots and credited
+					mistimed samples to the wrong one, which showed up as a pilot scoring
+					another's laps. With it off, a pilot enabled beyond the receiver count is
+					not timed, and the race page now warns when that happens. The default
+					race length is 20 laps and timing continues past the flag.
+				</p>
+				<p>
+					<a
+						href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/blob/dev/release_bins/V3/README.md">Full
+						release notes &rarr;</a>
+				</p>
+			</div>
+
+			<h3>First-flash extras</h3>
+
+			<p>
+				Only needed on a chip that has never been flashed. These three are
+				unchanged since V2 and the partition table is identical, which is also why
+				V1 and V2 units can update over WiFi.
+			</p>
+
+			<div class="dl">
+				<div class="dl-body">
+					<strong>bootloader.bin</strong>
+					<span>Offset <code>0x1000</code></span>
+				</div>
+				<span class="size">128 KB</span>
+				<a class="btn"
+					href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/raw/dev/release_bins/V2/bootloader.bin">Download</a>
+			</div>
+
+			<div class="dl">
+				<div class="dl-body">
+					<strong>partitions.bin</strong>
+					<span>Offset <code>0x8000</code></span>
+				</div>
+				<span class="size">3 KB</span>
+				<a class="btn"
+					href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/raw/dev/release_bins/V2/partitions.bin">Download</a>
+			</div>
+
+			<div class="dl">
+				<div class="dl-body">
+					<strong>ota_data_initial.bin</strong>
+					<span>Offset <code>0xE000</code></span>
+				</div>
+				<span class="size">8 KB</span>
+				<a class="btn"
+					href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/raw/dev/release_bins/V2/ota_data_initial.bin">Download</a>
+			</div>
+
+			<h3>Older releases</h3>
+
+			<p>
+				V1 and V2 are kept in the repository for reference, each with its own
+				complete set of five files.
+				<a
+					href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/tree/dev/release_bins">Browse
+					<code>release_bins/</code> &rarr;</a>
+			</p>
+
+			<h2 id="flasher">Serial flasher</h2>
+
+			<p>
+				A small PyQt GUI around <code>esptool</code>, for the first flash over an
+				FTDI cable. Needs Python 3 and
+				<code>pip install esptool PyQt5 pyserial</code>.
+			</p>
+
+			<div class="dl">
+				<div class="dl-body">
+					<strong>naco_chorus32_flasher.py</strong>
+					<span>Run with <code>python naco_chorus32_flasher.py</code></span>
+				</div>
+				<span class="size">7 KB</span>
+				<a class="btn"
+					href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/raw/dev/esp32flasher/naco_chorus32_flasher.py">Download</a>
+			</div>
+
+			<div class="dl">
+				<div class="dl-body">
+					<strong>Flasher folder</strong>
+					<span>Script, PyInstaller spec, FTDI orientation photo and a demo
+						clip</span>
+				</div>
+				<a class="btn"
+					href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/tree/dev/esp32flasher">Browse</a>
+			</div>
+
+			<h2 id="app">Android app</h2>
+
+			<p>
+				Andrey Voroshkov's Chorus RF Laptimer app, rebuilt so its TCP connection
+				works on current Android releases. Not on the Play Store, so your phone
+				will ask you to allow the install.
+				<a href="race-day.html#android">How to connect it &rarr;</a>
+			</p>
+
+			<div class="dl">
+				<div class="dl-body">
+					<strong>app-with-tcp-fix-v2.apk</strong>
+					<span>Latest build &middot; connect over TCP to
+						<code>192.168.4.1</code></span>
+				</div>
+				<span class="size">5.7 MB</span>
+				<a class="btn primary"
+					href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/raw/dev/Android%20sandbox/app-with-tcp-fix-v2.apk">Download</a>
+			</div>
+
+			<div class="dl">
+				<div class="dl-body">
+					<strong>app-with-tcp-fix.apk</strong>
+					<span>Previous build, kept in case v2 misbehaves on your device</span>
+				</div>
+				<span class="size">5.7 MB</span>
+				<a class="btn"
+					href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/raw/dev/Android%20sandbox/app-with-tcp-fix.apk">Download</a>
+			</div>
+
+			<div class="dl">
+				<div class="dl-body">
+					<strong>App source</strong>
+					<span>The modified Android project, if you want to build it
+						yourself</span>
+				</div>
+				<a class="btn"
+					href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/tree/dev/ChorusRFLaptimer_androidapp_fixed_guy">Browse</a>
+			</div>
+
+			<h2 id="pcb">PCB and hardware files</h2>
+
+			<p>
+				<a href="build.html#pcb">Which board to pick &rarr;</a>
+			</p>
+
+			<div class="dl">
+				<div class="dl-body">
+					<strong>Aaron Smith PCB V2 &mdash; schematic</strong>
+					<span>PDF. The board itself is ordered from its
+						<a href="https://www.pcbway.com/project/shareproject/Chorus_32_Lap_Timer_PCB.html">PCBWay
+							shared project</a>.</span>
+				</div>
+				<span class="size">91 KB</span>
+				<a class="btn"
+					href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/raw/dev/pcb/AaronSmith/PCB%20V2/ESP32%20LapTimer.pdf">Download</a>
+			</div>
+
+			<div class="dl">
+				<div class="dl-body">
+					<strong>Jye Smith V2 &mdash; gerbers</strong>
+					<span>Beeper and LEDs. Marked untested by its author.</span>
+				</div>
+				<span class="size">121 KB</span>
+				<a class="btn"
+					href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/raw/dev/pcb/JyeSmith/PCBV2/Gerber_V2.zip">Download</a>
+			</div>
+
+			<div class="dl">
+				<div class="dl-body">
+					<strong>Jye Smith V1 &mdash; gerbers</strong>
+					<span>Tested, but the INA219 Vin pads are reversed &mdash; read the
+						warning before you solder.</span>
+				</div>
+				<span class="size">96 KB</span>
+				<a class="btn"
+					href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/raw/dev/pcb/JyeSmith/PCBV1/Gerber_V1.zip">Download</a>
+			</div>
+
+			<div class="dl">
+				<div class="dl-body">
+					<strong>All PCB files</strong>
+					<span>Both designers, with their readmes, renders and assembly
+						photos</span>
+				</div>
+				<a class="btn"
+					href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/tree/dev/pcb">Browse</a>
+			</div>
+
+			<h2 id="print">Print files</h2>
+
+			<div class="dl">
+				<div class="dl-body">
+					<strong>Chorus32 box &mdash; STL</strong>
+					<span>Printable enclosure on Thingiverse. Check it against your own
+						board first &mdash; the PCB families differ in size.</span>
+				</div>
+				<a class="btn" href="https://www.thingiverse.com/thing:5164793">Open on
+					Thingiverse</a>
+			</div>
+
+			<p style="margin-top:16px">
+				Nothing is hosted in this repository &mdash; there are no STL or STEP
+				files under <code>pcb/</code>. The builds pictured in the
+				<a href="build.html#case">build guide</a> use off-the-shelf sealed
+				enclosures instead. If you design a case,
+				<a href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon/issues">open an
+					issue</a> and it will be added here.
+			</p>
+
+			<h2 id="accessories">Accessories</h2>
+
+			<div class="dl">
+				<div class="dl-body">
+					<strong>PIXLINK 300Mbps WiFi repeater</strong>
+					<span>Pocket 2.4GHz repeater / bridge, USB powered. Extends how far
+						from the timer you can stand.
+						<a href="race-day.html#range">How to use it &rarr;</a></span>
+				</div>
+				<a class="btn"
+					href="https://www.aliexpress.com/item/1005005547211634.html">AliExpress</a>
+			</div>
+
+			<h2 id="source">Source</h2>
+
+			<div class="dl">
+				<div class="dl-body">
+					<strong>Chorus32-LapTimerBreakingCarbon</strong>
+					<span>Firmware, web interface, flasher, Android app and PCB files</span>
+				</div>
+				<a class="btn primary"
+					href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon">GitHub</a>
+			</div>
+
+			<p style="margin-top:20px">
+				Upstream projects this is built on:
+				<a href="https://github.com/voroshkov/Chorus-RF-Laptimer">Chorus RF
+					Laptimer</a> by Andrey Voroshkov, and
+				<a href="https://github.com/AlessandroAU/Chorus32-ESP32LapTimer">Chorus32-ESP32LapTimer</a>
+				by AlessandroAU.
+			</p>
+
+		</div>
+	</div>
+
+	<footer class="site-footer">
+		<div class="wrap">
+			<span>Files are linked from the <code>dev</code> branch.</span>
+			<span class="spacer">
+				<a href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon">Source on GitHub</a>
+			</span>
+		</div>
+	</footer>
+
+</body>
+
+</html>

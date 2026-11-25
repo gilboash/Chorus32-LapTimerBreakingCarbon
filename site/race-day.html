@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="theme-color" content="#0b0b0c" />
+	<title>Race day &middot; Chorus32 Lap Timer</title>
+	<meta name="description"
+		content="Connect to the timer, set channels and thresholds, calibrate, and run a round from your phone or the Android app." />
+	<link rel="icon" href="assets/img/logo.jpg" />
+	<link rel="stylesheet" href="assets/css/site.css" />
+	<script src="assets/js/site.js"></script>
+</head>
+
+<body>
+
+	<header class="site-header">
+		<div class="wrap">
+			<a class="brand" href="index.html">
+				<img src="assets/img/flag.svg" alt="" />
+				<span>Chorus32 Lap Timer
+					<span class="sub">Breaking Carbon</span></span>
+			</a>
+			<nav class="site-nav">
+				<a href="index.html">Overview</a>
+				<a href="build.html">Build</a>
+				<a href="install.html">Install</a>
+				<a href="race-day.html">Race day</a>
+				<a href="downloads.html">Downloads</a>
+			</nav>
+			<button class="icon-btn" id="theme_toggle" title="Toggle daylight mode">&#9728;</button>
+		</div>
+	</header>
+
+	<div class="page-head">
+		<div class="wrap">
+			<span class="eyebrow">Operation</span>
+			<h1>Race day</h1>
+			<p>
+				Setting up at a field, getting the thresholds right, and running a round
+				without looking away from the sky.
+			</p>
+		</div>
+	</div>
+
+	<div class="doc">
+		<div class="wrap">
+
+			<h2 id="connect">Connect</h2>
+
+			<p>
+				The timer makes its own network. It is open, with no password, and it has
+				no internet &mdash; everything the page needs is served from the timer.
+			</p>
+
+			<ol class="steps">
+				<li>
+					<h3>Power it up and find the network</h3>
+					<p>
+						Look for <code>Chorus32_naco_</code> followed by the suffix set in its
+						settings. If you run more than one timer at a field, give each its own
+						suffix and its own WiFi channel so they stop fighting.
+					</p>
+				</li>
+				<li>
+					<h3>Open the page</h3>
+					<p>
+						Most phones offer it as soon as you join. If yours does not, open
+						<code>192.168.4.1</code> in a browser.
+					</p>
+					<p>
+						Android may complain that the network has no internet and quietly drop
+						off it. Tell it to stay connected.
+					</p>
+				</li>
+			</ol>
+
+			<p>
+				There are four pages: <strong>Live</strong> for the raw signal plot,
+				<strong>Race</strong> for running a round, <strong>Settings</strong> for
+				the hardware, and <strong>Update</strong> for new firmware.
+			</p>
+
+			<h2 id="range">Standing further away</h2>
+
+			<p>
+				The timer has to sit at the gate, and the ESP32's access point is not
+				strong. If the pit area is a long way from the track, the phone drops off
+				before you want it to. Two things help.
+			</p>
+
+			<p>
+				<strong>Set the WiFi protocol to b.</strong> In Settings, the protocol
+				choice is between <em>b</em> (longest range) and <em>bgn</em> (fastest).
+				There is nothing to be gained from the speed &mdash; the timer sends short
+				lines of text, not video &mdash; so pick <em>b</em> and take the range.
+			</p>
+
+			<p>
+				<strong>Or add a repeater.</strong> A pocket 2.4GHz repeater placed
+				between the gate and the pits rebroadcasts the timer's network, and phones
+				join the repeater instead. The
+				<a href="https://www.aliexpress.com/item/1005005547211634.html">PIXLINK
+					300Mbps repeater</a> is the one in use here: cheap, USB powered, and it
+				has an RJ-45 port if you ever want it wired. The timer's AP is open with
+				no password, so there is no key to type during setup.
+			</p>
+
+			<div class="note">
+				<strong>A repeater costs throughput, and that does not matter here</strong>
+				<p>
+					Repeating on one radio roughly halves the available bandwidth and adds
+					a little latency. For a stream of short ASCII lap messages that is
+					invisible &mdash; and it is a good trade against the phone dropping off
+					mid-round.
+				</p>
+			</div>
+
+			<h2 id="setup">Set up the receivers</h2>
+
+			<p>On <strong>Settings</strong>:</p>
+
+			<ol class="steps">
+				<li>
+					<h3>Set the number of receivers</h3>
+					<p>
+						How many RX5808 modules are actually fitted on the board. One per pilot
+						you can time.
+					</p>
+				</li>
+				<li>
+					<h3>Give each receiver a band and channel</h3>
+					<p>
+						Match each one to a pilot's video transmitter. Pilots should be spread
+						across the band &mdash; two quads on adjacent channels will show up in
+						each other's receivers.
+					</p>
+				</li>
+				<li>
+					<h3>Calibrate once, with a VTX on</h3>
+					<p>
+						Power up a quad at 25mW on any channel, put it near the timer, and
+						press <strong>Calibrate RSSI</strong>.
+					</p>
+					<div class="note danger" style="margin-bottom:0">
+						<strong>Do not calibrate with everything switched off</strong>
+						<p>
+							Running calibration with no active VTX anywhere leaves the timer
+							unable to detect laps at all until you run it again properly.
+						</p>
+					</div>
+				</li>
+			</ol>
+
+			<div class="note warn">
+				<strong>Changed in 3.0.0: no more receiver multiplexing</strong>
+				<p>
+					Multiplexing used to time-share one receiver across several pilots. It
+					credited mistimed samples to the wrong pilot, which showed up as a pilot
+					scoring somebody else's laps, so it is off by default.
+				</p>
+				<p>
+					The consequence: a pilot enabled beyond the number of fitted receivers
+					gets no receiver and is simply not timed. The Race page warns you when
+					that happens, rather than letting you find out at the end of the round.
+				</p>
+			</div>
+
+			<h2 id="thresholds">Getting thresholds right</h2>
+
+			<p>
+				This is the one setting that decides whether the timer works, and it is
+				worth five minutes before the first round.
+			</p>
+
+			<p>
+				Each receiver reports a signal strength many times a second. Sitting on the
+				ground it is low and noisy; as a quad comes through the gate it climbs,
+				peaks, and drops away. A lap is counted when that signal crosses the
+				pilot's <strong>threshold</strong> on the way up.
+			</p>
+
+			<div class="grid two">
+				<div class="card">
+					<h3>Threshold too low</h3>
+					<p>
+						Laps fire while the quad is on the far side of the field, or from
+						another pilot's transmitter. You get extra laps that are far too short.
+					</p>
+				</div>
+				<div class="card">
+					<h3>Threshold too high</h3>
+					<p>
+						The pass never reaches it and the lap is silently missed. Lap times
+						come out as a clean multiple of the real lap.
+					</p>
+				</div>
+			</div>
+
+			<p style="margin-top:16px">
+				The roster on the Race page shows a live bar per pilot with the threshold
+				marked on it, and the <strong>Live</strong> page plots the raw trace. Have
+				somebody fly a lap and watch where the peak lands: you want the threshold
+				clearly above the noise floor and clearly below the pass peak.
+			</p>
+
+			<figure class="narrow">
+				<img src="assets/img/ui-live.jpg" width="420" height="613" loading="lazy"
+					alt="The Live page showing four signal traces along a low noise floor with tall spikes at each gate pass, and a dashed threshold line between them." />
+				<figcaption>
+					This is what you are looking for. The noise floor sits near the bottom,
+					each gate pass spikes well above it, and the dashed threshold line has
+					clear air on both sides.
+				</figcaption>
+			</figure>
+
+			<p>
+				<strong>Minimum lap time</strong> is the backstop. It throws away a second
+				crossing that arrives impossibly soon after the first, which is what a quad
+				hovering next to the gate looks like. Set it a little under your fastest
+				realistic lap.
+			</p>
+
+			<h2 id="round">Running a round</h2>
+
+			<ol class="steps">
+				<li>
+					<h3>Tick the pilots who are flying</h3>
+					<p>
+						Only ticked pilots are in the race. The count is shown on the roster
+						header, and you get a warning if there are more of them than there are
+						receivers.
+					</p>
+				</li>
+				<li>
+					<h3>Set the laps and the minimum lap time</h3>
+					<p>
+						The default is 20 laps. Timing carries on past the flag, so an extra
+						lap after the target is still recorded rather than thrown away.
+					</p>
+				</li>
+				<li>
+					<h3>Choose how it talks to you</h3>
+					<p>
+						<strong>Lap beep</strong> is a tone on every crossing.
+						<strong>Callouts</strong> speak the lap and the time out loud, in
+						English or Arabic, using a voice from the phone. Press
+						<strong>Test</strong> to hear the selected voice before the round rather
+						than during it.
+					</p>
+				</li>
+				<li>
+					<h3>Start</h3>
+					<p>
+						Standings and lap times fill in live. Previous rounds stay in the lap
+						history until you clear it.
+					</p>
+				</li>
+			</ol>
+
+			<div class="note">
+				<strong>If the phone drops off the WiFi mid-race, the race is fine</strong>
+				<p>
+					The timer owns the lap times, not the phone. When the browser reconnects
+					it asks for everything again and the laps it missed appear, with their
+					original times and no duplicates. A dropout costs you the live view and
+					the callouts while it lasts &mdash; it does not cost you the round.
+				</p>
+			</div>
+
+			<h2 id="awake">Keeping the screen on</h2>
+
+			<p>
+				The Race page has a <strong>Keep screen awake</strong> option, and it is
+				honest with you about what it can do.
+			</p>
+
+			<p>
+				A web page served over plain HTTP &mdash; which is what the timer serves,
+				on its own network, with no certificate &mdash; is not allowed to hold a
+				phone's screen on. Browsers reserve that for secure origins. The page tries
+				the one trick that is left, and tells you when it did not work.
+			</p>
+
+			<div class="note warn">
+				<strong>Set the display timeout on the phone instead</strong>
+				<p>
+					<strong>iPhone:</strong> Settings &rsaquo; Display &amp; Brightness
+					&rsaquo; Auto-Lock &rsaquo; Never.<br />
+					<strong>Android:</strong> Settings &rsaquo; Display &rsaquo; Screen
+					timeout.
+				</p>
+				<p>Set it back afterwards, or the battery will be gone by the drive home.</p>
+			</div>
+
+			<p>
+				If the screen does sleep, nothing is lost. See the note above &mdash; the
+				laps are on the timer, and they come back when the page reconnects.
+			</p>
+
+			<h2 id="android">Using the Android app</h2>
+
+			<p>
+				The original Chorus RF Laptimer app works with this timer over WiFi, and it
+				is the right choice if you already run your events from it, or you want its
+				heat and pilot management.
+			</p>
+
+			<ol class="steps">
+				<li>
+					<h3>Install the APK</h3>
+					<p>
+						From <a href="downloads.html#app">Downloads</a>. It is not on the Play
+						Store, so Android will ask you to allow installation from your browser
+						or file manager.
+					</p>
+				</li>
+				<li>
+					<h3>Join the timer's WiFi</h3>
+					<p>Same network as the web page.</p>
+				</li>
+				<li>
+					<h3>Connect over TCP</h3>
+					<p>
+						Pick the TCP connection in the app and point it at
+						<code>192.168.4.1</code>.
+					</p>
+				</li>
+			</ol>
+
+			<div class="note">
+				<strong>The wire protocol has not changed</strong>
+				<p>
+					This fork adds its own commands but never alters the existing ones, on
+					purpose: an app that worked with an older Chorus timer keeps working with
+					this one. The web page and the app can even be connected at the same
+					time.
+				</p>
+			</div>
+
+			<h2 id="checklist">Field checklist</h2>
+
+			<ul>
+				<li>Battery on the timer, and a spare</li>
+				<li>Antenna fitted &mdash; receivers with no antenna see almost nothing</li>
+				<li>Each pilot's band and channel set, and actually matching their quad</li>
+				<li>Calibration done once, with a VTX powered up</li>
+				<li>One practice lap per pilot to check the threshold</li>
+				<li>Phone display timeout turned off</li>
+				<li>Timer's WiFi channel not shared with the other timer on the field</li>
+				<li>Repeater powered, if the pits are a long way from the gate</li>
+			</ul>
+
+		</div>
+	</div>
+
+	<footer class="site-footer">
+		<div class="wrap">
+			<span>Lap times are reported by the timer, not the phone.</span>
+			<span class="spacer">
+				<a href="https://github.com/gilboash/Chorus32-LapTimerBreakingCarbon">Source on GitHub</a>
+			</span>
+		</div>
+	</footer>
+
+</body>
+
+</html>
